@@ -13,5 +13,6 @@ function forum_access_install() {
     KEY rid (rid)
   );");
 
+  db_query("UPDATE {system} SET weight = 2 WHERE name = 'forum_access'");
   drupal_set_message("forum_access database tables created.");
 }

@@ -4,21 +4,10 @@
 /**
  * @file forum_access.module
  *
- * This module is a demo of the node_access module, to create access permissions
- * that exist only for forums. It is not as thorough a solution as taxonomy
- * access, but that's more than I want to write as a demo.
+ * This module uses form_alter to add permissions and moderator settings to
+ * forums.
  *
  */
-
-/**
- * Implementation of hook_help
- */
-function forum_access_help($section) {
-  switch($section) {
-    case 'admin/modules#description':
-      return t('forum access allows role-based access permissions to forums.');
-  }
-}
 
 /**
  * This function supplies the forum access grants. forum_access simply uses
@@ -30,11 +19,16 @@ function forum_access_node_grants($user, $op) {
 }
 
 /**
- * Implementation of hook_node_access_grants
+ * Implementation of hook_node_access_records
  *
  * Returns a list of grant records for the passed in node object.
+ * Checks to see if maybe we're being disabled.
  */
 function forum_access_node_access_records($node) {
+  if (!forum_access_enabled()) {
+    return;
+  }
+
   if ($node->type == 'forum') {
     $result = db_query('SELECT * FROM {forum_access} WHERE tid = %d', $node->tid);
     while ($grant = db_fetch_object($result)) {
@@ -59,30 +53,6 @@ function forum_access_form_alter($form_id, &$form) {
   else if ($form_id == 'forum_form_forum') {
     forum_access_forum_form($form_id, $form, FALSE);
   }
-  // hunmonk's module dependency check: see http://drupal.org/node/54463
-  if ($form_id == 'system_modules' && !$_POST) {
-    forum_access_system_module_validate($form);
-  }
-}
-
-/**
- * hunmonk's module dependency check: see http://drupal.org/node/54463
- */
-function forum_access_system_module_validate(&$form) {
-  $module = 'forum_access';
-  $dependencies = array('forum', 'acl');
-  foreach ($dependencies as $dependency) {
-      if (!in_array($dependency, $form['status']['#default_value'])) {
-        $missing_dependency = TRUE;
-        $missing_dependency_list[] = $dependency;
-      }
-  }
-  if (in_array($module, $form['status']['#default_value']) && isset($missing_dependency)) {
-    db_query("UPDATE {system} SET status = 0 WHERE type = 'module' AND name = '%s'", $module);
-    $key = array_search($module, $form['status']['#default_value']);
-    unset($form['status']['#default_value'][$key]);
-    drupal_set_message(t('The module %module was deactivated--it requires the following disabled/non-existent modules to function properly: %dependencies', array('%module' => $module, '%dependencies' => implode(', ', $missing_dependency_list))), 'error');
-  }
 }
 
 /**
@@ -98,6 +68,14 @@ function forum_access_node_form($form_id, &$form) {
   while ($obj = db_fetch_object($result)) {
     $tids[$obj->tid] = $obj->tid;
   }
+
+  // Ensure the forum they're trying to post to directly is allowed, otherwise
+  // there will be much confusion.
+  $forum_tid = arg(3);
+  if (is_numeric($forum_tid) && !$tids[$forum_tid]) {
+    return drupal_access_denied();
+  }
+
   foreach ($form['taxonomy'][_forum_get_vid()]['#options'] as $tid => $name) {
     if ($tids[$tid]) {
       $options[$tid] = $name;
@@ -128,18 +106,18 @@ function forum_access_forum_form($form_id, &$form, $container) {
       $view = $update = $delete = $create = array(1, 2);
     }
 
-    while ($fa = db_fetch_object($result)) {
-      if ($fa->grant_view) {
-        $view[] = $fa->rid;
+    while ($forum_access = db_fetch_object($result)) {
+      if ($forum_access->grant_view) {
+        $view[] = $forum_access->rid;
       }
-      if ($fa->grant_update) {
-        $update[] = $fa->rid;
+      if ($forum_access->grant_update) {
+        $update[] = $forum_access->rid;
       }
-      if ($fa->grant_delete) {
-        $delete[] = $fa->rid;
+      if ($forum_access->grant_delete) {
+        $delete[] = $forum_access->rid;
       }
-      if ($fa->grant_create) {
-        $create[] = $fa->rid;
+      if ($forum_access->grant_create) {
+        $create[] = $forum_access->rid;
       }
     }
   }
@@ -253,4 +231,33 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
     $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $node->tid));
     acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
  }
+}
+
+function forum_access_enabled($set = NULL) {
+  static $enabled = true;
+  if ($set !== NULL) {
+    $enabled = $set;
+  }
+  return $enabled;
+}
+
+/**
+ * Implementation of hook_enable
+ */
+function forum_access_enable() {
+  $result = db_query("SELECT nid FROM {node} WHERE type = 'forum'");
+  while ($node = db_fetch_object($result)) {
+    node_access_acquire_grants(node_load($node->nid));
+  }
+}
+
+/**
+ * Implementation of hook_disable
+ */
+function forum_access_disable() {
+  forum_access_enabled(FALSE);
+  $result = db_query("SELECT nid FROM {node} WHERE type = 'forum'");
+  while ($node = db_fetch_object($result)) {
+    node_access_acquire_grants(node_load($node->nid));
+  }
 }
