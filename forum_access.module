@@ -123,8 +123,9 @@ function forum_access_forum_form($form_id, &$form, $container) {
   }
   else {
     // Default to all users can read; all logged in users can post.
-    $view = $update = $delete = array(1, 2);
+    $view = array(1, 2);
     $create = array(2);
+    $update = $delete = array();
   }
   
   $form['forum_access'] = array('#type' => 'fieldset', 
