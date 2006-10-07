@@ -1,0 +1,17 @@
+<?php
+// $Id$
+
+function forum_access_install() {
+  db_query("create table if not exists {forum_access} (
+    tid int(10) NOT NULL default 0,
+    rid int(10) NOT NULL default 0,
+    grant_view tinyint(1) unsigned NOT NULL default '0',
+    grant_update tinyint(1) unsigned NOT NULL default '0',
+    grant_delete tinyint(1) unsigned NOT NULL default '0',
+    grant_create tinyint(1) unsigned NOT NULL default '0',
+    KEY tid (tid),
+    KEY rid (rid)
+  );");
+
+  drupal_set_message("forum_access database tables created.");
+}
