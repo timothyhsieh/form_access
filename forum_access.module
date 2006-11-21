@@ -145,8 +145,10 @@ function forum_access_forum_form($form_id, &$form, $container) {
   );
 
   $form['forum_access']['view'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="forum-access-div">',
+    '#suffix' => '</div>',
     '#options' => $rids,
-    '#title' => t('Roles who can view this forum'),
+    '#title' => t('View this forum'),
     '#default_value' => $view
   );
 
@@ -154,23 +156,33 @@ function forum_access_forum_form($form_id, &$form, $container) {
   // so these fields become meaningless for them.
   if (!$container) {
     $form['forum_access']['create'] = array('#type' => 'checkboxes',
+      '#prefix' => '<div class="forum-access-div">',
+      '#suffix' => '</div>',
       '#options' => $rids,
-      '#title' => t('Roles who can post in this forum'),
+      '#title' => t('Post in this forum'),
       '#default_value' => $create
     );
     $form['forum_access']['update'] = array('#type' => 'checkboxes',
+      '#prefix' => '<div class="forum-access-div">',
+      '#suffix' => '</div>',
       '#options' => $rids,
-      '#title' => t('Roles who can edit posts in this forum'),
+      '#title' => t('Edit posts'),
       '#default_value' => $update
     );
     $form['forum_access']['delete'] = array('#type' => 'checkboxes',
+      '#prefix' => '<div class="forum-access-div">',
+      '#suffix' => '</div>',
       '#options' => $rids,
-      '#title' => t('Roles who can delete posts in this forum'),
+      '#title' => t('Delete posts'),
       '#default_value' => $delete
     );
   }
   // Find our moderator ACL:
 
+  $form['forum_access']['clearer'] = array(
+    '#value' => '<div class="forum-access-clearer"></div>',
+  );
+  drupal_add_css(drupal_get_path('module', 'forum_access') . '/forum_access.css');
   if ($form['tid']['#value']) {
     $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $form['tid']['#value']));
     if (!$acl_id) { // create one
