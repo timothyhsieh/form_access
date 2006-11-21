@@ -63,7 +63,7 @@ function forum_access_node_form($form_id, &$form) {
     return;
   }
   global $user;
-  $roles = implode(', ', array_keys($user->roles));
+  $roles = implode(', ', array_merge(array((bool) $user->uid), array_keys($user->roles)));
   $result = db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_create = 1", $roles);
   while ($obj = db_fetch_object($result)) {
     $tids[$obj->tid] = $obj->tid;
@@ -72,12 +72,22 @@ function forum_access_node_form($form_id, &$form) {
   // Ensure the forum they're trying to post to directly is allowed, otherwise
   // there will be much confusion.
   $forum_tid = arg(3);
-  if (is_numeric($forum_tid) && !$tids[$forum_tid]) {
-    return drupal_access_denied();
+  if (is_numeric($forum_tid) && $forum_tid && !$tids[$forum_tid]) {
+    drupal_access_denied();
+    module_invoke_all('exit');
+    exit;
   }
 
+//  drupal_set_message('<pre>' . var_export($form['taxonomy'][_forum_get_vid()]['#options'], true));
   foreach ($form['taxonomy'][_forum_get_vid()]['#options'] as $tid => $name) {
-    if ($tids[$tid]) {
+    if (is_object($name)) {
+      foreach ($name->option as $sub_tid => $sub_name) {
+        if ($tids[$sub_tid]) {
+          $options[$tid] = $sub_name;
+        }
+      }
+    }
+    else if ($tids[$tid]) {
       $options[$tid] = $name;
     }
   }
