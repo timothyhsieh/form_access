@@ -83,7 +83,7 @@ function forum_access_node_form($form_id, &$form) {
     if (is_object($name)) {
       foreach ($name->option as $sub_tid => $sub_name) {
         if ($tids[$sub_tid]) {
-          $options[$tid] = $sub_name;
+          $options[$sub_tid] = $sub_name;
         }
       }
     }
