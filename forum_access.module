@@ -69,6 +69,13 @@ function forum_access_node_form($form_id, &$form) {
     $tids[$obj->tid] = $obj->tid;
   }
 
+  // Also get all forums they happen to be able to moderate.
+
+  $result = db_query("SELECT a.name AS tid FROM {acl} a INNER JOIN {acl_user} u ON a.acl_id = u.acl_id WHERE a.module = 'forum_access' AND u.uid = %d", $user->uid);
+  while ($obj = db_fetch_object($result)) {
+    $tids[$obj->tid] = $obj->tid;
+  }
+
   // Ensure the forum they're trying to post to directly is allowed, otherwise
   // there will be much confusion.
   $forum_tid = arg(3);
@@ -101,7 +108,7 @@ function forum_access_node_form($form_id, &$form) {
 }
 
 /**
- * Rewrite the taxonomy item on the node form
+ * Rewrite the forum administration page with our new access rules
  */
 function forum_access_forum_form($form_id, &$form, $container) {
   $rids = array();
@@ -238,9 +245,9 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
       return;
     }
     global $user;
-    $roles = implode(',', array_keys($user->roles));
-    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid";
-    $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL";
+    $roles = implode(', ', array_merge(array((bool) $user->uid), array_keys($user->roles)));
+    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid LEFT JOIN {acl} acl ON acl.name = $primary_table.tid AND acl.module = 'forum_access' LEFT JOIN acl_user aclu ON aclu.acl_id = acl.acl_id AND aclu.uid = $user->uid";
+    $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu.uid = $user->uid";
     $sql['distinct'] = 1;
     return $sql;
   }
@@ -283,4 +290,56 @@ function forum_access_disable() {
   while ($node = db_fetch_object($result)) {
     node_access_acquire_grants(node_load($node->nid));
   }
+}
+
+/**
+ * use hook init to deny access to forums if the user does not have access
+ * to it.
+ */
+function forum_access_init() {
+  if (arg(0) == 'forum' && is_numeric(arg(1))) {
+    global $user;
+    if (!forum_access_access(arg(1), 'view')) {
+      drupal_access_denied();
+       module_invoke_all('exit');
+       exit;
+    }
+  }
+}
+
+/**
+ * See if a given user has access to a forum.
+ *
+ * $tid -- the tid of the forum
+ * $type -- view, update, delete or create
+ * $account -- the account to test for. If NULL use current user.
+ */
+function forum_access_access($tid, $type, $account = NULL) {
+  static $cache = array();
+
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+
+  if (!isset($cache[$tid])) {
+    $roles = implode(', ', array_merge(array((bool) $account->uid), array_keys($account->roles)));
+    $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_$type = 1 AND tid = %d", $roles, $tid));
+
+    if ($result) {
+      $cache[$tid] = TRUE;
+    }
+    else {
+      // check our moderators too
+      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $tid));
+      $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
+      if ($result) {
+        $cache[$tid] = TRUE;
+      }
+      else {
+        $cache[$tid] = FALSE;
+      }
+    }
+  }
+  return $cache[$tid];
 }
