@@ -62,8 +62,13 @@ function forum_access_node_form($form_id, &$form) {
   if (!is_array($form['taxonomy'][_forum_get_vid()]['#options'])) {
     return;
   }
+
+  // forum administrators do NOT get their forms rewritten here.
+  if (forum_access('administer forums')) {
+    return; 
+  }
   global $user;
-  $roles = implode(', ', array_merge(array((bool) $user->uid), array_keys($user->roles)));
+  $roles = _forum_access_get_roles($user);
   $result = db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_create = 1", $roles);
   while ($obj = db_fetch_object($result)) {
     $tids[$obj->tid] = $obj->tid;
@@ -85,7 +90,6 @@ function forum_access_node_form($form_id, &$form) {
     exit;
   }
 
-//  drupal_set_message('<pre>' . var_export($form['taxonomy'][_forum_get_vid()]['#options'], true));
   foreach ($form['taxonomy'][_forum_get_vid()]['#options'] as $tid => $name) {
     if (is_object($name)) {
       foreach ($name->option as $sub_tid => $sub_name) {
@@ -240,12 +244,9 @@ function forum_access_form_submit($form_id, $form_values) {
  * taxonomy. There should be.
  */
 function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
-  if ($primary_field == 'tid') {
-    if (user_access('administer forums')) {
-      return;
-    }
+  if ($primary_field == 'tid' && !user_access('administer forums')) {
     global $user;
-    $roles = implode(', ', array_merge(array((bool) $user->uid), array_keys($user->roles)));
+    $roles = _forum_access_get_roles($user);
     $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid LEFT JOIN {acl} acl ON acl.name = $primary_table.tid AND acl.module = 'forum_access' LEFT JOIN acl_user aclu ON aclu.acl_id = acl.acl_id AND aclu.uid = $user->uid";
     $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu.uid = $user->uid";
     $sql['distinct'] = 1;
@@ -263,6 +264,9 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
  }
 }
 
+/**
+ * This is also required by ACL module.
+ */
 function forum_access_enabled($set = NULL) {
   static $enabled = true;
   if ($set !== NULL) {
@@ -275,10 +279,7 @@ function forum_access_enabled($set = NULL) {
  * Implementation of hook_enable
  */
 function forum_access_enable() {
-  $result = db_query("SELECT nid FROM {node} WHERE type = 'forum'");
-  while ($node = db_fetch_object($result)) {
-    node_access_acquire_grants(node_load($node->nid));
-  }
+  node_access_rebuild();
 }
 
 /**
@@ -286,10 +287,7 @@ function forum_access_enable() {
  */
 function forum_access_disable() {
   forum_access_enabled(FALSE);
-  $result = db_query("SELECT nid FROM {node} WHERE type = 'forum'");
-  while ($node = db_fetch_object($result)) {
-    node_access_acquire_grants(node_load($node->nid));
-  }
+  node_access_rebuild();
 }
 
 /**
@@ -297,7 +295,7 @@ function forum_access_disable() {
  * to it.
  */
 function forum_access_init() {
-  if (arg(0) == 'forum' && is_numeric(arg(1))) {
+  if (!user_access('administer forums') && arg(0) == 'forum' && is_numeric(arg(1))) {
     global $user;
     if (!forum_access_access(arg(1), 'view')) {
       drupal_access_denied();
@@ -322,8 +320,12 @@ function forum_access_access($tid, $type, $account = NULL) {
     $account = $user;
   }
 
+  if (user_access('administer forums', $account)) {
+    return TRUE;
+  }
+
   if (!isset($cache[$tid])) {
-    $roles = implode(', ', array_merge(array((bool) $account->uid), array_keys($account->roles)));
+    $roles = _forum_access_get_roles($user);
     $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_$type = 1 AND tid = %d", $roles, $tid));
 
     if ($result) {
@@ -342,4 +344,15 @@ function forum_access_access($tid, $type, $account = NULL) {
     }
   }
   return $cache[$tid];
+}
+
+/**
+ * Get the roles on a user, and add in the missing authenticated/anonymous roles
+ */
+function _forum_access_get_roles($user) {
+  // if the user has a uid, they get 1 as a role; otherwise 0.
+  $roles = array(intval((bool) $user->uid));
+  // add in their roles
+  $roles += array_keys($user->roles);
+  return implode(', ', $roles);
 }
