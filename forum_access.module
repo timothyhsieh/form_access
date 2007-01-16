@@ -64,7 +64,7 @@ function forum_access_node_form($form_id, &$form) {
   }
 
   // forum administrators do NOT get their forms rewritten here.
-  if (forum_access('administer forums')) {
+  if (user_access('administer forums')) {
     return; 
   }
   global $user;
