@@ -247,7 +247,7 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
   if ($primary_field == 'tid' && !user_access('administer forums')) {
     global $user;
     $roles = _forum_access_get_roles($user);
-    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid LEFT JOIN {acl} acl ON acl.name = $primary_table.tid AND acl.module = 'forum_access' LEFT JOIN acl_user aclu ON aclu.acl_id = acl.acl_id AND aclu.uid = $user->uid";
+    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid LEFT JOIN {acl} acl ON acl.name = $primary_table.tid AND acl.module = 'forum_access' LEFT JOIN {acl_user} aclu ON aclu.acl_id = acl.acl_id AND aclu.uid = $user->uid";
     $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu.uid = $user->uid";
     $sql['distinct'] = 1;
     return $sql;
@@ -295,12 +295,17 @@ function forum_access_disable() {
  * to it.
  */
 function forum_access_init() {
+  if (!function_exists('user_access')) {
+    // page is cached; bail.
+    return;
+  }
+
   if (!user_access('administer forums') && arg(0) == 'forum' && is_numeric(arg(1))) {
     global $user;
     if (!forum_access_access(arg(1), 'view')) {
       drupal_access_denied();
-       module_invoke_all('exit');
-       exit;
+      module_invoke_all('exit');
+      exit;
     }
   }
 }
@@ -351,7 +356,7 @@ function forum_access_access($tid, $type, $account = NULL) {
  */
 function _forum_access_get_roles($user) {
   // if the user has a uid, they get 1 as a role; otherwise 0.
-  $roles = array(intval((bool) $user->uid));
+  $roles = array(intval((bool) $user->uid) + 1);
   // add in their roles
   $roles += array_keys($user->roles);
   return implode(', ', $roles);
