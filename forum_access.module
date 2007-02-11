@@ -195,7 +195,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
   );
   drupal_add_css(drupal_get_path('module', 'forum_access') . '/forum_access.css');
   if ($form['tid']['#value']) {
-    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $form['tid']['#value']));
+    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $form['tid']['#value']));
     if (!$acl_id) { // create one
       $acl_id = acl_create_new_acl('forum_access', $form['tid']['#value']);
       // update every existing node in this forum to use this acl.
