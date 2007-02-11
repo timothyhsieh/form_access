@@ -62,9 +62,21 @@ function forum_access_node_form($form_id, &$form) {
   if (!is_array($form['taxonomy'][_forum_get_vid()]['#options'])) {
     return;
   }
+
+  // forum administrators do NOT get their forms rewritten here.
+  if (user_access('administer forums')) {
+    return; 
+  }
   global $user;
-  $roles = implode(', ', array_keys($user->roles));
+  $roles = _forum_access_get_roles($user);
   $result = db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_create = 1", $roles);
+  while ($obj = db_fetch_object($result)) {
+    $tids[$obj->tid] = $obj->tid;
+  }
+
+  // Also get all forums they happen to be able to moderate.
+
+  $result = db_query("SELECT a.name AS tid FROM {acl} a INNER JOIN {acl_user} u ON a.acl_id = u.acl_id WHERE a.module = 'forum_access' AND u.uid = %d", $user->uid);
   while ($obj = db_fetch_object($result)) {
     $tids[$obj->tid] = $obj->tid;
   }
@@ -72,12 +84,21 @@ function forum_access_node_form($form_id, &$form) {
   // Ensure the forum they're trying to post to directly is allowed, otherwise
   // there will be much confusion.
   $forum_tid = arg(3);
-  if (is_numeric($forum_tid) && !$tids[$forum_tid]) {
-    return drupal_access_denied();
+  if (is_numeric($forum_tid) && $forum_tid && !$tids[$forum_tid]) {
+    drupal_access_denied();
+    module_invoke_all('exit');
+    exit;
   }
 
   foreach ($form['taxonomy'][_forum_get_vid()]['#options'] as $tid => $name) {
-    if ($tids[$tid]) {
+    if (is_object($name)) {
+      foreach ($name->option as $sub_tid => $sub_name) {
+        if ($tids[$sub_tid]) {
+          $options[$sub_tid] = $sub_name;
+        }
+      }
+    }
+    else if ($tids[$tid]) {
       $options[$tid] = $name;
     }
   }
@@ -91,7 +112,7 @@ function forum_access_node_form($form_id, &$form) {
 }
 
 /**
- * Rewrite the taxonomy item on the node form
+ * Rewrite the forum administration page with our new access rules
  */
 function forum_access_forum_form($form_id, &$form, $container) {
   $rids = array();
@@ -135,8 +156,10 @@ function forum_access_forum_form($form_id, &$form, $container) {
   );
 
   $form['forum_access']['view'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="forum-access-div">',
+    '#suffix' => '</div>',
     '#options' => $rids,
-    '#title' => t('Roles who can view this forum'),
+    '#title' => t('View this forum'),
     '#default_value' => $view
   );
 
@@ -144,25 +167,35 @@ function forum_access_forum_form($form_id, &$form, $container) {
   // so these fields become meaningless for them.
   if (!$container) {
     $form['forum_access']['create'] = array('#type' => 'checkboxes',
+      '#prefix' => '<div class="forum-access-div">',
+      '#suffix' => '</div>',
       '#options' => $rids,
-      '#title' => t('Roles who can post in this forum'),
+      '#title' => t('Post in this forum'),
       '#default_value' => $create
     );
     $form['forum_access']['update'] = array('#type' => 'checkboxes',
+      '#prefix' => '<div class="forum-access-div">',
+      '#suffix' => '</div>',
       '#options' => $rids,
-      '#title' => t('Roles who can edit posts in this forum'),
+      '#title' => t('Edit posts'),
       '#default_value' => $update
     );
     $form['forum_access']['delete'] = array('#type' => 'checkboxes',
+      '#prefix' => '<div class="forum-access-div">',
+      '#suffix' => '</div>',
       '#options' => $rids,
-      '#title' => t('Roles who can delete posts in this forum'),
+      '#title' => t('Delete posts'),
       '#default_value' => $delete
     );
   }
   // Find our moderator ACL:
 
+  $form['forum_access']['clearer'] = array(
+    '#value' => '<div class="forum-access-clearer"></div>',
+  );
+  drupal_add_css(drupal_get_path('module', 'forum_access') . '/forum_access.css');
   if ($form['tid']['#value']) {
-    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $form['tid']['#value']));
+    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $form['tid']['#value']));
     if (!$acl_id) { // create one
       $acl_id = acl_create_new_acl('forum_access', $form['tid']['#value']);
       // update every existing node in this forum to use this acl.
@@ -211,14 +244,11 @@ function forum_access_form_submit($form_id, $form_values) {
  * taxonomy. There should be.
  */
 function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
-  if ($primary_field == 'tid') {
-    if (user_access('administer forums')) {
-      return;
-    }
+  if ($primary_field == 'tid' && !user_access('administer forums')) {
     global $user;
-    $roles = implode(',', array_keys($user->roles));
-    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid";
-    $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL";
+    $roles = _forum_access_get_roles($user);
+    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid LEFT JOIN {acl} acl ON acl.name = $primary_table.tid AND acl.module = 'forum_access' LEFT JOIN {acl_user} aclu ON aclu.acl_id = acl.acl_id AND aclu.uid = $user->uid";
+    $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu.uid = $user->uid";
     $sql['distinct'] = 1;
     return $sql;
   }
@@ -234,6 +264,9 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
  }
 }
 
+/**
+ * This is also required by ACL module.
+ */
 function forum_access_enabled($set = NULL) {
   static $enabled = true;
   if ($set !== NULL) {
@@ -246,10 +279,7 @@ function forum_access_enabled($set = NULL) {
  * Implementation of hook_enable
  */
 function forum_access_enable() {
-  $result = db_query("SELECT nid FROM {node} WHERE type = 'forum'");
-  while ($node = db_fetch_object($result)) {
-    node_access_acquire_grants(node_load($node->nid));
-  }
+  node_access_rebuild();
 }
 
 /**
@@ -257,8 +287,77 @@ function forum_access_enable() {
  */
 function forum_access_disable() {
   forum_access_enabled(FALSE);
-  $result = db_query("SELECT nid FROM {node} WHERE type = 'forum'");
-  while ($node = db_fetch_object($result)) {
-    node_access_acquire_grants(node_load($node->nid));
+  node_access_rebuild();
+}
+
+/**
+ * use hook init to deny access to forums if the user does not have access
+ * to it.
+ */
+function forum_access_init() {
+  if (!function_exists('user_access')) {
+    // page is cached; bail.
+    return;
   }
+
+  if (!user_access('administer forums') && arg(0) == 'forum' && is_numeric(arg(1))) {
+    global $user;
+    if (!forum_access_access(arg(1), 'view')) {
+      drupal_access_denied();
+      module_invoke_all('exit');
+      exit;
+    }
+  }
+}
+
+/**
+ * See if a given user has access to a forum.
+ *
+ * $tid -- the tid of the forum
+ * $type -- view, update, delete or create
+ * $account -- the account to test for. If NULL use current user.
+ */
+function forum_access_access($tid, $type, $account = NULL) {
+  static $cache = array();
+
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+
+  if (user_access('administer forums', $account)) {
+    return TRUE;
+  }
+
+  if (!isset($cache[$tid])) {
+    $roles = _forum_access_get_roles($user);
+    $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_$type = 1 AND tid = %d", $roles, $tid));
+
+    if ($result) {
+      $cache[$tid] = TRUE;
+    }
+    else {
+      // check our moderators too
+      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $tid));
+      $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
+      if ($result) {
+        $cache[$tid] = TRUE;
+      }
+      else {
+        $cache[$tid] = FALSE;
+      }
+    }
+  }
+  return $cache[$tid];
+}
+
+/**
+ * Get the roles on a user, and add in the missing authenticated/anonymous roles
+ */
+function _forum_access_get_roles($user) {
+  // if the user has a uid, they get 1 as a role; otherwise 0.
+  $roles = array(intval((bool) $user->uid) + 1);
+  // add in their roles
+  $roles += array_keys($user->roles);
+  return implode(', ', $roles);
 }
