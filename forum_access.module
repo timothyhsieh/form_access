@@ -162,17 +162,16 @@ function forum_access_forum_form($form_id, &$form, $container) {
     '#title' => t('View this forum'),
     '#default_value' => $view
   );
+  $form['forum_access']['create'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="forum-access-div">',
+    '#suffix' => '</div>',
+    '#options' => $rids,
+    '#title' => t('Post in this forum'),
+    '#default_value' => $create
+  );
 
-  // Containers can only be viewed; they can't be posted to
-  // so these fields become meaningless for them.
+  // Containers do not contain any nodes, so these fields become meaningless for them.
   if (!$container) {
-    $form['forum_access']['create'] = array('#type' => 'checkboxes',
-      '#prefix' => '<div class="forum-access-div">',
-      '#suffix' => '</div>',
-      '#options' => $rids,
-      '#title' => t('Post in this forum'),
-      '#default_value' => $create
-    );
     $form['forum_access']['update'] = array('#type' => 'checkboxes',
       '#prefix' => '<div class="forum-access-div">',
       '#suffix' => '</div>',
@@ -205,7 +204,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
         acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
       }
     }
-    $form['forum_access']['acl'] = acl_edit_form($acl_id, 'Moderators');
+    $form['forum_access']['acl'] = acl_edit_form($acl_id, t('Moderators'));
     // Move some stuff down so our block goes in a nice place.
   }
   $form['submit']['#weight'] = 10;
@@ -259,7 +258,7 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
  */
 function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   if ($node && $node->type == 'forum' && $op == 'insert') {
-    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $node->tid));
+    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $node->tid));
     acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
  }
 }
@@ -338,7 +337,7 @@ function forum_access_access($tid, $type, $account = NULL) {
     }
     else {
       // check our moderators too
-      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $tid));
+      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $tid));
       $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
       if ($result) {
         $cache[$tid] = TRUE;
