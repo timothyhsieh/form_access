@@ -1,0 +1,11 @@
+CHANGELOG for Forum Access for Drupal 5
+
+Forum Access 5.x-1.x:
+  Bugs fixed:
+    - Minor coding style fixes.
+    - #166497: Add forum_access_uninstall(), by VeryMisunderstood.
+    - #120161: Allow post access to containers, so they appear in the forums combobox.
+    - #137575: Fix PostgreSQL incompatible queries, by a_m_c.
+    - #146622: Make moderators string translatable, by deelight.
+
+

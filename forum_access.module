@@ -192,7 +192,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
   $form['forum_access']['clearer'] = array(
     '#value' => '<div class="forum-access-clearer"></div>',
   );
-  drupal_add_css(drupal_get_path('module', 'forum_access') . '/forum_access.css');
+  drupal_add_css(drupal_get_path('module', 'forum_access') .'/forum_access.css');
   if ($form['tid']['#value']) {
     $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $form['tid']['#value']));
     if (!$acl_id) { // create one
@@ -219,7 +219,7 @@ function forum_access_form_submit($form_id, $form_values) {
   if (array_key_exists('acl', $access)) {
     acl_save_form($access['acl']);
   }
-  foreach($access['view'] as $rid => $checked) {
+  foreach ($access['view'] as $rid => $checked) {
     $grants[] = array(
       'realm' => 'forum_access',
       'gid' => $rid,
@@ -260,7 +260,7 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   if ($node && $node->type == 'forum' && $op == 'insert') {
     $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $node->tid));
     acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
- }
+  }
 }
 
 /**
