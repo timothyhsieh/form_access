@@ -1,7 +1,11 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x:
+
+
+Forum Access 5.x-1.8:
   Bugs fixed:
+    - Add caching to forum_access_node_access_records() to improve Rebuild Permissions performance.
     - Minor coding style fixes.
     - #166497: Add forum_access_uninstall(), by VeryMisunderstood.
     - #120161: Allow post access to containers, so they appear in the forums combobox.
