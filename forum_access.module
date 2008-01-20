@@ -365,3 +365,17 @@ function _forum_access_get_roles($user) {
   $roles += array_keys($user->roles);
   return implode(', ', $roles);
 }
+
+/**
+ * Implementation of hook_node_access_explain
+ */
+function forum_access_node_access_explain($row) {
+  static $roles = NULL;
+  if ($row->realm == 'forum_access') {
+    if (!isset($roles)) {
+      $roles = user_roles();
+    }
+    return array($roles[$row->gid]);
+  }
+}
+

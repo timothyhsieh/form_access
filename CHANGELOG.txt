@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x:
   Enhancements:
+    - Implement new hook_node_access_explain().
     - Remove deprecated db_num_rows(); see http://drupal.org/node/163191.
 
 
