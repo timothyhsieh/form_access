@@ -95,14 +95,17 @@ function forum_access_node_form($form_id, &$form) {
   }
 
   foreach ($form['taxonomy'][_forum_get_vid()]['#options'] as $tid => $name) {
-    if (is_object($name)) {
+    if (!is_numeric($tid)) {
+      $options[$tid] = $name;
+    }
+    elseif (is_object($name)) {
       foreach ($name->option as $sub_tid => $sub_name) {
         if ($tids[$sub_tid]) {
-          $options[$sub_tid] = $sub_name;
+          $options[$tid]->option[$sub_tid] = $sub_name;
         }
       }
     }
-    else if ($tids[$tid]) {
+    elseif ($tids[$tid]) {
       $options[$tid] = $name;
     }
   }

@@ -1,9 +1,11 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x:
+  Bugs fixed:
+    - #175957: Don't disturb the _taxonomy_term_select structure (incompatibility with og!), adapted from Paul Kishimoto.
   Enhancements:
     - Implement new hook_node_access_explain().
-    - Remove deprecated db_num_rows(); see http://drupal.org/node/163191.
+    - Remove deprecated db_num_rows() call; see http://drupal.org/node/163191.
 
 
 Forum Access 5.x-1.8:
