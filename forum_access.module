@@ -127,11 +127,9 @@ function forum_access_forum_form($form_id, &$form, $container) {
 
   if ($form['tid']['#value']) {
     $result = db_query("SELECT * FROM {forum_access} where tid=%d", $form['tid']['#value']);
-    if (db_num_rows($result) == 0) {
-      $view = $update = $delete = $create = array(1, 2);
-    }
 
     while ($forum_access = db_fetch_object($result)) {
+      $row_received = TRUE;
       if ($forum_access->grant_view) {
         $view[] = $forum_access->rid;
       }
@@ -144,6 +142,9 @@ function forum_access_forum_form($form_id, &$form, $container) {
       if ($forum_access->grant_create) {
         $create[] = $forum_access->rid;
       }
+    }
+    if (!isset($row_received)) {
+      $view = $update = $delete = $create = array(1, 2);
     }
   }
   else {

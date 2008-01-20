@@ -1,6 +1,8 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x:
+  Enhancements:
+    - Remove deprecated db_num_rows(); see http://drupal.org/node/163191.
 
 
 Forum Access 5.x-1.8:
