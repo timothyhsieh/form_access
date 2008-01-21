@@ -5,7 +5,7 @@ function forum_access_install() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      db_query("create table if not exists {forum_access} (
+      db_query("CREATE TABLE IF NOT EXISTS {forum_access} (
         tid int(10) NOT NULL default 0,
         rid int(10) NOT NULL default 0,
         grant_view tinyint(1) unsigned NOT NULL default '0',
@@ -32,6 +32,9 @@ function forum_access_install() {
   }
 
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'forum_access'");
+}
 
-  drupal_set_message("forum_access database tables created.");
+
+function forum_access_uninstall() {
+  db_query("DROP TABLE {forum_access}");
 }

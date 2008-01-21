@@ -1,0 +1,6 @@
+CHANGELOG for Forum Access for Drupal 6
+
+forum_access HEAD:
+  Porting to D6
+    - Copied 5.x-1.9.
+

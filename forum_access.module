@@ -29,12 +29,16 @@ function forum_access_node_access_records($node) {
     return;
   }
 
+  static $grants = array();
   if ($node->type == 'forum') {
-    $result = db_query('SELECT * FROM {forum_access} WHERE tid = %d', $node->tid);
-    while ($grant = db_fetch_object($result)) {
-      $grants[] = array('realm' => 'forum_access', 'gid' => $grant->rid, 'grant_view' => $grant->grant_view, 'grant_update' => $grant->grant_update, 'grant_delete' => $grant->grant_delete); 
+    if (!isset($grants[$node->tid])) {
+      $result = db_query('SELECT * FROM {forum_access} WHERE tid = %d', $node->tid);
+      while ($grant = db_fetch_object($result)) {
+        $grants[$node->tid][] = array('realm' => 'forum_access', 'gid' => $grant->rid, 'grant_view' => $grant->grant_view, 'grant_update' => $grant->grant_update, 'grant_delete' => $grant->grant_delete); 
+      }
+      //drupal_set_message("forum_access_node_access_records($node->nid) (tid=$node->tid) returns ". var_export($grants[$node->tid], TRUE), 'status');
     }
-    return $grants;
+    return $grants[$node->tid];
   }
 }
 
@@ -91,14 +95,17 @@ function forum_access_node_form($form_id, &$form) {
   }
 
   foreach ($form['taxonomy'][_forum_get_vid()]['#options'] as $tid => $name) {
-    if (is_object($name)) {
+    if (!is_numeric($tid)) {
+      $options[$tid] = $name;
+    }
+    elseif (is_object($name)) {
       foreach ($name->option as $sub_tid => $sub_name) {
         if ($tids[$sub_tid]) {
-          $options[$sub_tid] = $sub_name;
+          $options[$tid]->option[$sub_tid] = $sub_name;
         }
       }
     }
-    else if ($tids[$tid]) {
+    elseif ($tids[$tid]) {
       $options[$tid] = $name;
     }
   }
@@ -123,11 +130,9 @@ function forum_access_forum_form($form_id, &$form, $container) {
 
   if ($form['tid']['#value']) {
     $result = db_query("SELECT * FROM {forum_access} where tid=%d", $form['tid']['#value']);
-    if (db_num_rows($result) == 0) {
-      $view = $update = $delete = $create = array(1, 2);
-    }
 
     while ($forum_access = db_fetch_object($result)) {
+      $row_received = TRUE;
       if ($forum_access->grant_view) {
         $view[] = $forum_access->rid;
       }
@@ -140,6 +145,9 @@ function forum_access_forum_form($form_id, &$form, $container) {
       if ($forum_access->grant_create) {
         $create[] = $forum_access->rid;
       }
+    }
+    if (!isset($row_received)) {
+      $view = $update = $delete = $create = array(1, 2);
     }
   }
   else {
@@ -162,17 +170,16 @@ function forum_access_forum_form($form_id, &$form, $container) {
     '#title' => t('View this forum'),
     '#default_value' => $view
   );
+  $form['forum_access']['create'] = array('#type' => 'checkboxes',
+    '#prefix' => '<div class="forum-access-div">',
+    '#suffix' => '</div>',
+    '#options' => $rids,
+    '#title' => t('Post in this forum'),
+    '#default_value' => $create
+  );
 
-  // Containers can only be viewed; they can't be posted to
-  // so these fields become meaningless for them.
+  // Containers do not contain any nodes, so these fields become meaningless for them.
   if (!$container) {
-    $form['forum_access']['create'] = array('#type' => 'checkboxes',
-      '#prefix' => '<div class="forum-access-div">',
-      '#suffix' => '</div>',
-      '#options' => $rids,
-      '#title' => t('Post in this forum'),
-      '#default_value' => $create
-    );
     $form['forum_access']['update'] = array('#type' => 'checkboxes',
       '#prefix' => '<div class="forum-access-div">',
       '#suffix' => '</div>',
@@ -193,7 +200,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
   $form['forum_access']['clearer'] = array(
     '#value' => '<div class="forum-access-clearer"></div>',
   );
-  drupal_add_css(drupal_get_path('module', 'forum_access') . '/forum_access.css');
+  drupal_add_css(drupal_get_path('module', 'forum_access') .'/forum_access.css');
   if ($form['tid']['#value']) {
     $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $form['tid']['#value']));
     if (!$acl_id) { // create one
@@ -205,7 +212,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
         acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
       }
     }
-    $form['forum_access']['acl'] = acl_edit_form($acl_id, 'Moderators');
+    $form['forum_access']['acl'] = acl_edit_form($acl_id, t('Moderators'));
     // Move some stuff down so our block goes in a nice place.
   }
   $form['submit']['#weight'] = 10;
@@ -220,7 +227,7 @@ function forum_access_form_submit($form_id, $form_values) {
   if (array_key_exists('acl', $access)) {
     acl_save_form($access['acl']);
   }
-  foreach($access['view'] as $rid => $checked) {
+  foreach ($access['view'] as $rid => $checked) {
     $grants[] = array(
       'realm' => 'forum_access',
       'gid' => $rid,
@@ -259,9 +266,9 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
  */
 function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   if ($node && $node->type == 'forum' && $op == 'insert') {
-    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $node->tid));
+    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $node->tid));
     acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
- }
+  }
 }
 
 /**
@@ -338,7 +345,7 @@ function forum_access_access($tid, $type, $account = NULL) {
     }
     else {
       // check our moderators too
-      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' && name = %d", $tid));
+      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $tid));
       $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
       if ($result) {
         $cache[$tid] = TRUE;
@@ -361,3 +368,17 @@ function _forum_access_get_roles($user) {
   $roles += array_keys($user->roles);
   return implode(', ', $roles);
 }
+
+/**
+ * Implementation of hook_node_access_explain
+ */
+function forum_access_node_access_explain($row) {
+  static $roles = NULL;
+  if ($row->realm == 'forum_access') {
+    if (!isset($roles)) {
+      $roles = user_roles();
+    }
+    return array($roles[$row->gid]);
+  }
+}
+
