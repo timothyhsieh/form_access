@@ -38,8 +38,10 @@ function forum_access_node_access_records($node) {
       }
       //drupal_set_message("forum_access_node_access_records($node->nid) (tid=$node->tid) returns ". var_export($grants[$node->tid], TRUE), 'status');
     }
+    if (in_array($node->tid, $grants)) {
     return $grants[$node->tid];
   }
+}
 }
 
 /**
@@ -47,7 +49,7 @@ function forum_access_node_access_records($node) {
  *
  * Remove inaccessible forums from the node form.
  */
-function forum_access_form_alter($form_id, &$form) {
+function forum_access_form_alter(&$form, &$form_state, $form_id) {
   if (isset($form['type']) && $form['type']['#value'] .'_node_form' == $form_id) {
     forum_access_node_form($form_id, $form);
   }
@@ -63,7 +65,9 @@ function forum_access_form_alter($form_id, &$form) {
  * Rewrite the taxonomy item on the node form
  */
 function forum_access_node_form($form_id, &$form) {
-  if (!is_array($form['taxonomy'][_forum_get_vid()]['#options'])) {
+  $vid = variable_get('forum_nav_vocabulary', '');
+
+  if (!is_array($form['taxonomy'][$vid]['#options'])) {
     return;
   }
 
@@ -94,7 +98,7 @@ function forum_access_node_form($form_id, &$form) {
     exit;
   }
 
-  foreach ($form['taxonomy'][_forum_get_vid()]['#options'] as $tid => $name) {
+  foreach ($form['taxonomy'][$vid]['#options'] as $tid => $name) {
     if (!is_numeric($tid)) {
       $options[$tid] = $name;
     }
@@ -111,10 +115,10 @@ function forum_access_node_form($form_id, &$form) {
   }
 
   if ($options) {
-    $form['taxonomy'][_forum_get_vid()]['#options'] = $options;
+    $form['taxonomy'][$vid]['#options'] = $options;
   }
   else {
-    unset($form['taxonomy'][_forum_get_vid()]);
+    unset($form['taxonomy'][$vid]);
   }
 }
 
@@ -131,6 +135,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
   if ($form['tid']['#value']) {
     $result = db_query("SELECT * FROM {forum_access} where tid=%d", $form['tid']['#value']);
 
+    $view = $update = $delete = $create = array();
     while ($forum_access = db_fetch_object($result)) {
       $row_received = TRUE;
       if ($forum_access->grant_view) {
@@ -218,12 +223,12 @@ function forum_access_forum_form($form_id, &$form, $container) {
   $form['submit']['#weight'] = 10;
   $form['delete']['#weight'] = 10;
 
-  $form['#submit']['forum_access_form_submit'] = current($form['#submit']);
+  $form['#submit'][] = 'forum_access_form_submit';
 }
 
-function forum_access_form_submit($form_id, $form_values) {
-  db_query("DELETE FROM {forum_access} WHERE tid = %d", $form_values['tid']);
-  $access = $form_values['forum_access']; // shortcut
+function forum_access_form_submit($form, &$form_state) {
+  db_query("DELETE FROM {forum_access} WHERE tid = %d", $form_state['values']['tid']);
+  $access = $form_state['values']['forum_access']; // shortcut
   if (array_key_exists('acl', $access)) {
     acl_save_form($access['acl']);
   }
@@ -235,11 +240,11 @@ function forum_access_form_submit($form_id, $form_values) {
       'grant_update' => (bool) $access['update'][$rid],
       'grant_delete' => (bool) $access['delete'][$rid],
     );
-    db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create) VALUES (%d, %d, %d, %d, %d, %d)", $form_values['tid'], $rid, (bool) $checked, (bool) $access['update'][$rid], (bool) $access['delete'][$rid], (bool) $access['create'][$rid]);
+    db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create) VALUES (%d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, (bool) $access['update'][$rid], (bool) $access['delete'][$rid], (bool) $access['create'][$rid]);
   }
 
   // mass update
-  $result = db_query("SELECT n.nid FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form_values['tid']);
+  $result = db_query("SELECT n.nid FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form_state['values']['tid']);
   while ($node = db_fetch_object($result)) {
     node_access_write_grants($node, $grants, 'forum_access');
   }
@@ -338,7 +343,7 @@ function forum_access_access($tid, $type, $account = NULL) {
 
   if (!isset($cache[$tid])) {
     $roles = _forum_access_get_roles($user);
-    $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_$type = 1 AND tid = %d", $roles, $tid));
+    $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_%s = 1 AND tid = %d", $roles, $type, $tid));
 
     if ($result) {
       $cache[$tid] = TRUE;
