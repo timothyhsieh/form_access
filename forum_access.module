@@ -34,7 +34,14 @@ function forum_access_node_access_records($node) {
     if (!isset($grants[$node->tid])) {
       $result = db_query('SELECT * FROM {forum_access} WHERE tid = %d', $node->tid);
       while ($grant = db_fetch_object($result)) {
-        $grants[$node->tid][] = array('realm' => 'forum_access', 'gid' => $grant->rid, 'grant_view' => $grant->grant_view, 'grant_update' => $grant->grant_update, 'grant_delete' => $grant->grant_delete); 
+        $grants[$node->tid][] = array(
+          'realm' => 'forum_access', 
+          'gid' => $grant->rid, 
+          'grant_view' => $grant->grant_view, 
+          'grant_update' => $grant->grant_update, 
+          'grant_delete' => $grant->grant_delete,
+          'priority' => 0,
+        ); 
       }
       //drupal_set_message("forum_access_node_access_records($node->nid) (tid=$node->tid) returns ". var_export($grants[$node->tid], TRUE), 'status');
     }
