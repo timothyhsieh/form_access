@@ -46,9 +46,9 @@ function forum_access_node_access_records($node) {
       //drupal_set_message("forum_access_node_access_records($node->nid) (tid=$node->tid) returns ". var_export($grants[$node->tid], TRUE), 'status');
     }
     if (in_array($node->tid, $grants)) {
-    return $grants[$node->tid];
+      return $grants[$node->tid];
+    }
   }
-}
 }
 
 /**
@@ -139,7 +139,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
     $rids[$obj->rid] = $obj->name;
   }
 
-  if ($form['tid']['#value']) {
+  if (isset($form['tid']['#value'])) {  // edit
     $result = db_query("SELECT * FROM {forum_access} where tid=%d", $form['tid']['#value']);
 
     $view = $update = $delete = $create = array();
@@ -162,7 +162,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
       $view = $update = $delete = $create = array(1, 2);
     }
   }
-  else {
+  else {  // create
     // Default to all users can read; all logged in users can post.
     $view = array(1, 2);
     $create = array(2);
@@ -213,7 +213,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
     '#value' => '<div class="forum-access-clearer"></div>',
   );
   drupal_add_css(drupal_get_path('module', 'forum_access') .'/forum_access.css');
-  if ($form['tid']['#value']) {
+  if (isset($form['tid']['#value'])) {  // edit, not new
     $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $form['tid']['#value']));
     if (!$acl_id) { // create one
       $acl_id = acl_create_new_acl('forum_access', $form['tid']['#value']);
@@ -244,10 +244,10 @@ function forum_access_form_submit($form, &$form_state) {
       'realm' => 'forum_access',
       'gid' => $rid,
       'grant_view' => (bool) $checked,
-      'grant_update' => (bool) $access['update'][$rid],
-      'grant_delete' => (bool) $access['delete'][$rid],
+      'grant_update' => !empty($access['update'][$rid]),
+      'grant_delete' => !empty($access['delete'][$rid]),
     );
-    db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create) VALUES (%d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, (bool) $access['update'][$rid], (bool) $access['delete'][$rid], (bool) $access['create'][$rid]);
+    db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create) VALUES (%d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]));
   }
 
   // mass update
