@@ -348,26 +348,26 @@ function forum_access_access($tid, $type, $account = NULL) {
     return TRUE;
   }
 
-  if (!isset($cache[$tid])) {
+  if (!isset($cache[$account->uid][$tid][$type])) {
     $roles = _forum_access_get_roles($user);
     $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_%s = 1 AND tid = %d", $roles, $type, $tid));
 
     if ($result) {
-      $cache[$tid] = TRUE;
+      $cache[$account->uid][$tid][$type] = TRUE;
     }
     else {
       // check our moderators too
       $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $tid));
       $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
       if ($result) {
-        $cache[$tid] = TRUE;
+        $cache[$account->uid][$tid][$type] = TRUE;
       }
       else {
-        $cache[$tid] = FALSE;
+        $cache[$account->uid][$tid][$type] = FALSE;
       }
     }
   }
-  return $cache[$tid];
+  return $cache[$account->uid][$tid][$type];
 }
 
 /**

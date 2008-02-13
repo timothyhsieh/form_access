@@ -1,7 +1,9 @@
 CHANGELOG for Forum Access for Drupal 6
 
 forum_access HEAD:
-  Porting to D6
+  Bugs fixed:
+    - #221095: Fix caching in forum_access_access().
+  Porting to D6:
     - Avoid E_NOTICEs
     - First-shot port to D6.
     - Copied 5.x-1.9.
