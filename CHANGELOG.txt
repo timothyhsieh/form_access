@@ -1,5 +1,9 @@
 CHANGELOG for Forum Access for Drupal 5
 
+Forum Access 5.x-1.x:
+  Bugs fixed:
+    - #221095: Fix caching in forum_access_access(), by Josh Benner.
+
 Forum Access 5.x-1.9:
   Bugs fixed:
     - #175957: Don't disturb the _taxonomy_term_select structure (incompatibility with og_forum!), adapted from Paul Kishimoto.
