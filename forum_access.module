@@ -147,7 +147,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
       }
     }
     if (!isset($row_received) && empty($form['#post'])) {
-      drupal_set_message('If you have only just installed Forum Access, then the posts in this forum may still be accessible, but once your permissions get rebuilt (intentionally or behind-the-scenes by some other module), the posts in this forum will vanish &mdash; so, be sure to set the desired Access Control below and save!', 'error');
+      drupal_set_message('If you have only just installed Forum Access, then the posts in this forum may still be accessible, but once your permissions get rebuilt (intentionally or behind-the-scenes by some other module), they will vanish &mdash; so, be sure to set the desired Access Control below and save!', 'error');
     }
   }
   else {  // create
