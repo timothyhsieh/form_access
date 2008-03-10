@@ -202,7 +202,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
   );
   drupal_add_css(drupal_get_path('module', 'forum_access') .'/forum_access.css');
   if (isset($form['tid']['#value'])) {  // edit, not new
-    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $form['tid']['#value']));
+    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $form['tid']['#value']));
     if (!$acl_id) { // create one
       $acl_id = acl_create_new_acl('forum_access', $form['tid']['#value']);
       // update every existing node in this forum to use this acl.
@@ -266,7 +266,7 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
  */
 function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   if ($node && $node->type == 'forum' && $op == 'insert') {
-    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $node->tid));
+    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $node->tid));
     acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
   }
 }
@@ -345,7 +345,7 @@ function forum_access_access($tid, $type, $account = NULL) {
     }
     else {
       // check our moderators too
-      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = %d", $tid));
+      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $tid));
       $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
       if ($result) {
         $cache[$account->uid][$tid][$type] = TRUE;

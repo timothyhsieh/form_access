@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x:
   Bugs fixed:
+    - #230123: Newest pgsql refuses to do automatic type conversions.
     - Provide a message for uninitialized forums when newly installed, rather than the incorrect 'default' setting of grant_all for 1 & 2.
     - #221095: Fix caching in forum_access_access(), by Josh Benner.
 
