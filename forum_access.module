@@ -265,9 +265,28 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
  * nodeapi hook to add ACL data to fresh forum posts.
  */
 function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  if ($node && $node->type == 'forum' && $op == 'insert') {
-    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $node->tid));
-    acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
+  static $old_tid = NULL;
+  
+  if ($node && $node->type == 'forum') {
+    switch ($op) {
+      case 'prepare':
+        $old_tid = $node->tid;
+        break;
+        
+      case 'update':
+        if ($node->tid == $old_tid) {
+          break;
+        }
+        $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $old_tid));
+        acl_node_remove_acl($node->nid, $acl_id);
+        // fall through to 'insert' to enter the new tid...
+        
+      case 'insert':
+        $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $node->tid));
+        acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
+        $old_tid = NULL;
+        break;
+    }
   }
 }
 
