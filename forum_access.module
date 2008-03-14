@@ -57,6 +57,9 @@ function forum_access_form_alter($form_id, &$form) {
   else if ($form_id == 'forum_form_forum') {
     forum_access_forum_form($form_id, $form, FALSE);
   }
+  else if ($form_id == 'user_admin_role') {
+    forum_access_user_admin_role_form($form_id, $form);
+  }
 }
 
 /**
@@ -242,6 +245,23 @@ function forum_access_form_submit($form_id, $form_values) {
   $result = db_query("SELECT n.nid FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form_values['tid']);
   while ($node = db_fetch_object($result)) {
     node_access_write_grants($node, $grants, 'forum_access');
+  }
+}
+
+/**
+ * We must know when a role is deleted.
+ */
+function forum_access_user_admin_role_form($form_id, &$form) {
+  $form['#submit']['forum_access_user_admin_role_submit'] = array();
+}
+
+/**
+ * If a role is deleted, we remove the grants it provided.
+ */
+function forum_access_user_admin_role_submit($form, &$form_state) {
+  if ($form_state['op'] == $form_state['delete']) {
+    db_query("DELETE FROM {forum_access} WHERE rid = %d", $form_state['rid']);
+    db_query("DELETE FROM {node_access} WHERE gid = %d AND realm = 'forum_access'", $form_state['rid']);
   }
 }
 

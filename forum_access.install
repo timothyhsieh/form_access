@@ -34,7 +34,16 @@ function forum_access_install() {
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'forum_access'");
 }
 
-
 function forum_access_uninstall() {
   db_query("DROP TABLE {forum_access}");
+}
+
+/**
+ * Purge orphaned grants that were left behind when deleting roles.
+ */
+function forum_access_update_1() {
+  $ret = array();
+  db_query("DELETE FROM {forum_access} WHERE rid NOT IN (SELECT rid from {role})");
+  db_query("DELETE FROM {node_access} WHERE realm = 'forum_access' AND gid NOT IN (SELECT rid from {role})");
+  return $ret;
 }
