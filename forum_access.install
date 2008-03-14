@@ -68,3 +68,13 @@ function forum_access_schema() {
 function forum_access_uninstall() {
   drupal_uninstall_schema('forum_access');
 }
+
+/**
+ * Purge orphaned grants that were left behind when deleting roles.
+ */
+function forum_access_update_1() {
+  $ret = array();
+  db_query("DELETE FROM {forum_access} WHERE rid NOT IN (SELECT rid from {role})");
+  db_query("DELETE FROM {node_access} WHERE realm = 'forum_access' AND gid NOT IN (SELECT rid from {role})");
+  return $ret;
+}

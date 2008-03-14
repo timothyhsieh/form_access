@@ -2,11 +2,12 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access HEAD:
   Bugs fixed:
+    - #219778: Remove grants when roles are deleted, purge orphaned grants.
     - #230123: Newest pgsql refuses to do automatic type conversions.
     - Provide a message for uninitialized forums when newly installed, rather than the incorrect 'default' setting of grant_all for 1 & 2.
     - #222477: forum_access_node_access_records() didn't return its result.
   Porting to D6:
-    - #231611: Add support for non-forum content types.
+    - #231611: Add support for non-forum content types; update moderator(s) when changing forum.
     - Avoid E_NOTICEs — ready for beta.
     - First-shot port to D6.
     - Copied 5.x-1.9.

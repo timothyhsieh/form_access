@@ -67,6 +67,9 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
   else if ($form_id == 'forum_form_forum') {
     forum_access_forum_form($form_id, $form, FALSE);
   }
+  else if ($form_id == 'user_admin_role') {
+    forum_access_user_admin_role_form($form_id, $form);
+  }
 }
 
 /**
@@ -259,6 +262,23 @@ function forum_access_form_submit($form, &$form_state) {
 }
 
 /**
+ * We must know when a role is deleted.
+ */
+function forum_access_user_admin_role_form($form_id, &$form) {
+  $form['#submit'][] = 'forum_access_user_admin_role_submit';
+}
+
+/**
+ * If a role is deleted, we remove the grants it provided.
+ */
+function forum_access_user_admin_role_submit($form, &$form_state) {
+  if ($form_state['values']['op'] == $form_state['values']['delete']) {
+    db_query("DELETE FROM {forum_access} WHERE rid = %d", $form_state['values']['rid']);
+    db_query("DELETE FROM {node_access} WHERE gid = %d AND realm = 'forum_access'", $form_state['values']['rid']);
+  }
+}
+
+/**
  * Because in order to restrict the visible forums, we have to rewrite
  * the sql. This is because there isn't a node_access equivalent for
  * taxonomy. There should be.
@@ -418,7 +438,10 @@ function forum_access_node_access_explain($row) {
     if (!isset($roles)) {
       $roles = user_roles();
     }
-    return array($roles[$row->gid]);
+    if (isset($roles[$row->gid])) {
+      return array($roles[$row->gid]);
+    }
+    return array('(unknown gid)');
   }
 }
 
