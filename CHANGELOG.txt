@@ -1,5 +1,9 @@
 CHANGELOG for Forum Access for Drupal 5
 
+Forum Access 5.x-1.x-dev:
+  Enhancements:
+    - Provide diagnostics related to Content Access module.
+
 Forum Access 5.x-1.10:
   Bugs fixed:
     - #219778: Remove grants when roles are deleted, purge orphaned grants.
