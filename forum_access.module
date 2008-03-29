@@ -70,6 +70,11 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
   else if ($form_id == 'user_admin_role') {
     forum_access_user_admin_role_form($form_id, $form);
   }
+  else if ($form_id == 'content_access_admin_settings') {
+    if (arg(3) == 'forum' && empty($_POST)) {
+      drupal_set_message('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access settings, but !Forum_Access can only allow <i>more</i> access, not less.', array('!Forum_Access' => t('Forum Access')), 'warning');
+    }
+  }
 }
 
 /**
@@ -163,7 +168,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
       }
     }
     if (!isset($row_received) && empty($form['#parameters'][1]['post'])) {
-      drupal_set_message('If you have only just installed Forum Access, then the posts in this forum may still be accessible, but once your permissions get rebuilt (intentionally or behind-the-scenes by some other module), they will vanish &mdash; so, be sure to set the desired Access Control below and save!', 'error');
+      drupal_set_message('If you have only just installed !Forum_Access, then the posts in this forum may still be accessible, but once your permissions get rebuilt (intentionally or behind-the-scenes by some other module), they will vanish &mdash; so, be sure to set the desired Access Control below and save!', array('!Forum_Access' => t('Forum Access')), 'error');
     }
   }
   else {  // create
@@ -229,8 +234,59 @@ function forum_access_forum_form($form_id, &$form, $container) {
       }
     }
     $form['forum_access']['acl'] = acl_edit_form($acl_id, t('Moderators'));
-    // Move some stuff down so our block goes in a nice place.
   }
+  
+  //$form['forum_access']['interference'] = array(
+  //  '#type' => 'fieldset', 
+  //  '#title' => t('Module interference'),
+  //  '#collapsible' => TRUE,
+  //);
+  //$variables = array(
+  //  '%content_type' => node_get_types('name', 'forum'),
+  //  '!Forum_Access' => 'Forum Access',
+  //  '!button' => t('Rebuild permissions'),
+  //);
+  //
+  //if (module_exists('content_access')) {    TODO: Test and activate when CA is ported to D6!
+  //  $ca_settings = variable_get('content_access_settings', array());
+  //  foreach (array('view', 'update', 'delete', 'per_node') as $type) {
+  //    $value = content_access_get_settings($type, 'forum');
+  //    if (!empty($value)) {
+  //      $ca_interferes = TRUE;
+  //    }
+  //  }
+  //  $ca_priority = content_access_get_settings('priority', 'forum');
+  //  $fa_priority = 0;
+  //  $is_conflict = $ca_priority >= $fa_priority && !empty($ca_interferes);
+  //  $form['forum_access']['interference']['#attributes'] = ($is_conflict ? array('class' => 'error') : array());
+  //  $variables += array(
+  //    '!Content_Access' => 'Content Access', 
+  //    '!link' => l(t('!Content_Access configuration for the %content_type type', $variables), 'admin/content/types/forum/access', array(), NULL, NULL, FALSE, TRUE),
+  //  );
+  //  $specifically = ($ca_priority == $fa_priority ? t('Specifically, any grants given by !Content_Access cannot be taken back by !Forum_Access.', $variables) : ''); 
+  //  if ($is_conflict) {
+  //    $form['forum_access']['interference'][] = array(
+  //      '#value' => '<p>'. t('You have set the !Content_Access module to control access to content of type %content_type&mdash;this can interfere with proper operation of !Forum_Access!', $variables) ." $specifically</p>",
+  //    );
+  //    if ($ca_priority == $fa_priority) {
+  //      $form['forum_access']['interference'][] = array(
+  //        '#value' => '<p>'. t("Unless you really know what you're doing, we recommend that you go to the !link page and clear all checkboxes.", $variables) .'</p>',
+  //      );
+  //    }
+  //    else {
+  //      $form['forum_access']['interference'][] = array(
+  //        '#value' => '<div>'. t("The priority of !Content_Access ($ca_priority) is higher than the priority of !Forum_Access ($fa_priority), which means the latter is <b>completely disabled</b> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page and clear all checkboxes and/or change the priorities.", $variables) .'</div>',
+  //      );
+  //    }
+  //  }
+  //  else {
+  //    $form['forum_access']['interference'][] = array(
+  //      '#value' => '<p>'. t('Note: You have installed the !Content_Access module, which has the capability to grant access to content that would otherwise be protected by !Forum_Access. Be careful when configuring !Content_Access!', $variables) .'</p>',
+  //    );
+  //  }
+  //}
+
+  // Move some stuff down so our block goes in a nice place.
   $form['submit']['#weight'] = 10;
   $form['delete']['#weight'] = 10;
 
