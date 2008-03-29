@@ -230,6 +230,18 @@ function forum_access_forum_form($form_id, &$form, $container) {
     $form['forum_access']['acl'] = acl_edit_form($acl_id, t('Moderators'));
   }
 
+  $form['forum_access']['interference'] = array(
+    '#type' => 'fieldset', 
+    '#title' => t('Module interference'),
+    '#collapsible' => TRUE,
+    '#attributes' => ($is_conflict ? array('class' => 'error') : array()),
+  );
+  $variables = array(
+    '%content_type' => node_get_types('name', 'forum'),
+    '!Forum_Access' => 'Forum Access',
+    '!Content_Access' => 'Content Access', 
+    '!button' => t('Rebuild permissions'),
+  );
   if (module_exists('content_access')) {
     $ca_settings = variable_get('content_access_settings', array());
     foreach (array('view', 'update', 'delete', 'per_node') as $type) {
@@ -241,40 +253,34 @@ function forum_access_forum_form($form_id, &$form, $container) {
     $ca_priority = content_access_get_settings('priority', 'forum');
     $fa_priority = 0;
     $is_conflict = $ca_priority >= $fa_priority && !empty($ca_interferes);
-    $form['forum_access']['content_access'] = array(
-      '#type' => 'fieldset', 
-      '#title' => t('Module interference'),
-      '#collapsible' => TRUE,
-      '#attributes' => ($is_conflict ? array('class' => 'error') : array()),
-    );
-    $variables = array(
-      '!Forum_Access' => 'Forum Access',
-      '!Content_Access' => 'Content Access', 
-      '%content_type' => node_get_types('name', 'forum'),
-    );
+    $form['forum_access']['interference']['#attributes'] = ($is_conflict ? array('class' => 'error') : array());
     $variables['!link'] = l(t('!Content_Access configuration for the %content_type type', $variables), 'admin/content/types/forum/access', array(), NULL, NULL, FALSE, TRUE);
     $specifically = ($ca_priority == $fa_priority ? t('Specifically, any grants given by !Content_Access cannot be taken back by !Forum_Access.', $variables) : ''); 
     if ($is_conflict) {
-      $form['forum_access']['content_access'][] = array(
+      $form['forum_access']['interference'][] = array(
         '#value' => '<p>'. t('You have set the !Content_Access module to control access to content of type %content_type&mdash;this can interfere with proper operation of !Forum_Access!', $variables) ." $specifically</p>",
       );
       if ($ca_priority == $fa_priority) {
-        $form['forum_access']['content_access'][] = array(
+        $form['forum_access']['interference'][] = array(
           '#value' => '<p>'. t("Unless you really know what you're doing, we recommend that you go to the !link page and clear all checkboxes.", $variables) .'</p>',
         );
       }
       else {
-        $form['forum_access']['content_access'][] = array(
+        $form['forum_access']['interference'][] = array(
           '#value' => '<div>'. t("The priority of !Content_Access ($ca_priority) is higher than the priority of !Forum_Access ($fa_priority), which means the latter is <b>completely disabled</b> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page and clear all checkboxes and/or change the priorities.", $variables) .'</div>',
         );
       }
     }
     else {
-      $form['forum_access']['content_access'][] = array(
+      $form['forum_access']['interference'][] = array(
         '#value' => '<p>'. t('Note: You have installed the !Content_Access module, which has the capability to grant access to content that would otherwise be protected by !Forum_Access. Be careful when configuring !Content_Access!', $variables) .'</p>',
       );
     }
   }
+  $variables['!link'] = l('admin/content/node-settings', 'admin/content/node-settings');
+  $form['forum_access']['interference'][] = array(  // This doesn't apply to D6!
+    '#value' => '<p>'. t("Note: If you have any other node access module installed besides !Forum_Access, and you've set that other module to use a grant priority (or 'weight') > 0 and to also control access to %content_type nodes, then you need to go to !link and click the [!button] button, <strong>after</strong> submitting this form. This is a limitation of Drupal 5 core. <br /> Be aware, however, that this may cause the !Forum_Access settings to be ignored in favor of that other modules's settings!", $variables) .'</p>',
+  );
 
   // Move some stuff down so our block goes in a nice place.
   $form['submit']['#weight'] = 10;

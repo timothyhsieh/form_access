@@ -2,9 +2,10 @@ CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
   Enhancements:
+    - Add warning about possible interference by other node access modules with higher priority.
     - Provide diagnostics related to Content Access module.
 
-Forum Access 5.x-1.10:
+Forum Access 5.x-1.10 (2008-03-14):
   Bugs fixed:
     - #219778: Remove grants when roles are deleted, purge orphaned grants.
     - Update moderator(s) when changing forum.
@@ -12,7 +13,7 @@ Forum Access 5.x-1.10:
     - Provide a message for uninitialized forums when newly installed, rather than the incorrect 'default' setting of grant_all for 1 & 2.
     - #221095: Fix caching in forum_access_access(), by Josh Benner.
 
-Forum Access 5.x-1.9:
+Forum Access 5.x-1.9 (2008-01-20):
   Bugs fixed:
     - #175957: Don't disturb the _taxonomy_term_select structure (incompatibility with og_forum!), adapted from Paul Kishimoto.
   Enhancements:
@@ -20,7 +21,7 @@ Forum Access 5.x-1.9:
     - Remove deprecated db_num_rows() call; see http://drupal.org/node/163191.
 
 
-Forum Access 5.x-1.8:
+Forum Access 5.x-1.8 (2007-12-16):
   Bugs fixed:
     - Add caching to forum_access_node_access_records() to improve Rebuild Permissions performance.
     - Minor coding style fixes.
