@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access HEAD:
   Bugs fixed:
+    - #246959: Fix a bad t() call.
     - #219778: Remove grants when roles are deleted, purge orphaned grants.
     - #230123: Newest pgsql refuses to do automatic type conversions.
     - Provide a message for uninitialized forums when newly installed, rather than the incorrect 'default' setting of grant_all for 1 & 2.
