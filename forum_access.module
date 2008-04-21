@@ -376,6 +376,42 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 }
 
 /**
+ * Return a themed list of moderators for a given forum.
+ */
+function forum_access_moderator_list($tid) {
+  $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE name = '%s'", $tid));
+  $result = db_query("SELECT uid from {acl_user} WHERE acl_id = '%s'", $acl_id);
+  $moderators = array();
+  while ($row = db_fetch_object($result)) {
+    $moderators[] = $row->uid;
+  }
+  return theme('forum_access_moderator_list', $moderators);
+}
+
+/**
+ * theme function for list of moderators
+ */
+function theme_forum_access_moderator_list($moderators) {
+  static $users;
+  if (!empty($moderators)) {
+    $moderators_links = array();
+    foreach ($moderators as $uid) {
+      if (!isset($users[$uid])) {
+        $users[$uid] = user_load(array('uid' => $uid));
+      }
+      $moderators_links[] = theme('username', $users[$uid]);
+    }
+    $output  = '<span class="moderator-list-title">'. format_plural(count($moderators_links), 'Moderator:', 'Moderators:') .' </span>';
+    $moderators = implode(', ', $moderators_links);
+    $output .= '<span class="moderator-list-usernames">'. $moderators .'</span>';
+    $output  = '<div class="moderator-list">'. $output .'</div>';
+    return $output;
+  }
+  else {
+    return '';
+  }
+}
+/**
  * This is also required by ACL module.
  */
 function forum_access_enabled($set = NULL) {
