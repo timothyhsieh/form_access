@@ -8,6 +8,7 @@ forum_access HEAD:
     - Provide a message for uninitialized forums when newly installed, rather than the incorrect 'default' setting of grant_all for 1 & 2.
     - #222477: forum_access_node_access_records() didn't return its result.
   Porting to D6:
+    - #128846: Accommodate PostgreSQL 8.3's requirement for explicit casts.
     - Publish .pot file.
     - Port precautionary warning on Content Access page (will need to test and activate full diagnostics when CA is ported).
     - #231611: Add support for non-forum content types; update moderator(s) when changing forum.
