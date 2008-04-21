@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
   Enhancements:
+    - Accommodate PostgreSQL 8.3's requirement for explicit casts.
     - Add warning about possible interference by other node access modules with higher priority.
     - Provide diagnostics related to Content Access module.
 
