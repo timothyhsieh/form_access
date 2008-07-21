@@ -36,13 +36,13 @@ function forum_access_node_access_records($node) {
       $result = db_query('SELECT * FROM {forum_access} WHERE tid = %d', $tid);
       while ($grant = db_fetch_object($result)) {
         $grants[$tid][] = array(
-          'realm' => 'forum_access', 
-          'gid' => $grant->rid, 
-          'grant_view' => $grant->grant_view, 
-          'grant_update' => $grant->grant_update, 
+          'realm' => 'forum_access',
+          'gid' => $grant->rid,
+          'grant_view' => $grant->grant_view,
+          'grant_update' => $grant->grant_update,
           'grant_delete' => $grant->grant_delete,
           'priority' => 0,
-        ); 
+        );
       }
       //drupal_set_message("forum_access_node_access_records($node->nid) (tid=$tid) returns ". var_export($grants[$tid], TRUE), 'status');
     }
@@ -89,7 +89,7 @@ function forum_access_node_form($form_id, &$form) {
 
   // forum administrators do NOT get their forms rewritten here.
   if (user_access('administer forums')) {
-    return; 
+    return;
   }
   global $user;
   $roles = _forum_access_get_roles($user);
@@ -178,7 +178,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
     $update = $delete = array();
   }
   
-  $form['forum_access'] = array('#type' => 'fieldset', 
+  $form['forum_access'] = array('#type' => 'fieldset',
     '#title' => t('Access control'),
     '#collapsible' => TRUE,
     '#tree' => TRUE,
@@ -237,7 +237,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
   }
   
   //$form['forum_access']['interference'] = array(
-  //  '#type' => 'fieldset', 
+  //  '#type' => 'fieldset',
   //  '#title' => t('Module interference'),
   //  '#collapsible' => TRUE,
   //);
@@ -260,10 +260,10 @@ function forum_access_forum_form($form_id, &$form, $container) {
   //  $is_conflict = $ca_priority >= $fa_priority && !empty($ca_interferes);
   //  $form['forum_access']['interference']['#attributes'] = ($is_conflict ? array('class' => 'error') : array());
   //  $variables += array(
-  //    '!Content_Access' => 'Content Access', 
+  //    '!Content_Access' => 'Content Access',
   //    '!link' => l(t('!Content_Access configuration for the %content_type type', $variables), 'admin/content/types/forum/access', array(), NULL, NULL, FALSE, TRUE),
   //  );
-  //  $specifically = ($ca_priority == $fa_priority ? t('Specifically, any grants given by !Content_Access cannot be taken back by !Forum_Access.', $variables) : ''); 
+  //  $specifically = ($ca_priority == $fa_priority ? t('Specifically, any grants given by !Content_Access cannot be taken back by !Forum_Access.', $variables) : '');
   //  if ($is_conflict) {
   //    $form['forum_access']['interference'][] = array(
   //      '#value' => '<p>'. t('You have set the !Content_Access module to control access to content of type %content_type&mdash;this can interfere with proper operation of !Forum_Access!', $variables) ." $specifically</p>",

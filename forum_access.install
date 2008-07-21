@@ -2,8 +2,8 @@
 // $Id$
 
 /**
-* Implementation of hook_install().
-*/
+ * Implementation of hook_install().
+ */
 function forum_access_install() {
   drupal_install_schema('forum_access');
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'forum_access'");
@@ -18,41 +18,41 @@ function forum_access_schema() {
     'fields'          => array(
       'tid'           => array(
         'description' => t('The {term_data}.tid to which this {forum_access} entry applies.'),
-        'type'        => 'int', 
-        'not null'    => TRUE, 
+        'type'        => 'int',
+        'not null'    => TRUE,
         'default'     => 0),
       'rid'           => array(
         'description' => t('The {role}.rid to which this {forum_access} entry applies.'),
-        'type'        => 'int', 
-        'not null'    => TRUE, 
+        'type'        => 'int',
+        'not null'    => TRUE,
         'default'     => 0),
       'grant_view'    => array(
         'description' => t('Whether to grant "view" permission.'),
-        'type'        => 'int', 
+        'type'        => 'int',
         'size'        => 'tiny',
         'unsigned'    => TRUE,
-        'not null'    => TRUE, 
+        'not null'    => TRUE,
         'default'     => 0),
       'grant_update'  => array(
         'description' => t('Whether to grant "update" permission.'),
-        'type'        => 'int', 
+        'type'        => 'int',
         'size'        => 'tiny',
         'unsigned'    => TRUE,
-        'not null'    => TRUE, 
+        'not null'    => TRUE,
         'default'     => 0),
       'grant_delete'  => array(
         'description' => t('Whether to grant "delete" permission.'),
-        'type'        => 'int', 
+        'type'        => 'int',
         'size'        => 'tiny',
         'unsigned'    => TRUE,
-        'not null'    => TRUE, 
+        'not null'    => TRUE,
         'default'     => 0),
       'grant_create'  => array(
         'description' => t('Whether to grant "create" permission.'),
-        'type'        => 'int', 
+        'type'        => 'int',
         'size'        => 'tiny',
         'unsigned'    => TRUE,
-        'not null'    => TRUE, 
+        'not null'    => TRUE,
         'default'     => 0)),
     'indexes'         => array(
       'tid'           => array('tid'),
