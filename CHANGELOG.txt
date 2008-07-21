@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access HEAD:
   Bugs fixed:
+    - Use node_access_needs_rebuild() rather than node_access_rebuild() when enabling/disabling module.
     - Fix cosmetic coder issues (no functional change).
     - #246959: Fix a bad t() call.
     - #219778: Remove grants when roles are deleted, purge orphaned grants.

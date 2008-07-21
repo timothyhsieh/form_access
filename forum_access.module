@@ -402,7 +402,7 @@ function forum_access_enabled($set = NULL) {
  * Implementation of hook_enable
  */
 function forum_access_enable() {
-  node_access_rebuild();
+  node_access_needs_rebuild();
 }
 
 /**
@@ -410,7 +410,7 @@ function forum_access_enable() {
  */
 function forum_access_disable() {
   forum_access_enabled(FALSE);
-  node_access_rebuild();
+  node_access_needs_rebuild();
 }
 
 /**
