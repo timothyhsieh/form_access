@@ -19,7 +19,7 @@ function forum_access_node_grants($user, $op) {
 }
 
 /**
- * Implementation of hook_node_access_records
+ * Implementation of hook_node_access_records().
  *
  * Returns a list of grant records for the passed in node object.
  * Checks to see if maybe we're being disabled.
@@ -50,7 +50,7 @@ function forum_access_node_access_records($node) {
 }
 
 /**
- * Implementation of hook_form_alter()
+ * Implementation of hook_form_alter().
  *
  * Remove inaccessible forums from the node form.
  */
@@ -75,7 +75,7 @@ function forum_access_form_alter($form_id, &$form) {
 }
 
 /**
- * Rewrite the taxonomy item on the node form
+ * Rewrite the taxonomy item on the node form.
  */
 function forum_access_node_form($form_id, &$form) {
   if (!is_array($form['taxonomy'][_forum_get_vid()]['#options'])) {
@@ -134,7 +134,7 @@ function forum_access_node_form($form_id, &$form) {
 }
 
 /**
- * Rewrite the forum administration page with our new access rules
+ * Rewrite the forum administration page with our new access rules.
  */
 function forum_access_forum_form($form_id, &$form, $container) {
   $rids = array();
@@ -279,7 +279,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
   }
   $variables['!link'] = l('admin/content/node-settings', 'admin/content/node-settings');
   $form['forum_access']['interference'][] = array(  // This doesn't apply to D6!
-    '#value' => '<p>'. t("Note: If you have any other node access module installed besides !Forum_Access, and you've set that other module to use a grant priority (or 'weight') > 0 and to also control access to %content_type nodes, then you need to go to !link and click the [!button] button, <strong>after</strong> submitting this form. This is a limitation of Drupal 5 core. <br /> Be aware, however, that this may cause the !Forum_Access settings to be ignored in favor of that other modules's settings!", $variables) .'</p>',
+    '#value' => '<p>'. t("Note: If you have any other node access module installed besides !Forum_Access, and you've set that other module to use a grant priority (or 'weight') > 0 and to also control access to %content_type nodes, then you need to go to !link and click the [!button] button, <strong>after</strong> submitting this form. This is a limitation of Drupal 5 core. <br /> Be aware, however, that this may cause the !Forum_Access settings to be ignored in favor of that other modules' settings!", $variables) .'</p>',
   );
 
   // Move some stuff down so our block goes in a nice place.
@@ -389,7 +389,7 @@ function forum_access_moderator_list($tid) {
 }
 
 /**
- * theme function for list of moderators
+ * Theme function for list of moderators.
  */
 function theme_forum_access_moderator_list($moderators) {
   static $users;
@@ -411,6 +411,7 @@ function theme_forum_access_moderator_list($moderators) {
     return '';
   }
 }
+
 /**
  * This is also required by ACL module.
  */
@@ -423,14 +424,14 @@ function forum_access_enabled($set = NULL) {
 }
 
 /**
- * Implementation of hook_enable
+ * Implementation of hook_enable().
  */
 function forum_access_enable() {
   node_access_rebuild();
 }
 
 /**
- * Implementation of hook_disable
+ * Implementation of hook_disable().
  */
 function forum_access_disable() {
   forum_access_enabled(FALSE);
@@ -438,7 +439,7 @@ function forum_access_disable() {
 }
 
 /**
- * use hook init to deny access to forums if the user does not have access
+ * Use hook init to deny access to forums if the user does not have access
  * to it.
  */
 function forum_access_init() {
@@ -499,18 +500,14 @@ function forum_access_access($tid, $type, $account = NULL) {
 }
 
 /**
- * Get the roles on a user, and add in the missing authenticated/anonymous roles
+ * Get the roles of a user.
  */
 function _forum_access_get_roles($user) {
-  // if the user has a uid, they get 1 as a role; otherwise 0.
-  $roles = array(intval((bool) $user->uid) + 1);
-  // add in their roles
-  $roles += array_keys($user->roles);
-  return implode(', ', $roles);
+  return implode(', ', array_keys($user->roles));
 }
 
 /**
- * Implementation of hook_node_access_explain
+ * Implementation of hook_node_access_explain().
  */
 function forum_access_node_access_explain($row) {
   static $roles = NULL;

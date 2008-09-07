@@ -1,6 +1,8 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
+  Bugs fixed:
+    - #302774: Remove cruft from _forum_access_get_roles().
   Enhancements:
     - #109924: Provide a themable moderators list.
     - #249375: Accommodate PostgreSQL 8.3's requirement for explicit casts.
