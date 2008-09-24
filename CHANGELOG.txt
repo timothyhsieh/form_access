@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access HEAD:
   Bugs fixed:
+    - #309113: Fix warning messages in bootstrap.inc (caused by bad drupal_set_message() call).
     - #302774: Remove cruft from _forum_access_get_roles().
     - Use node_access_needs_rebuild() rather than node_access_rebuild() when enabling/disabling module.
     - Fix cosmetic coder issues (no functional change).

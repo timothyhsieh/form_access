@@ -72,7 +72,7 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
   }
   else if ($form_id == 'content_access_admin_settings') {
     if (arg(3) == 'forum' && empty($_POST)) {
-      drupal_set_message('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access settings, but !Forum_Access can only allow <i>more</i> access, not less.', array('!Forum_Access' => t('Forum Access')), 'warning');
+      drupal_set_message(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access settings, but !Forum_Access can only allow <i>more</i> access, not less.', array('!Forum_Access' => t('Forum Access'))), 'warning');
     }
   }
 }
