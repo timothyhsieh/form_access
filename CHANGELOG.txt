@@ -1,6 +1,9 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
+
+
+Forum Access 5.x-1.11 (2008-10-16):
   Bugs fixed:
     - #309113: Fix warning messages in bootstrap.inc (caused by bad drupal_set_message() call).
     - #302774: Remove cruft from _forum_access_get_roles().
