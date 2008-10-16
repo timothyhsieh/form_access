@@ -1,17 +1,17 @@
 # $Id$
 #
-# LANGUAGE translation of Drupal (forum_access)
+# LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
-#  forum_access.module,v 1.26 2008/07/21 15:01:15 salvis
+#  forum_access.module,v 1.28 2008/09/24 07:17:11 salvis
 #  forum_access.info: n/a
 #  forum_access.install,v 1.7 2008/07/21 14:56:04 salvis
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Forum Access 6.x\n"
-"POT-Creation-Date: 2008-07-28 17:44+0200\n"
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2008-10-16 23:57+0200\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -19,6 +19,10 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: forum_access.module:75
+msgid "Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access settings, but !Forum_Access can only allow <i>more</i> access, not less."
+msgstr ""
 
 #: forum_access.module:75 forum_access.info:0
 msgid "Forum Access"
@@ -50,10 +54,6 @@ msgstr ""
 
 #: forum_access.module:236
 msgid "Moderators"
-msgstr ""
-
-#: forum_access.module:0
-msgid "forum_access"
 msgstr ""
 
 #: forum_access.install:17
