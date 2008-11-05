@@ -339,7 +339,11 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
   if ($primary_field == 'tid' && !user_access('administer forums')) {
     global $user;
     $roles = _forum_access_get_roles($user);
-    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid LEFT JOIN {acl} acl ON acl.name = CAST($primary_table.tid AS CHAR) AND acl.module = 'forum_access' LEFT JOIN {acl_user} aclu ON aclu.acl_id = acl.acl_id AND aclu.uid = $user->uid";
+    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
+                    LEFT JOIN {acl} acl ON acl.name = ". ($GLOBALS['db_type'] == 'pgsql' ? 'CAST(' : '')
+                                                    ."$primary_table.tid". ($GLOBALS['db_type'] == 'pgsql' ? ' AS CHAR)' : '')
+                                                                      ." AND acl.module = 'forum_access' 
+                    LEFT JOIN {acl_user} aclu ON aclu.acl_id = acl.acl_id AND aclu.uid = $user->uid";
     $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu.uid = $user->uid";
     $sql['distinct'] = 1;
     return $sql;

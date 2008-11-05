@@ -1,7 +1,7 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
-
+    - #328341: Make pgsql CAST() conditional on the database engine.
 
 Forum Access 5.x-1.11 (2008-10-16):
   Bugs fixed:
