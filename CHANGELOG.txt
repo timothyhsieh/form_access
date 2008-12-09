@@ -1,6 +1,7 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
+    - #344711: Fix forum_access_access() to use $account consistently.
     - #328341: Make pgsql CAST() conditional on the database engine.
 
 Forum Access 5.x-1.11 (2008-10-16):

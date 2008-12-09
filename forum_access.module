@@ -482,7 +482,7 @@ function forum_access_access($tid, $type, $account = NULL) {
   }
 
   if (!isset($cache[$account->uid][$tid][$type])) {
-    $roles = _forum_access_get_roles($user);
+    $roles = _forum_access_get_roles($account);
     $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_$type = 1 AND tid = %d", $roles, $tid));
 
     if ($result) {
