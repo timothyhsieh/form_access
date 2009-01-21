@@ -120,7 +120,7 @@ function forum_access_node_form($form_id, &$form) {
     }
     elseif (is_object($name)) {
       foreach ($name->option as $sub_tid => $sub_name) {
-        if ($tids[$sub_tid]) {
+        if (!empty($tids[$sub_tid])) {
           $options[$tid]->option[$sub_tid] = $sub_name;
         }
       }
@@ -388,6 +388,45 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       }
       $old_tid = NULL;
       break;
+  }
+}
+
+/**
+ * Get an array of moderator UIDs or NULL.
+ */
+function forum_access_get_moderator_uids($tid) {
+  if ($acl_id = acl_get_id_by_name('forum_access', $tid)) {
+    if ($uids = acl_get_uids($acl_id)) {
+      return $uids;
+    }
+  }
+}
+
+/**
+ * Implementation of $modulename_preprocess_$hook().
+ *
+ * Add forum_access_moderators to each forum,
+ * containing a list of user objects.
+ *
+ * Note: On a site with many moderators, this function is expensive,
+ * and thus it is disabled by default. Set the variable to TRUE to enable.
+ */
+function forum_access_preprocess_forum_list(&$variables) {
+  if (variable_get('forum_access_provide_moderators_template_variable', FALSE)) {
+    static $users;
+    foreach ($variables['forums'] as $tid => $forum)
+    {
+      $moderators = array();
+      if ($uids = forum_access_get_moderator_uids($tid)) {
+        foreach ($uids as $uid) {
+          if (!isset($users[$uid])) {
+            $users[$uid] = user_load(array('uid' => $uid));
+          }
+          $moderators[$uid] = $users[$uid];
+        }
+      }
+      $forum->forum_access_moderators = (empty($moderators) ? NULL : $moderators);
+    }
   }
 }
 

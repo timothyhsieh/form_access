@@ -1,6 +1,9 @@
 CHANGELOG for Forum Access for Drupal 6
 
-forum_access HEAD:
+forum_access 6.x-1.x-dev:
+  Enhancements:
+    - #109924: Add optional forum_access_preprocess_forum_list(&$variables) function to provide moderators in the $forums template variable.
+    - #109924: Add new forum_access_get_moderator_uids($tid) function (requires new ACL version!).
 
 forum_access 6.x-1.x-BETA1 (2008-10-14):
   Bugs fixed:
