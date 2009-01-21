@@ -380,16 +380,21 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 }
 
 /**
+ * Get an array of moderator UIDs or NULL.
+ */
+function forum_access_get_moderator_uids($tid) {
+  if ($acl_id = acl_get_id_by_name('forum_access', $tid)) {
+    if ($uids = acl_get_uids($acl_id)) {
+      return $uids;
+    }
+  }
+}
+
+/**
  * Return a themed list of moderators for a given forum.
  */
 function forum_access_moderator_list($tid) {
-  $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE name = '%s'", $tid));
-  $result = db_query("SELECT uid from {acl_user} WHERE acl_id = '%s'", $acl_id);
-  $moderators = array();
-  while ($row = db_fetch_object($result)) {
-    $moderators[] = $row->uid;
-  }
-  return theme('forum_access_moderator_list', $moderators);
+  return theme('forum_access_moderator_list', forum_access_get_moderator_uids($tid));
 }
 
 /**
