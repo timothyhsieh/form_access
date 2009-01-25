@@ -268,7 +268,6 @@ function forum_access_forum_form($form_id, &$form, $container) {
       '#title' => t('Module interference'),
       '#collapsible' => TRUE,
     );
-    $tr = 't';
     $variables = array(
       '!content_type' => $tr('content type'),
       '%content_type' => node_get_types('name', 'forum'),
@@ -370,11 +369,64 @@ function forum_access_form_submit($form, &$form_state) {
     db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]), $fa_priority);
   }
 
-  // mass update
-  $result = db_query("SELECT n.nid FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form_state['values']['tid']);
-  while ($node_nid = db_fetch_array($result)) {
-    node_access_acquire_grants(node_load($node_nid));
+  // mass update in batch mode, modeled after node.module
+  $batch = array(
+    'title' => t('Updating content access permissions'),
+    'operations' => array(
+      array('_forum_access_update_batch_operation', array($form_state['values']['tid'])),
+    ),
+    'finished' => '_forum_access_update_batch_finished'
+  );
+  batch_set($batch);
+}
+
+/**
+ * Batch operation for forum_access_form_submit().
+ *
+ * This is a mutlistep operation : we go through all nodes by packs of 20.
+ * The batch processing engine interrupts processing and sends progress
+ * feedback after 1 second execution time.
+ */
+function _forum_access_update_batch_operation($tid, &$context) {
+  if (empty($context['sandbox'])) {
+    // Initiate multistep processing.
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['current_node'] = 0;
+    $context['sandbox']['max'] = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $tid));
   }
+
+  // Process the next 20 nodes.
+  $limit = 20;
+  $result = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE n.nid > %d AND tn.tid = %d ORDER BY n.nid ASC", $context['sandbox']['current_node'], $tid, $context['sandbox']['current_node'], 0, $limit);
+  while ($row = db_fetch_array($result)) {
+    $loaded_node = node_load($row['nid'], NULL, TRUE);
+    // To preserve database integrity, only aquire grants if the node
+    // loads successfully.
+    if (!empty($loaded_node)) {
+      node_access_acquire_grants($loaded_node);
+    }
+    $context['sandbox']['progress']++;
+    $context['sandbox']['current_node'] = $loaded_node->nid;
+  }
+
+  // Multistep processing : report progress.
+  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }
+}
+
+/**
+ * Post-processing for forum_access_form_submit().
+ */
+function _forum_access_update_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('The content access permissions have been updated.'));
+  }
+  else {
+    drupal_set_message(t('The content access permissions have not been properly updated.'), 'error');
+    node_access_needs_rebuild(TRUE);
+  }
+  cache_clear_all();
 }
 
 /**
