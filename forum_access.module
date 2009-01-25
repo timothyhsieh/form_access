@@ -69,7 +69,7 @@ function forum_access_form_alter($form_id, &$form) {
   }
   else if ($form_id == 'content_access_admin_settings') {
     if (arg(3) == 'forum' && empty($_POST)) {
-      drupal_set_message(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the Forum Access settings, but Forum Access can only allow <i>more</i> access, not less.'), 'error');
+      drupal_set_message(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access settings, but !Forum_Access can only allow <i>more</i> access, not less.', array('!Forum_Access' => 'Forum Access')), 'error');
     }
   }
 }
@@ -162,7 +162,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
       }
     }
     if (!isset($row_received) && empty($form['#post'])) {
-      drupal_set_message('If you have only just installed Forum Access, then the posts in this forum may still be accessible, but once your permissions get rebuilt (intentionally or behind-the-scenes by some other module), they will vanish &mdash; so, be sure to set the desired Access Control below and save!', 'error');
+      drupal_set_message(t('If you have only just installed !Forum_Access, then the posts in this forum may still be accessible, but once your permissions get rebuilt (intentionally or behind-the-scenes by some other module), they will vanish &mdash; so, be sure to set the desired Access Control below and save!', array('!Forum_Access' => 'Forum Access')), 'error');
     }
   }
   else {  // create
