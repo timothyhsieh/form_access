@@ -41,7 +41,7 @@ function forum_access_node_access_records($node) {
           'grant_view' => $grant->grant_view,
           'grant_update' => $grant->grant_update,
           'grant_delete' => $grant->grant_delete,
-          'priority' => 0,
+          'priority' => $grant->priority,
         );
       }
       //drupal_set_message("forum_access_node_access_records($node->nid) (tid=$tid) returns ". var_export($grants[$tid], TRUE), 'status');
@@ -276,11 +276,14 @@ function forum_access_forum_form($form_id, &$form, $container) {
       '!Content_Access' => 'Content Access',
       '!ACL' => 'ACL',
       '!module_list' => '<ul><li>'. implode($na_modules, '</li><li>') .'</li></ul>',
+      '%devel_node_access' => 'devel_node_access',
+      '!Devel' => l('Devel', 'http://drupal.org/project/devel'),
+      '!debug_mode' => l('debug mode', 'admin/settings/devel', array('fragment' => 'edit-devel-node-access-debug-mode')),
     );
     $form['forum_access']['interference'][] = array(
       '#type' => 'item',
       '#value' => '<p>'. t("Besides !Forum_Access (and !ACL) you have installed the following node access module(s): !module_list   The grants of every module will be combined for each node. Access can only be granted, not removed&mdash;if a certain module grants a permission, the other(s) cannot deny it.", $variables) .'</p>',
-      '#description' => t('Forums can contain other content types besides %content_type; !Forum_Access will contribute the grants defined above to every node in this forum, but other node access control modules may also contribute their grants, especially to nodes of types other than %content_type. <br /> In case of problems, you should temporarily (!) install the %devel_node_access module (part of the !Devel module) and enable its debug mode: this will show you all the grants that actually control your nodes.', $variables += array('%devel_node_access' => 'devel_node_access', '!Devel' => l('Devel', 'http://drupal.org/project/devel'))),
+      '#description' => t('Forums can contain other content types besides %content_type; !Forum_Access will contribute the grants defined above to every node in this forum, but other node access control modules may also contribute their grants, especially to nodes of types other than %content_type. <br /> In case of problems, you should temporarily (!) install the %devel_node_access module (part of the !Devel module) and enable its !debug_mode: this will show you all the grants that actually control your nodes.', $variables),
     );
 
     if (module_exists('content_access')) {
@@ -295,7 +298,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
       $is_conflict = $ca_priority >= $fa_priority && !empty($ca_interferes) || $ca_priority > $fa_priority;
       $variables += array(
         '!Content_Access' => 'Content Access',
-        '!link' => l(t('!Content_Access configuration for the %content_type type', $variables), 'admin/content/node-type/forum/access', array('html' => TRUE), NULL, NULL, FALSE, TRUE),
+        '!link' => l(t('!Content_Access configuration for the %content_type type', $variables), 'admin/content/node-type/forum/access', array('html' => TRUE)),
         '%Advanced' => $tr('Advanced'),
       );
       $specifically = ($ca_priority == $fa_priority ? t('Specifically, any grants given by !Content_Access cannot be taken back by !Forum_Access.', $variables) : '');
@@ -326,7 +329,7 @@ function forum_access_forum_form($form_id, &$form, $container) {
         );
       }
     }
-    /*
+
     $form['forum_access']['interference']['advanced'] = array(
       '#type' => 'fieldset',
       '#title' => t('Advanced'),
@@ -336,11 +339,9 @@ function forum_access_forum_form($form_id, &$form, $container) {
     $form['forum_access']['interference']['advanced']['priority'] = array(
       '#type' => 'weight',
       '#title' => t('Priority of !Forum_Access node grants in this forum', $variables),
-      '#value' => $fa_priority,
       '#default_value' => $fa_priority,
       '#description' => t("If you have no other node access control modules installed, you should leave this at the default 0. <br /> Otherwise you can raise or lower the priority of !Forum_Access' grants. Out of all the grants contributed to a node, only those with the highest priority are used, and all others are discarded.", $variables),
     );
-    /**/
   }
 
   // Move some stuff down so our block goes in a nice place.
@@ -353,9 +354,9 @@ function forum_access_forum_form($form_id, &$form, $container) {
 function forum_access_form_submit($form, &$form_state) {
   db_query("DELETE FROM {forum_access} WHERE tid = %d", $form_state['values']['tid']);
   $access = $form_state['values']['forum_access']; // shortcut
-  //$fa_priority = $access['interference']['advanced']['priority'];
+  $fa_priority = $access['interference']['advanced']['priority'];
   if (array_key_exists('acl', $access)) {
-    acl_save_form($access['acl']);
+    acl_save_form($access['acl'], $fa_priority);
   }
   foreach ($access['view'] as $rid => $checked) {
     $grants[] = array(
@@ -364,14 +365,15 @@ function forum_access_form_submit($form, &$form_state) {
       'grant_view' => (bool) $checked,
       'grant_update' => !empty($access['update'][$rid]),
       'grant_delete' => !empty($access['delete'][$rid]),
+      'priority' => $fa_priority,
     );
-    db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create) VALUES (%d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]));
+    db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]), $fa_priority);
   }
 
   // mass update
   $result = db_query("SELECT n.nid FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form_state['values']['tid']);
-  while ($node = db_fetch_object($result)) {
-    node_access_write_grants($node, $grants, 'forum_access');
+  while ($node_nid = db_fetch_array($result)) {
+    node_access_acquire_grants(node_load($node_nid));
   }
 }
 
