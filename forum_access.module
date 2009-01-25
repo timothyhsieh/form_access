@@ -524,7 +524,10 @@ function forum_access_node_access_explain($row) {
     if (!isset($roles)) {
       $roles = user_roles();
     }
-    return array($roles[$row->gid]);
+    if (isset($roles[$row->gid])) {
+      return array($roles[$row->gid]);
+    }
+    return array('(unknown gid)');
   }
 }
 

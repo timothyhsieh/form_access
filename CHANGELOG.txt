@@ -1,7 +1,10 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
+  Enhancements:
     - #109924: Add new forum_access_get_moderator_uids($tid) function (requires new ACL version!).
+  Bugs fixed:
+    - Recognize unknown gids in hook_node_access_explain().
     - #344711: Fix forum_access_access() to use $account consistently.
     - #328341: Make pgsql CAST() conditional on the database engine.
 
