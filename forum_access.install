@@ -12,6 +12,7 @@ function forum_access_install() {
         grant_update tinyint(1) unsigned NOT NULL default '0',
         grant_delete tinyint(1) unsigned NOT NULL default '0',
         grant_create tinyint(1) unsigned NOT NULL default '0',
+        priority smallint NOT NULL default 0,
         KEY tid (tid),
         KEY rid (rid)
       );");
@@ -25,6 +26,7 @@ function forum_access_install() {
         grant_update smallint  NOT NULL DEFAULT 0,
         grant_delete smallint NOT NULL DEFAULT 0,
         grant_create smallint NOT NULL DEFAULT 0,
+        priority smallint NOT NULL DEFAULT 0,
         PRIMARY KEY (tid, rid)
       );");
       break;
@@ -45,5 +47,22 @@ function forum_access_update_1() {
   $ret = array();
   db_query("DELETE FROM {forum_access} WHERE rid NOT IN (SELECT rid from {role})");
   db_query("DELETE FROM {node_access} WHERE realm = 'forum_access' AND gid NOT IN (SELECT rid from {role})");
+  return $ret;
+}
+
+/**
+ * Add a priority column (will probably not be used until D6).
+ */
+function forum_access_update_2() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'pgsql':
+      db_add_column($ret, 'forum_access', 'priority', 'smallint', array('not null' => TRUE, 'default' => 0));
+      break;
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {forum_access} ADD COLUMN priority smallint NOT NULL DEFAULT 0");
+      break;
+  }
   return $ret;
 }
