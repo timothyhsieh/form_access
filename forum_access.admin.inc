@@ -41,9 +41,6 @@ function _forum_access_forum_form($form_id, &$form, $container) {
         $fa_priority = $forum_access->priority;
       }
     }
-    if (!isset($row_received) && empty($form['#parameters'][1]['post'])) {
-      drupal_set_message(t('If you have only just installed !Forum_Access, then the posts in this forum may still be accessible, but once your permissions get rebuilt (intentionally or behind-the-scenes by some other module), they will vanish &mdash; so, be sure to set the desired Access Control below and save!', array('!Forum_Access' => 'Forum Access')), 'error');
-    }
   }
   else {  // create
     // Default to all users can read; all logged in users can post.
