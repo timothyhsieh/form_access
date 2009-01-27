@@ -41,6 +41,9 @@ function _forum_access_forum_form($form_id, &$form, $container) {
         $fa_priority = $forum_access->priority;
       }
     }
+    if (!isset($row_received) && empty($form['#parameters'][1]['post'])) {
+      drupal_set_message(t('If you have only just installed !Forum_Access, then the posts in this forum may still be accessible, but once your permissions get rebuilt (intentionally or behind-the-scenes by some other module), they will vanish &mdash; so, be sure to set the desired Access Control below and save!', array('!Forum_Access' => 'Forum Access')), 'error');
+    }
   }
   else {  // create
     // Default to all users can read; all logged in users can post.
@@ -113,6 +116,14 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       }
     }
     $form['forum_access']['acl'] = acl_edit_form($acl_id, t('Moderators'));
+    if (strlen($form['forum_access']['acl']['user_list']['#default_value']) <= 6 && empty($form_state['post']['forum_access']['acl']['add']))
+    {
+      $form['forum_access']['acl']['#collapsed'] = TRUE;
+    }
+    $form['forum_access']['acl']['note'] = array(
+      '#type' => 'markup',
+      '#value' => '<div>'. t('Note: Changes to moderators are not saved until you click [!Submit] below.', array('!Submit' => $tr('Submit'))) .'</div>',
+    );
   }
 
   foreach (module_implements('node_access_records') as $module) {
