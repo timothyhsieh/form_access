@@ -1,6 +1,9 @@
 CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
+
+
+forum_access 6.x-1.x-BETA2 (2009-01-29):
   Enhancements:
     - Collapse Moderators fieldset if empty.
     - Factor out form and batch code into .inc files.
