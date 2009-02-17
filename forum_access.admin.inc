@@ -60,47 +60,88 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '!access_content' => '<em>'. l($tr('access content'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>', 
     '%administer_nodes' => $tr('administer nodes')
   );
-  $form['forum_access']['note'] = array('#type' => 'markup',
-    '#value' => '<div>'. t('Note that users need at least the !access_content permission to be able to deal in any way with content. Furthermore note that content which is not published is treated in a different way by Drupal: It can be viewed only by its author or users with the %administer_nodes permission.', $variables) .'</div>',
-  );
-  $form['forum_access']['view'] = array('#type' => 'checkboxes',
+  if (!$container) {
+    $form['forum_access']['note'] = array(
+      '#type' => 'markup',
+      '#value' => '<div>'. t('Note that users need at least the !access_content permission to be able to deal in any way with content. Furthermore note that content which is not published is treated in a different way by Drupal: It can be viewed only by its author or users with the %administer_nodes permission.', $variables) .'</div>',
+    );
+  }
+
+  // Column titles:
+  $form['forum_access']['headers']['view'] = array(
+    '#type' => 'item',
     '#prefix' => '<div class="forum-access-div">',
+    '#title' => ($container ? t('View this container') : t('View this forum')),
     '#suffix' => '</div>',
-    '#options' => $rids,
-    '#title' => t('View this forum'),
-    '#default_value' => $view
   );
-  $form['forum_access']['create'] = array('#type' => 'checkboxes',
-    '#prefix' => '<div class="forum-access-div">',
+  $form['forum_access']['headers']['create'] = array(
+    '#type' => 'item',
+    '#prefix' => '<div class="forum-access-div" id="container">',
+    '#title' => t('Show this container in %Forums selection list', array('%Forums' => taxonomy_vocabulary_load(variable_get('forum_nav_vocabulary', ''))->name)),
     '#suffix' => '</div>',
-    '#options' => $rids,
-    '#title' => t('Post in this forum'),
-    '#default_value' => $create
+  );
+  if (!$container) {
+    $form['forum_access']['headers']['create'] = array(  // overwrite!
+      '#type' => 'item',
+      '#prefix' => '<div class="forum-access-div">',
+      '#title' => t('Post in this forum'),
+      '#suffix' => '</div>',
+    );
+    $form['forum_access']['headers']['update'] = array(
+      '#type' => 'item',
+      '#prefix' => '<div class="forum-access-div">',
+      '#title' => t('Edit posts'),
+      '#suffix' => '</div>',
+    );
+    $form['forum_access']['headers']['delete'] = array(
+      '#type' => 'item',
+      '#prefix' => '<div class="forum-access-div">',
+      '#title' => t('Delete posts'),
+      '#suffix' => '</div>',
+    );
+  }
+  $form['forum_access']['headers']['clearer'] = array(
+    '#value' => '<div class="forum-access-clearer"></div>',
   );
 
-  // Containers do not contain any nodes, so these fields become meaningless for them.
+  // Column content (checkboxes):
+  $form['forum_access']['view'] = array(
+    '#type' => 'checkboxes',
+    '#prefix' => '<div class="forum-access-div">',
+    '#suffix' => '</div>',
+    '#options' => $rids,
+    '#default_value' => $view
+  );
+  $form['forum_access']['create'] = array(
+    '#type' => 'checkboxes',
+    '#prefix' => '<div class="forum-access-div">',
+    '#suffix' => '</div>',
+    '#options' => $rids,
+    '#default_value' => $create
+  );
   if (!$container) {
-    $form['forum_access']['update'] = array('#type' => 'checkboxes',
+    $form['forum_access']['update'] = array(
+      '#type' => 'checkboxes',
       '#prefix' => '<div class="forum-access-div">',
       '#suffix' => '</div>',
       '#options' => $rids,
-      '#title' => t('Edit posts'),
       '#default_value' => $update
     );
-    $form['forum_access']['delete'] = array('#type' => 'checkboxes',
+    $form['forum_access']['delete'] = array(
+      '#type' => 'checkboxes',
       '#prefix' => '<div class="forum-access-div">',
       '#suffix' => '</div>',
       '#options' => $rids,
-      '#title' => t('Delete posts'),
       '#default_value' => $delete
     );
   }
-  // Find our moderator ACL:
-
   $form['forum_access']['clearer'] = array(
     '#value' => '<div class="forum-access-clearer"></div>',
   );
+
   drupal_add_css(drupal_get_path('module', 'forum_access') .'/forum_access.css');
+
+  // Find our moderator ACL:
   if (isset($form['tid']['#value'])) {  // edit, not new
     $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $form['tid']['#value']));
     if (!$acl_id) { // create one
@@ -128,7 +169,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   }
   unset($na_modules['forum_access']);
   unset($na_modules['acl']);
-  if (count($na_modules)) {
+  if (count($na_modules) && !$container) {
     $form['forum_access']['interference'] = array(
       '#type' => 'fieldset',
       '#title' => t('Module interference'),
@@ -199,7 +240,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#type' => 'fieldset',
       '#title' => t('Advanced'),
       '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
+      '#collapsed' => !($fa_priority != 0),
     );
     $form['forum_access']['interference']['advanced']['priority'] = array(
       '#type' => 'weight',
