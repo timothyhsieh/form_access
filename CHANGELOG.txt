@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
   Enhancements:
+    - Make forum_access_db_rewrite_sql() more resistant against name conflicts.
     - Add priority column to {forum_access} table (for D6).
     - #109924: Add new forum_access_get_moderator_uids($tid) function (requires new ACL version!).
   Bugs fixed:
