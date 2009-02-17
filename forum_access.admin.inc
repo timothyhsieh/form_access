@@ -74,10 +74,11 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '#title' => ($container ? t('View this container') : t('View this forum')),
     '#suffix' => '</div>',
   );
+  $forum_vocabulary = taxonomy_vocabulary_load(variable_get('forum_nav_vocabulary', ''));
   $form['forum_access']['headers']['create'] = array(
     '#type' => 'item',
     '#prefix' => '<div class="forum-access-div" id="container">',
-    '#title' => t('Show this container in %Forums selection list', array('%Forums' => taxonomy_vocabulary_load(variable_get('forum_nav_vocabulary', ''))->name)),
+    '#title' => t('Show this container in %Forums selection list', array('%Forums' => $forum_vocabulary->name)),
     '#suffix' => '</div>',
   );
   if (!$container) {
