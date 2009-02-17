@@ -13,12 +13,17 @@
  * Rewrite the forum administration page with our new access rules.
  */
 function _forum_access_forum_form($form_id, &$form, $container) {
+  if (isset($form['tid']['#value']) && !forum_access_access($form['tid']['#value'], 'view')) {
+    return;  // Deny access to (hide) the FA controls if the user doesn't have View access to the forum.
+  }
+
   $rids = array();
   $result = db_query("SELECT r.rid, r.name FROM {role} r ORDER BY r.name");
   while ($obj = db_fetch_object($result)) {
     $rids[$obj->rid] = $obj->name;
   }
 
+  $fa_priority = 0;
   if (isset($form['tid']['#value'])) {  // edit
     $result = db_query("SELECT * FROM {forum_access} where tid=%d", $form['tid']['#value']);
 
@@ -161,7 +166,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     }
     $form['forum_access']['acl']['note'] = array(
       '#type' => 'markup',
-      '#value' => '<div>'. t('Note: Changes to moderators are not saved until you click [!Submit] below.', array('!Submit' => $tr('Submit'))) .'</div>',
+      '#value' => '<div>'. t('Note: Changes to moderators are not saved until you click [!Save] below.', array('!Save' => $tr('Save'))) .'</div>',
     );
   }
 
@@ -255,13 +260,29 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   $form['submit']['#weight'] = 10;
   $form['delete']['#weight'] = 10;
 
+  $form['#validate'][] = '_forum_access_form_validate';
   $form['#submit'][] = '_forum_access_form_submit';
+}
+
+function _forum_access_form_validate($form, &$form_state) {
+  global $user;
+  
+  if ($user->uid == 1) {
+    return;
+  }
+  $access = $form_state['values']['forum_access']; // shortcut
+  foreach ($access['view'] as $rid => $checked) {
+    if ($checked && isset($user->roles[$rid])) {
+      return;
+    }
+  }
+  form_set_error('forum_access][view', t('You must assign %View access to a role that you hold.', array('%View' => 'View')));
 }
 
 function _forum_access_form_submit($form, &$form_state) {
   db_query("DELETE FROM {forum_access} WHERE tid = %d", $form_state['values']['tid']);
   $access = $form_state['values']['forum_access']; // shortcut
-  $fa_priority = $access['interference']['advanced']['priority'];
+  $fa_priority = isset($access['interference']['advanced']['priority']) ? $access['interference']['advanced']['priority'] : 0;
   if (array_key_exists('acl', $access)) {
     acl_save_form($access['acl'], $fa_priority);
   }
@@ -277,16 +298,18 @@ function _forum_access_form_submit($form, &$form_state) {
     db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]), $fa_priority);
   }
 
-  // mass update in batch mode, modeled after node.module
-  $batch = array(
-    'title' => t('Updating content access permissions'),
-    'file' => drupal_get_path('module', 'forum_access') .'/forum_access.admin.inc',
-    'operations' => array(
-      array('_forum_access_update_batch_operation', array($form_state['values']['tid'])),
-    ),
-    'finished' => '_forum_access_update_batch_finished'
-  );
-  batch_set($batch);
+  if ($form_state['values']['form_id'] != 'forum_form_container') {
+    // mass update in batch mode, modeled after node.module
+    $batch = array(
+      'title' => t('Updating content access permissions'),
+      'file' => drupal_get_path('module', 'forum_access') .'/forum_access.admin.inc',
+      'operations' => array(
+        array('_forum_access_update_batch_operation', array($form_state['values']['tid'])),
+      ),
+      'finished' => '_forum_access_update_batch_finished'
+    );
+    batch_set($batch);
+  }
 }
 
 /**
@@ -336,6 +359,23 @@ function _forum_access_update_batch_finished($success, $results, $operations) {
     node_access_needs_rebuild(TRUE);
   }
   cache_clear_all();
+}
+
+/**
+ * Remove unusable 'edit' links from overview form.
+ */
+function _forum_access_forum_overview($form_id, &$form) {
+  global $user;
+  if ($user->uid == 1) {
+    return;
+  }
+  foreach ($form as $key => $value) {
+    if (preg_match('/^tid:(.*):0$/', $key, $matches)) {
+      if (!forum_access_access($matches[1], 'view')) {
+        unset($form[$key]['edit']['#value']);
+      }
+    }
+  }
 }
 
 /**

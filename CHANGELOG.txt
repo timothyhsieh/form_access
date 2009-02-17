@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Enhancements:
+    - Use View grant to control access to the forum's admin page (with the access settings!), too.
     - Make forum_access_db_rewrite_sql() more resistant against name conflicts.
     - Keep the checkboxes aligned even when the column titles wrap; improve the titles for containers.
 

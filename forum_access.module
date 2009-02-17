@@ -62,6 +62,10 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
     module_load_include('node.inc', 'forum_access');
     _forum_access_node_form($form_id, $form);
   }
+  else if ($form_id == 'forum_overview') {
+    module_load_include('admin.inc', 'forum_access');
+    _forum_access_forum_overview($form_id, $form);
+  }
   else if ($form_id == 'forum_form_container') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_forum_form($form_id, $form, TRUE);
@@ -104,8 +108,8 @@ function forum_access_user_admin_role_submit($form, &$form_state) {
  * taxonomy. There should be.
  */
 function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
-  if ($primary_field == 'tid' && !user_access('administer forums')) {
-    global $user;
+  global $user;
+  if ($primary_field == 'tid' && $user->uid != 1 && !($_GET['q'] == 'admin/content/forum' && user_access('administer forums'))) {
     $roles = _forum_access_get_roles($user);
     $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
                     LEFT JOIN {acl} acl_fa ON acl_fa.name = ". ($GLOBALS['db_type'] == 'pgsql' ? 'CAST(' : '')
@@ -233,8 +237,7 @@ function forum_access_init() {
     return;
   }
 
-  if (!user_access('administer forums') && arg(0) == 'forum' && is_numeric(arg(1))) {
-    global $user;
+  if (arg(0) == 'forum' && is_numeric(arg(1))) {
     if (!forum_access_access(arg(1), 'view')) {
       drupal_access_denied();
       module_invoke_all('exit');
@@ -258,7 +261,7 @@ function forum_access_access($tid, $type, $account = NULL) {
     $account = $user;
   }
 
-  if (user_access('administer forums', $account)) {
+  if ($account->uid == 1) {
     return TRUE;
   }
 
