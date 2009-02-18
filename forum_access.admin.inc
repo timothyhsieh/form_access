@@ -61,14 +61,38 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   );
 
   $tr = 't';
+  $form['forum_access']['permissions'] = array(
+    '#type' => 'fieldset',
+    '#title' => $tr('Permissions'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
   $variables = array(
-    '!access_content' => '<em>'. l($tr('access content'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>', 
-    '%administer_nodes' => $tr('administer nodes')
+    '!access_content'                 => '<em>'. l($tr('access content'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>',
+    '!access_comments'                => '<em>'. l($tr('access comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
+    '!create_forum_topics'            => '<em>'. l($tr('create forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
+    '!post_comments'                  => '<em>'. l($tr('post comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
+    '!post_comments_without_approval' => '<em>'. l($tr('post comments without approval'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
+    '!edit_own_forum_topics'          => '<em>'. l($tr('edit own forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
+    '!edit_any_forum_topics'          => '<em>'. l($tr('edit any forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
+    '!delete_own_forum_topics'        => '<em>'. l($tr('delete own forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
+    '!delete_any_forum_topics'        => '<em>'. l($tr('delete any forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
+    '!administer_comments'            => '<em>'. l($tr('administer comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
+    '!administer_forums'              => '<em>'. l($tr('administer forums'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
+    '!administer_nodes'               => '<em>'. l($tr('administer nodes'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>',
   );
   if (!$container) {
-    $form['forum_access']['note'] = array(
+    $form['forum_access']['permissions'][] = array(
       '#type' => 'markup',
-      '#value' => '<div>'. t('Note that users need at least the !access_content permission to be able to deal in any way with content. Furthermore note that content which is not published is treated in a different way by Drupal: It can be viewed only by its author or users with the %administer_nodes permission.', $variables) .'</div>',
+      '#value' => '<div>'. t('Note that users need') .'<ul style="margin-top: 0"><li>'.
+                           t('the !access_content and !access_comments permissions <strong>AND <em>View</em></strong> to be able to see content at all,', $variables) .'</li><li>'.
+                           t('the !create_forum_topics (and similar) permissions <strong>AND <em>Post</em></strong> to be able to create forum content, and', $variables) .'</li><li>'.
+                           t('the !post_comments or !post_comments_without_approval permission to be able to post comments and replies;', $variables) .'</li><li>'.
+                           t('the !edit_own_forum_topics or !edit_any_forum_topics (and similar) permissions (<strong>OR <em>Edit</em></strong>) can be added if desired, <strong>plus</strong>', $variables) .'</li><li>'.
+                           t('the !delete_own_forum_topics or !delete_any_forum_topics (and similar) permissions (<strong>OR <em>Delete</em></strong>) if desired;', $variables) .'</li><li>'.
+                           t('the !administer_comments permission to be able to administer comments and replies (everywhere!),', $variables) .'</li><li>'.
+                           t('the !administer_forums permission <strong>AND <em>View</em></strong> to be able to administer forums (and change access!).', $variables) .'</li></ul>'.
+                           t('Furthermore note that content which is not published is treated in a different way by Drupal: it can be viewed only by its author or by users with the !administer_nodes permission. Unpublished comments and replies are accessible to users with the !administer_comments permission only.', $variables) .'</div>',
     );
   }
 
@@ -160,11 +184,16 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       }
     }
     $form['forum_access']['acl'] = acl_edit_form($acl_id, t('Moderators'));
+    $form['forum_access']['acl']['note1'] = array(
+      '#type' => 'markup',
+      '#value' => '<div>'. t('Moderators receive <strong><em>View</em></strong>, <strong><em>Post</em></strong>, <strong><em>Edit</em></strong>, and <strong><em>Delete</em></strong>. They also need the following permissions: !access_content, !access_comments, !create_forum_topics (and similar), !post_comments_without_approval, and possibly !administer_comments (which is a global permission!).', $variables) .'</div>',
+      '#weight' => -1,
+    );
     if (strlen($form['forum_access']['acl']['user_list']['#default_value']) <= 6 && empty($form_state['post']['forum_access']['acl']['add']))
     {
       $form['forum_access']['acl']['#collapsed'] = TRUE;
     }
-    $form['forum_access']['acl']['note'] = array(
+    $form['forum_access']['acl']['note2'] = array(
       '#type' => 'markup',
       '#value' => '<div>'. t('Note: Changes to moderators are not saved until you click [!Save] below.', array('!Save' => $tr('Save'))) .'</div>',
     );
@@ -185,17 +214,15 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '!content_type' => $tr('content type'),
       '%content_type' => node_get_types('name', 'forum'),
       '!Forum_Access' => 'Forum Access',
-      '!Content_Access' => 'Content Access',
+      '!Content_Access' => l('Content Access', 'http://drupal.org/project/content_access'),
+      '@Content_Access' => 'Content Access',
       '!ACL' => 'ACL',
       '!module_list' => '<ul><li>'. implode($na_modules, '</li><li>') .'</li></ul>',
-      '%devel_node_access' => 'devel_node_access',
-      '!Devel' => l('Devel', 'http://drupal.org/project/devel'),
-      '!debug_mode' => l('debug mode', 'admin/settings/devel', array('fragment' => 'edit-devel-node-access-debug-mode')),
     );
     $form['forum_access']['interference'][] = array(
       '#type' => 'item',
-      '#value' => '<p>'. t("Besides !Forum_Access (and !ACL) you have installed the following node access module(s): !module_list   The grants of every module will be combined for each node. Access can only be granted, not removed&mdash;if a certain module grants a permission, the other(s) cannot deny it.", $variables) .'</p>',
-      '#description' => t('Forums can contain other content types besides %content_type; !Forum_Access will contribute the grants defined above to every node in this forum, but other node access control modules may also contribute their grants, especially to nodes of types other than %content_type. <br /> In case of problems, you should temporarily (!) install the %devel_node_access module (part of the !Devel module) and enable its !debug_mode: this will show you all the grants that actually control your nodes.', $variables),
+      '#value' => '<p>'. t("Besides !Forum_Access (and !ACL) you have installed the following node access module(s): !module_list   The grants of every module are combined for each node. Access can only be granted, not removed &mdash; if a certain module grants a permission, the other(s) cannot deny it.", $variables) .'</p>',
+      '#description' => t('Forums can contain other content types besides %content_type; !Forum_Access will contribute the grants defined above to every node in this forum, but other node access control modules may also contribute their grants, especially to nodes of types other than %content_type.', $variables),
     );
 
     if (module_exists('content_access')) {
@@ -209,8 +236,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       $ca_priority = content_access_get_settings('priority', 'forum');
       $is_conflict = $ca_priority >= $fa_priority && !empty($ca_interferes) || $ca_priority > $fa_priority;
       $variables += array(
-        '!Content_Access' => 'Content Access',
-        '!link' => l(t('!Content_Access configuration for the %content_type type', $variables), 'admin/content/node-type/forum/access', array('html' => TRUE)),
+        '!link' => l(t('@Content_Access configuration for the %content_type type', $variables), 'admin/content/node-type/forum/access', array('html' => TRUE)),
         '%Advanced' => $tr('Advanced'),
       );
       $specifically = ($ca_priority == $fa_priority ? t('Specifically, any grants given by !Content_Access cannot be taken back by !Forum_Access.', $variables) : '');
@@ -226,18 +252,18 @@ function _forum_access_forum_form($form_id, &$form, $container) {
         );
         if ($ca_priority == $fa_priority) {
           $form['forum_access']['interference']['by_content_access'][] = array(
-            '#value' => '<div>'. t("Unless you really know what you're doing, we recommend that you go to the !link page and clear all checkboxes. This will instruct !Content_Access to leave the %content_type nodes alone. However, if you put nodes of other !content_types into forums as well, then these !content_types will continue to have this problem.", $variables) .'</div>',
+            '#value' => '<div>'. t("Unless you really know what you're doing, we recommend that you go to the !link page and clear all checkboxes. This will instruct @Content_Access to leave the %content_type nodes alone. However, if you put nodes of other !content_types into forums as well, then these !content_types will continue to have this problem.", $variables) .'</div>',
           );
         }
         else {
           $form['forum_access']['interference']['by_content_access'][] = array(
-            '#value' => '<div>'. t("The priority of !Content_Access ($ca_priority) is higher than the priority of !Forum_Access ($fa_priority), which means the latter is <b>completely disabled</b> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page, change the priority (under %Advanced) to 0, and clear all checkboxes.", $variables) .'</div>',
+            '#value' => '<div>'. t("The priority of @Content_Access ($ca_priority) is higher than the priority of !Forum_Access ($fa_priority), which means the latter is <b>completely disabled</b> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page, change the priority (under %Advanced) to 0, and clear all checkboxes.", $variables) .'</div>',
           );
         }
       }
       else {
         $form['forum_access']['interference'][] = array(
-          '#value' => '<p>'. t('Note: You have installed the !Content_Access module, which has the capability to grant access to content that would otherwise be protected by !Forum_Access. Be careful when configuring !Content_Access!', $variables) .'</p>',
+          '#value' => '<p>'. t('Note: You have installed the !Content_Access module, which has the capability to grant access to content that would otherwise be protected by !Forum_Access. Be careful when configuring @Content_Access!', $variables) .'</p>',
         );
       }
     }
@@ -255,6 +281,45 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#description' => t("If you have no other node access control modules installed, you should leave this at the default 0. <br /> Otherwise you can raise or lower the priority of !Forum_Access' grants. Out of all the grants contributed to a node, only those with the highest priority are used, and all others are discarded.", $variables),
     );
   }
+
+  $variables = array(
+    '!Forum_Access'        => l('Forum Access', 'http://drupal.org/project/forum_access'),
+    '!ACL'                 => l('ACL', 'http://drupal.org/project/acl'),
+    '%Module_interference' => t('Module interference'),
+    '!Forum_Access-dev'    => l('Forum&nbsp;Access&nbsp;6.x-1.x-dev', 'http://drupal.org/node/96795', array('html' => TRUE)),
+    '!ACL-dev'             => l('ACL&nbsp;6.x-1.x-dev', 'http://drupal.org/node/96794', array('html' => TRUE)),
+    '%devel_node_access'   => 'devel_node_access',
+    '!Devel'               => l('Devel', 'http://drupal.org/project/devel'),
+    '!DNA'                 => 'DNA',
+    '!debug_mode'          => l('debug mode', 'admin/settings/devel', array('fragment' => 'edit-devel-node-access-debug-mode')),
+    '!dna_summary'         => l('devel/node_access/summary', 'devel/node_access/summary'),
+    '!Rebuild_permissions' => '['. $tr('Rebuild permissions') .']',
+    '!Post_settings_link'  => l('admin/content/node-settings', 'admin/content/node-settings'),
+    '!Forum_Access_'       => l('Forum Access', 'http://drupal.org/project/issues/forum_access'),
+    '!ACL_'                => l('ACL', 'http://drupal.org/project/issues/acl'),
+  );
+  $form['forum_access']['troubleshooting'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Trouble-shooting node access'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['forum_access']['troubleshooting'][] = array(
+    '#type' => 'item',
+    '#value' => '<div>'.    t("In case of problems, follow these steps until you've got it worked out:") .'<ol style="margin-top: 0"><li>'.
+                            t("Update to the 'recommended' !Forum_Access and !ACL releases for your version of Drupal.", $variables) .'</li><li>'.
+      (count($na_modules) ? t("Read %Module_interference above and update your other node access modules.", $variables) .'</li><li>' : '').
+                            t("Check the release notes of the development snapshots for issues that might have been fixed in !Forum_Access-dev or !ACL-dev since the latest release.", $variables) .'</li><li>'.
+                            t("Install the %devel_node_access module (!DNA, part of the !Devel module) and enable its !debug_mode: !DNA will show you all the grants that actually control your nodes in a footer block on each node's page.", $variables) .'</li><li>'.
+                            t("Additional insight can be gained from !dna_summary and by enabling the second !DNA block.", $variables) .'</li><li>'.
+                            t("Click !Rebuild_permissions on !Post_settings_link and check DNA for changes.", $variables) .'</li><li>'.
+                            t("Check the issues queues of !Forum_Access_ and !ACL_ for existing reports and possible solutions.", $variables) .'</li><li>'.
+                            t("If all of this hasn't helped, then pick ONE node that is misbehaving, create a new issue in the issues queue, describe the problem... <ul><li> what did you do? </li><li> what did you expect? </li><li> what happened instead? </li></ul> ... and <strong>include all the DNA records</strong> for that one node. <br /> Be sure to indicate paths (URLs) for every page and module that you mention.") .'</li></ol></div>',
+  );
+  $form['forum_access']['troubleshooting'][] = array(
+    '#type' => 'item',
+    '#value' => '<div>'. t("Note: You should not keep the !Devel module enabled on a production site.", $variables) .'</div>',
+  );
 
   // Move some stuff down so our block goes in a nice place.
   $form['submit']['#weight'] = 10;
