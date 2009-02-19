@@ -73,6 +73,8 @@ function forum_access_schema() {
  */
 function forum_access_uninstall() {
   drupal_uninstall_schema('forum_access');
+  variable_del('forum_access_batch_threshold');
+  variable_del('forum_access_provide_moderators_template_variable');
 }
 
 /**

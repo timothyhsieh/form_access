@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Enhancements:
+    - Provide a choice of how/when to update the {node_access} table and only do it if necessary.
     - Tune presentation of configuration information.
     - Add extensive configuration information and trouble-shooting tips.
     - Use View grant to control access to the forum's admin page (with the access settings!), too.

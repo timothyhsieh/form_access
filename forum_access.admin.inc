@@ -195,14 +195,11 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#value' => '<div>'. t('Moderators receive all grants above; to moderate comments, they also need !administer_comments (which is a global permission!).', $variables) .'</div>',
       '#weight' => -1,
     );
-    if (strlen($form['forum_access']['acl']['user_list']['#default_value']) <= 6 && empty($form_state['post']['forum_access']['acl']['add']))
-    {
-      $form['forum_access']['acl']['#collapsed'] = TRUE;
-    }
     $form['forum_access']['acl']['note'] = array(
       '#type' => 'markup',
       '#value' => '<div>'. t('Note: Changes to moderators are not saved until you click [!Save] below.', array('!Save' => $tr('Save'))) .'</div>',
     );
+    $form['forum_access']['#after_build'] = array('_forum_access_forum_form_after_build');
   }
 
   foreach (module_implements('node_access_records') as $module) {
@@ -329,12 +326,65 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     );
   }
 
+  if (!$container && isset($form['tid']['#value']) && !node_access_needs_rebuild())
+  {
+    $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form['tid']['#value']));
+    $limit = 20;   // from _node_access_rebuild_batch_operation()
+    $threshold = variable_get('forum_access_batch_threshold', $limit);  // change the variable if you want
+    $form['forum_access']['update_limit'] = array(
+      '#type' => 'value',
+      '#value' => $limit,
+    );
+    $form['forum_access']['update_choice'] = array(
+      '#type' => 'radios',
+      '#title' => 'Update the permissions',
+      '#description' => t('<em>If</em> you make any node access changes, then each node in this forum needs to be updated. Hover over the radiobuttons for details.'),
+      '#options' => NULL,
+      0 => array(
+        '#type' => 'radio',
+        '#title' => t('all %count nodes immediately', array('%count' => $count)),
+        '#attributes' => array('title' => t('This option is the fastest, but with many nodes it can still take considerable time and memory. If it fails, it will leave your !node_access table in an inconsistent state.', array('!node_access' => '{node_access}'))),
+        '#return_value' => 0,
+        '#default_value' => ($count <= $threshold ? 0 : 1),
+        '#parents' => array('forum_access', 'update_choice'),
+      ),
+      1 => array(
+        '#type' => 'radio',
+        '#title' => t('in batches of !limit now', array('!limit' => $limit)),
+        '#attributes' => array('title' => t('The batch option will always work reliably, but it takes longer to complete.')),
+        '#return_value' => 1,
+        '#default_value' => ($count <= $threshold ? 0 : 1),
+        '#parents' => array('forum_access', 'update_choice'),
+      ),
+      2 => array(
+        '#type' => 'radio',
+        '#title' => t('rebuild all permissions later'),
+        '#attributes' => array('title' => t("This option will only set a flag to remind you to rebuild all permissions later; this is useful if you want to make multiple changes to your node access settings quickly and delay the updating until you're done.")),
+        '#return_value' => 2,
+        '#default_value' => ($count <= $threshold ? 0 : 1),
+        '#parents' => array('forum_access', 'update_choice'),
+      ),
+      '#attributes' => array('class' => 'forum-access-flowed'),
+    );  
+  }
+  
   // Move some stuff down so our block goes in a nice place.
   $form['submit']['#weight'] = 10;
   $form['delete']['#weight'] = 10;
 
   $form['#validate'][] = '_forum_access_form_validate';
   $form['#submit'][] = '_forum_access_form_submit';
+}
+
+function _forum_access_forum_form_after_build($form, $form_state) {
+  if ($form['acl']['user_list']['#default_value'] == 'a:0:{}' && $form['acl']['user_list']['#value'] == 'a:0:{}')
+  {
+    $form['acl']['#collapsed'] = TRUE;
+  }
+  if ($form['acl']['user_list']['#default_value'] != $form['acl']['user_list']['#value']) {
+    $form['acl']['note']['#value'] = preg_replace('/<div>/', '<div class="warning">', $form['acl']['note']['#value']);
+  }
+  return $form;
 }
 
 function _forum_access_form_validate($form, &$form_state) {
@@ -353,8 +403,25 @@ function _forum_access_form_validate($form, &$form_state) {
 }
 
 function _forum_access_form_submit($form, &$form_state) {
-  db_query("DELETE FROM {forum_access} WHERE tid = %d", $form_state['values']['tid']);
   $access = $form_state['values']['forum_access']; // shortcut
+  // check for changes
+  $is_changed = FALSE;
+  foreach (array('view', 'create', 'update', 'delete') as $grant_type) {
+    if (isset($form['forum_access'][$grant_type])) {
+      $defaults = $form['forum_access'][$grant_type]['#default_value'];
+      $defaults = array_flip($defaults);
+      foreach ($access[$grant_type] as $tid => $checked) {
+        $is_changed = $is_changed || (!empty($checked) != isset($defaults[$tid]));
+      }
+    }
+  }
+  if (!$is_changed && $access['acl']['user_list'] == $form['forum_access']['acl']['user_list']['#default_value']) {
+    drupal_set_message(t('The content access permissions are unchanged.'));
+    return;
+  }
+
+  db_query("DELETE FROM {forum_access} WHERE tid = %d", $form_state['values']['tid']);
+
   $fa_priority = isset($access['interference']['advanced']['priority']) ? $access['interference']['advanced']['priority'] : 0;
   if (array_key_exists('acl', $access)) {
     acl_save_form($access['acl'], $fa_priority);
@@ -372,16 +439,40 @@ function _forum_access_form_submit($form, &$form_state) {
   }
 
   if ($form_state['values']['form_id'] != 'forum_form_container') {
-    // mass update in batch mode, modeled after node.module
-    $batch = array(
-      'title' => t('Updating content access permissions'),
-      'file' => drupal_get_path('module', 'forum_access') .'/forum_access.admin.inc',
-      'operations' => array(
-        array('_forum_access_update_batch_operation', array($form_state['values']['tid'])),
-      ),
-      'finished' => '_forum_access_update_batch_finished'
-    );
-    batch_set($batch);
+    if (!isset($access['update_choice']) || $access['update_choice'] == 2) {
+      node_access_needs_rebuild(TRUE);
+    }
+    elseif ($access['update_choice'] == 0) {
+      // update immediately (but use the batch functions anyway
+      $save_redirect = $form_state['redirect'];
+      $form_state['redirect'] = $_GET['q'];
+      $context = array();
+      $pending_error_messages = drupal_get_messages('error', FALSE);
+      $our_error_message_index = (isset($pending_error_messages['error']) ? count($pending_error_messages['error']) : 0);
+      _forum_access_update_batch_finished(FALSE, array(), array());       // add our error message (in case we die underway)
+      _forum_access_update_batch_operation($form_state['values']['tid'], 999999, 1, $context);
+      $pending_error_messages = drupal_get_messages('error', TRUE);       // still alive, get and clear all 'error' messages
+      unset($pending_error_messages['error'][$our_error_message_index]);  // remove our error message
+      foreach ($pending_error_messages['error'] as $message) {            // replay any others
+        drupal_set_message($message, 'error');
+      }
+      _forum_access_update_batch_finished(TRUE, array(), array());
+      $form_state['redirect'] = $save_redirect;
+    }
+    else {
+      // mass update in batch mode, modeled after node.module
+      $limit = $access['update_limit'];
+      $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form_state['values']['tid']));
+      $batch = array(
+        'title' => t('Updating content access permissions'),
+        'file' => drupal_get_path('module', 'forum_access') .'/forum_access.admin.inc',
+        'operations' => array(
+          array('_forum_access_update_batch_operation', array($form_state['values']['tid'], $limit, $count)),
+        ),
+        'finished' => '_forum_access_update_batch_finished'
+      );
+      batch_set($batch);
+    }
   }
 }
 
@@ -392,16 +483,15 @@ function _forum_access_form_submit($form, &$form_state) {
  * The batch processing engine interrupts processing and sends progress
  * feedback after 1 second execution time.
  */
-function _forum_access_update_batch_operation($tid, &$context) {
+function _forum_access_update_batch_operation($tid, $limit, $count, &$context) {
   if (empty($context['sandbox'])) {
     // Initiate multistep processing.
     $context['sandbox']['progress'] = 0;
     $context['sandbox']['current_node'] = 0;
-    $context['sandbox']['max'] = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $tid));
+    $context['sandbox']['max'] = $count;
   }
 
   // Process the next 20 nodes.
-  $limit = 20;
   $result = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE n.nid > %d AND tn.tid = %d ORDER BY n.nid ASC", $context['sandbox']['current_node'], $tid, $context['sandbox']['current_node'], 0, $limit);
   while ($row = db_fetch_array($result)) {
     $loaded_node = node_load($row['nid'], NULL, TRUE);
@@ -426,12 +516,11 @@ function _forum_access_update_batch_operation($tid, &$context) {
 function _forum_access_update_batch_finished($success, $results, $operations) {
   if ($success) {
     drupal_set_message(t('The content access permissions have been updated.'));
+    cache_clear_all();
   }
   else {
     drupal_set_message(t('The content access permissions have not been properly updated.'), 'error');
-    node_access_needs_rebuild(TRUE);
   }
-  cache_clear_all();
 }
 
 /**
