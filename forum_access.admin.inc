@@ -61,12 +61,6 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   );
 
   $tr = 't';
-  $form['forum_access']['permissions'] = array(
-    '#type' => 'fieldset',
-    '#title' => $tr('Permissions'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
   $variables = array(
     '!access_content'                 => '<em>'. l($tr('access content'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>',
     '!access_comments'                => '<em>'. l($tr('access comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
@@ -82,6 +76,12 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '!administer_nodes'               => '<em>'. l($tr('administer nodes'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>',
   );
   if (!$container) {
+    $form['forum_access']['permissions'] = array(
+      '#type' => 'fieldset',
+      '#title' => $tr('Permissions'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
     $form['forum_access']['permissions'][] = array(
       '#type' => 'markup',
       '#value' => '<div>'. t('Note that users need') .'<ul style="margin-top: 0"><li>'.
@@ -168,6 +168,12 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   $form['forum_access']['clearer'] = array(
     '#value' => '<div class="forum-access-clearer"></div>',
   );
+  if ($container) {
+    $form['forum_access']['container_note'] = array(
+      '#type' => 'item',
+      '#description' => t('Users who can see any forum or container within this one should get the <strong><em>View</em></strong> grant. <br /> Users who can post to a forum within this container should get the <strong><em>Show</em></strong> grant.', $variables),
+    );
+  }
 
   drupal_add_css(drupal_get_path('module', 'forum_access') .'/forum_access.css');
 
@@ -184,16 +190,16 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       }
     }
     $form['forum_access']['acl'] = acl_edit_form($acl_id, t('Moderators'));
-    $form['forum_access']['acl']['note1'] = array(
+    $form['forum_access']['acl'][] = array(
       '#type' => 'markup',
-      '#value' => '<div>'. t('Moderators receive <strong><em>View</em></strong>, <strong><em>Post</em></strong>, <strong><em>Edit</em></strong>, and <strong><em>Delete</em></strong>. They also need the following permissions: !access_content, !access_comments, !create_forum_topics (and similar), !post_comments_without_approval, and possibly !administer_comments (which is a global permission!).', $variables) .'</div>',
+      '#value' => '<div>'. t('Moderators receive all grants above; to moderate comments, they also need !administer_comments (which is a global permission!).', $variables) .'</div>',
       '#weight' => -1,
     );
     if (strlen($form['forum_access']['acl']['user_list']['#default_value']) <= 6 && empty($form_state['post']['forum_access']['acl']['add']))
     {
       $form['forum_access']['acl']['#collapsed'] = TRUE;
     }
-    $form['forum_access']['acl']['note2'] = array(
+    $form['forum_access']['acl']['note'] = array(
       '#type' => 'markup',
       '#value' => '<div>'. t('Note: Changes to moderators are not saved until you click [!Save] below.', array('!Save' => $tr('Save'))) .'</div>',
     );
@@ -282,44 +288,46 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     );
   }
 
-  $variables = array(
-    '!Forum_Access'        => l('Forum Access', 'http://drupal.org/project/forum_access'),
-    '!ACL'                 => l('ACL', 'http://drupal.org/project/acl'),
-    '%Module_interference' => t('Module interference'),
-    '!Forum_Access-dev'    => l('Forum&nbsp;Access&nbsp;6.x-1.x-dev', 'http://drupal.org/node/96795', array('html' => TRUE)),
-    '!ACL-dev'             => l('ACL&nbsp;6.x-1.x-dev', 'http://drupal.org/node/96794', array('html' => TRUE)),
-    '%devel_node_access'   => 'devel_node_access',
-    '!Devel'               => l('Devel', 'http://drupal.org/project/devel'),
-    '!DNA'                 => 'DNA',
-    '!debug_mode'          => l('debug mode', 'admin/settings/devel', array('fragment' => 'edit-devel-node-access-debug-mode')),
-    '!dna_summary'         => l('devel/node_access/summary', 'devel/node_access/summary'),
-    '!Rebuild_permissions' => '['. $tr('Rebuild permissions') .']',
-    '!Post_settings_link'  => l('admin/content/node-settings', 'admin/content/node-settings'),
-    '!Forum_Access_'       => l('Forum Access', 'http://drupal.org/project/issues/forum_access'),
-    '!ACL_'                => l('ACL', 'http://drupal.org/project/issues/acl'),
-  );
-  $form['forum_access']['troubleshooting'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Trouble-shooting node access'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-  $form['forum_access']['troubleshooting'][] = array(
-    '#type' => 'item',
-    '#value' => '<div>'.    t("In case of problems, follow these steps until you've got it worked out:") .'<ol style="margin-top: 0"><li>'.
-                            t("Update to the 'recommended' !Forum_Access and !ACL releases for your version of Drupal.", $variables) .'</li><li>'.
-      (count($na_modules) ? t("Read %Module_interference above and update your other node access modules.", $variables) .'</li><li>' : '').
-                            t("Check the release notes of the development snapshots for issues that might have been fixed in !Forum_Access-dev or !ACL-dev since the latest release.", $variables) .'</li><li>'.
-                            t("Install the %devel_node_access module (!DNA, part of the !Devel module) and enable its !debug_mode: !DNA will show you all the grants that actually control your nodes in a footer block on each node's page.", $variables) .'</li><li>'.
-                            t("Additional insight can be gained from !dna_summary and by enabling the second !DNA block.", $variables) .'</li><li>'.
-                            t("Click !Rebuild_permissions on !Post_settings_link and check DNA for changes.", $variables) .'</li><li>'.
-                            t("Check the issues queues of !Forum_Access_ and !ACL_ for existing reports and possible solutions.", $variables) .'</li><li>'.
-                            t("If all of this hasn't helped, then pick ONE node that is misbehaving, create a new issue in the issues queue, describe the problem... <ul><li> what did you do? </li><li> what did you expect? </li><li> what happened instead? </li></ul> ... and <strong>include all the DNA records</strong> for that one node. <br /> Be sure to indicate paths (URLs) for every page and module that you mention.") .'</li></ol></div>',
-  );
-  $form['forum_access']['troubleshooting'][] = array(
-    '#type' => 'item',
-    '#value' => '<div>'. t("Note: You should not keep the !Devel module enabled on a production site.", $variables) .'</div>',
-  );
+  if (!$container) {
+    $variables = array(
+      '!Forum_Access'        => l('Forum Access', 'http://drupal.org/project/forum_access'),
+      '!ACL'                 => l('ACL', 'http://drupal.org/project/acl'),
+      '%Module_interference' => t('Module interference'),
+      '!Forum_Access-dev'    => l('Forum&nbsp;Access&nbsp;6.x-1.x-dev', 'http://drupal.org/node/96795', array('html' => TRUE)),
+      '!ACL-dev'             => l('ACL&nbsp;6.x-1.x-dev', 'http://drupal.org/node/96794', array('html' => TRUE)),
+      '%devel_node_access'   => 'devel_node_access',
+      '!Devel'               => l('Devel', 'http://drupal.org/project/devel'),
+      '!DNA'                 => 'DNA',
+      '!debug_mode'          => l('debug mode', 'admin/settings/devel', array('fragment' => 'edit-devel-node-access-debug-mode')),
+      '!dna_summary'         => l('devel/node_access/summary', 'devel/node_access/summary'),
+      '!Rebuild_permissions' => '['. $tr('Rebuild permissions') .']',
+      '!Post_settings_link'  => l('admin/content/node-settings', 'admin/content/node-settings'),
+      '!Forum_Access_'       => l('Forum Access', 'http://drupal.org/project/issues/forum_access'),
+      '!ACL_'                => l('ACL', 'http://drupal.org/project/issues/acl'),
+    );
+    $form['forum_access']['troubleshooting'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Trouble-shooting node access'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['forum_access']['troubleshooting'][] = array(
+      '#type' => 'item',
+      '#value' => '<div>'.    t("In case of problems, follow these steps until you've got it worked out:") .'<ol style="margin-top: 0"><li>'.
+                              t("Update to the 'recommended' !Forum_Access and !ACL releases for your version of Drupal.", $variables) .'</li><li>'.
+        (count($na_modules) ? t("Read %Module_interference above and update your other node access modules.", $variables) .'</li><li>' : '').
+                              t("Check the release notes of the development snapshots for issues that might have been fixed in !Forum_Access-dev or !ACL-dev since the latest release.", $variables) .'</li><li>'.
+                              t("Install the %devel_node_access module (!DNA, part of the !Devel module) and enable its !debug_mode: !DNA will show you all the grants that actually control your nodes in a footer block on each node's page.", $variables) .'</li><li>'.
+                              t("Additional insight can be gained from !dna_summary and by enabling the second !DNA block.", $variables) .'</li><li>'.
+                              t("Click !Rebuild_permissions on !Post_settings_link and check DNA for changes.", $variables) .'</li><li>'.
+                              t("Check the issues queues of !Forum_Access_ and !ACL_ for existing reports and possible solutions.", $variables) .'</li><li>'.
+                              t("If all of this hasn't helped, then pick ONE node that is misbehaving, create a new issue in the issues queue, describe the problem... <ul><li> what did you do? </li><li> what did you expect? </li><li> what happened instead? </li></ul> ... and <strong>include all the DNA records</strong> for that one node. <br /> Be sure to indicate paths (URLs) for every page and module that you mention.") .'</li></ol></div>',
+    );
+    $form['forum_access']['troubleshooting'][] = array(
+      '#type' => 'item',
+      '#value' => '<div>'. t("Note: You should not keep the !Devel module enabled on a production site.", $variables) .'</div>',
+    );
+  }
 
   // Move some stuff down so our block goes in a nice place.
   $form['submit']['#weight'] = 10;
