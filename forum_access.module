@@ -10,6 +10,8 @@
  */
 
 /**
+ * Implementation of hook_node_grants().
+ *
  * This function supplies the forum access grants. forum_access simply uses
  * roles as ACLs, so rids translate directly to gids.
  */
