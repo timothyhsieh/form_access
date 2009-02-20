@@ -415,7 +415,7 @@ function _forum_access_form_submit($form, &$form_state) {
       }
     }
   }
-  if (!$is_changed && $access['acl']['user_list'] == $form['forum_access']['acl']['user_list']['#default_value']) {
+  if (!$is_changed && $access['acl']['user_list'] == $form['forum_access']['acl']['user_list']['#default_value'] && $access['interference']['advanced']['priority'] == $form['forum_access']['interference']['advanced']['priority']['#default_value']) {
     drupal_set_message(t('The content access permissions are unchanged.'));
     return;
   }
