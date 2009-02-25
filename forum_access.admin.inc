@@ -13,8 +13,9 @@
  * Rewrite the forum administration page with our new access rules.
  */
 function _forum_access_forum_form($form_id, &$form, $container) {
-  if (isset($form['tid']['#value']) && !forum_access_access($form['tid']['#value'], 'view')) {
-    return;  // Deny access to (hide) the FA controls if the user doesn't have View access to the forum.
+  $tid = (isset($form['tid']['#value']) ? $form['tid']['#value'] : NULL);
+  if (isset($tid) && !forum_access_access($tid, 'view')) {
+    return;  // Deny access to (i.e. hide) the FA controls if the user doesn't have View access to the forum.
   }
 
   $rids = array();
@@ -23,38 +24,18 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     $rids[$obj->rid] = $obj->name;
   }
 
-  $fa_priority = 0;
-  if (isset($form['tid']['#value'])) {  // edit
-    $result = db_query("SELECT * FROM {forum_access} where tid=%d", $form['tid']['#value']);
-
-    $view = $update = $delete = $create = array();
-    while ($forum_access = db_fetch_object($result)) {
-      $row_received = TRUE;
-      if ($forum_access->grant_view) {
-        $view[] = $forum_access->rid;
-      }
-      if ($forum_access->grant_update) {
-        $update[] = $forum_access->rid;
-      }
-      if ($forum_access->grant_delete) {
-        $delete[] = $forum_access->rid;
-      }
-      if ($forum_access->grant_create) {
-        $create[] = $forum_access->rid;
-      }
-      if ($forum_access->rid == DRUPAL_AUTHENTICATED_RID) {  // this is our reference
-        $fa_priority = $forum_access->priority;
-      }
-    }
+  if (isset($tid)) {  // edit
+    $template_tid = variable_get('forum_access_default_template_tid', 0);
+    $settings = _forum_access_get_settings($tid);
   }
   else {  // create
-    // Default to all users can read; all logged in users can post.
-    $view = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
-    $create = array(DRUPAL_AUTHENTICATED_RID);
-    $update = $delete = array();
+    $template_tid = variable_get('forum_access_new_template_tid', NULL);
+    $settings = _forum_access_get_settings($template_tid);
   }
+  $fa_priority = $settings['priority'];
 
-  $form['forum_access'] = array('#type' => 'fieldset',
+  $form['forum_access'] = array(
+    '#type' => 'fieldset',
     '#title' => t('Access control'),
     '#collapsible' => TRUE,
     '#tree' => TRUE,
@@ -78,7 +59,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   if (!$container) {
     $form['forum_access']['permissions'] = array(
       '#type' => 'fieldset',
-      '#title' => $tr('Permissions'),
+      '#title' => $tr('Permissions information'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
     );
@@ -96,6 +77,38 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     );
   }
 
+  // Load a template:
+  $vid = variable_get('forum_nav_vocabulary', '');
+  $form['forum_access']['template'] = array(
+      '#type' => 'fieldset',
+      '#title' => $tr('Template'),
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($template_tid),
+  );
+  $form['forum_access']['template']['taxonomy'][$vid] = taxonomy_form($vid, array($template_tid), '');
+  $form['forum_access']['template']['taxonomy'][$vid]['#description'] = t("Select a forum and click !Load to retrieve that forum's settings as a starting point for this forum or container.", array('!Load' => '['. t('Load') .']'));
+  $form['forum_access']['template']['load_button'] = array(
+    '#type' => 'button',
+    '#name' => 'load_template',
+    '#value' => t('Load'),
+    '#submit' => FALSE,
+  );
+  $form['forum_access']['template']['template_tid'] = array(
+    '#type' => 'value',
+    '#value' => NULL,
+  );
+  $form['forum_access']['template']['select_by_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Remember this selection.'),
+    '#default_value' => FALSE,
+  );
+  $form['forum_access']['template']['load_for_new'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Use the selected forum's settings as defaults for new forums and containers."),
+    '#default_value' => FALSE,
+  );
+  $form['forum_access']['#after_build'][] = '_forum_access_forum_form_after_build';
+
   // Column titles:
   $form['forum_access']['headers']['view'] = array(
     '#type' => 'item',
@@ -107,7 +120,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   $form['forum_access']['headers']['create'] = array(
     '#type' => 'item',
     '#prefix' => '<div class="forum-access-div" id="container">',
-    '#title' => t('Show this container in %Forums selection list', array('%Forums' => $forum_vocabulary->name)),
+    '#title' => t('See this container in the %Forums selection list', array('%Forums' => $forum_vocabulary->name)),
     '#suffix' => '</div>',
   );
   if (!$container) {
@@ -140,14 +153,14 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '#prefix' => '<div class="forum-access-div">',
     '#suffix' => '</div>',
     '#options' => $rids,
-    '#default_value' => $view
+    '#default_value' => $settings['view'],
   );
   $form['forum_access']['create'] = array(
     '#type' => 'checkboxes',
     '#prefix' => '<div class="forum-access-div">',
     '#suffix' => '</div>',
     '#options' => $rids,
-    '#default_value' => $create
+    '#default_value' => $settings['create'],
   );
   if (!$container) {
     $form['forum_access']['update'] = array(
@@ -155,14 +168,14 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#prefix' => '<div class="forum-access-div">',
       '#suffix' => '</div>',
       '#options' => $rids,
-      '#default_value' => $update
+      '#default_value' => $settings['update'],
     );
     $form['forum_access']['delete'] = array(
       '#type' => 'checkboxes',
       '#prefix' => '<div class="forum-access-div">',
       '#suffix' => '</div>',
       '#options' => $rids,
-      '#default_value' => $delete
+      '#default_value' => $settings['delete'],
     );
   }
   $form['forum_access']['clearer'] = array(
@@ -171,19 +184,19 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   if ($container) {
     $form['forum_access']['container_note'] = array(
       '#type' => 'item',
-      '#description' => t('Users who can see any forum or container within this one should get the <strong><em>View</em></strong> grant. <br /> Users who can post to a forum within this container should get the <strong><em>Show</em></strong> grant.', $variables),
+      '#description' => t('Users who can see any forum or container within this one should get the <strong><em>View</em></strong> grant. <br /> Users who can post to a forum within this container should get the <strong><em>See</em></strong> grant, so that this forum appears in the proper context in the selection list.', $variables),
     );
   }
 
   drupal_add_css(drupal_get_path('module', 'forum_access') .'/forum_access.css');
 
   // Find our moderator ACL:
-  if (isset($form['tid']['#value'])) {  // edit, not new
-    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $form['tid']['#value']));
+  if (isset($tid)) {  // edit, not new
+    $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $tid));
     if (!$acl_id) { // create one
-      $acl_id = acl_create_new_acl('forum_access', $form['tid']['#value']);
+      $acl_id = acl_create_new_acl('forum_access', $tid);
       // update every existing node in this forum to use this acl.
-      $result = db_query("SELECT nid FROM {term_node} WHERE tid = %d", $form['tid']['#value']);
+      $result = db_query("SELECT nid FROM {term_node} WHERE tid = %d", $tid);
       while ($node = db_fetch_object($result)) {
         // all privs to this ACL.
         acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
@@ -199,7 +212,9 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#type' => 'markup',
       '#value' => '<div>'. t('Note: Changes to moderators are not saved until you click [!Save] below.', array('!Save' => $tr('Save'))) .'</div>',
     );
-    $form['forum_access']['#after_build'] = array('_forum_access_forum_form_after_build');
+    $form['forum_access']['acl']['#after_build'][] = '_forum_access_forum_form_after_build_acl0';
+    $form['forum_access']['acl']['#after_build'] = array_reverse($form['forum_access']['acl']['#after_build']);
+    $form['forum_access']['acl']['#after_build'][] = '_forum_access_forum_form_after_build_acl2';
   }
 
   foreach (module_implements('node_access_records') as $module) {
@@ -214,7 +229,6 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#collapsible' => TRUE,
     );
     $variables = array(
-      '!content_type' => $tr('content type'),
       '%content_type' => node_get_types('name', 'forum'),
       '!Forum_Access' => 'Forum Access',
       '!Content_Access' => l('Content Access', 'http://drupal.org/project/content_access'),
@@ -255,12 +269,12 @@ function _forum_access_forum_form($form_id, &$form, $container) {
         );
         if ($ca_priority == $fa_priority) {
           $form['forum_access']['interference']['by_content_access'][] = array(
-            '#value' => '<div>'. t("Unless you really know what you're doing, we recommend that you go to the !link page and clear all checkboxes. This will instruct @Content_Access to leave the %content_type nodes alone. However, if you put nodes of other !content_types into forums as well, then these !content_types will continue to have this problem.", $variables) .'</div>',
+            '#value' => '<div>'. t("Unless you really know what you're doing, we recommend that you go to the !link page and clear all checkboxes. This will instruct @Content_Access to leave the %content_type nodes alone. However, if you put nodes of other content types into forums as well, then these content types will continue to have this problem.", $variables) .'</div>',
           );
         }
         else {
           $form['forum_access']['interference']['by_content_access'][] = array(
-            '#value' => '<div>'. t("The priority of @Content_Access ($ca_priority) is higher than the priority of !Forum_Access ($fa_priority), which means the latter is <b>completely disabled</b> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page, change the priority (under %Advanced) to 0, and clear all checkboxes.", $variables) .'</div>',
+            '#value' => '<div>'. t("The priority of @Content_Access ($ca_priority) is higher than the priority of !Forum_Access ($fa_priority), which means the latter is <strong>completely disabled</strong> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page, change the priority (under %Advanced) to 0, and clear all checkboxes.", $variables) .'</div>',
           );
         }
       }
@@ -326,9 +340,9 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     );
   }
 
-  if (!$container && isset($form['tid']['#value']) && !node_access_needs_rebuild())
+  if (!$container && isset($tid) && !node_access_needs_rebuild())
   {
-    $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form['tid']['#value']));
+    $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $tid));
     $limit = 20;   // from _node_access_rebuild_batch_operation()
     $threshold = variable_get('forum_access_batch_threshold', $limit);  // change the variable if you want
     $form['forum_access']['update_limit'] = array(
@@ -376,13 +390,58 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   $form['#submit'][] = '_forum_access_form_submit';
 }
 
-function _forum_access_forum_form_after_build($form, $form_state) {
-  if ($form['acl']['user_list']['#default_value'] == 'a:0:{}' && $form['acl']['user_list']['#value'] == 'a:0:{}')
+function _forum_access_forum_form_after_build_acl0($form, $form_state) {
+  if (isset($form['#post']['forum_access']['template']['taxonomy']))
   {
-    $form['acl']['#collapsed'] = TRUE;
+    // Get ACL's user_list for the template and replace it before ACL's after_build function gets its shot at it.
+    $template_tid = reset(array_values($form['#post']['forum_access']['template']['taxonomy']));
+    if ($acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $template_tid))) {
+      $f = acl_edit_form($acl_id, 'DUMMY');
+      $form['user_list']['#value'] = $f['user_list']['#default_value'];
+    }
+  } 
+  return $form;
+}
+
+function _forum_access_forum_form_after_build_acl2($form, $form_state) {
+  if (!count(unserialize($form['user_list']['#default_value'])) && !count(unserialize($form['user_list']['#value']))) {
+    $form['#collapsed'] = TRUE;
   }
-  if ($form['acl']['user_list']['#default_value'] != $form['acl']['user_list']['#value']) {
-    $form['acl']['note']['#value'] = preg_replace('/<div>/', '<div class="warning">', $form['acl']['note']['#value']);
+  if ($form['user_list']['#default_value'] != $form['user_list']['#value']) {
+    $form['note']['#value'] = preg_replace('/<div>/', '<div class="warning">', $form['note']['#value']);
+  }
+  return $form;
+}
+
+function _forum_access_forum_form_after_build($form, &$form_state) {
+  if (isset($form_state['clicked_button']['#name']) && $form_state['clicked_button']['#name'] == $form['template']['load_button']['#name'])
+  {
+    // Load a setting from a template:
+    $template_tid = reset(array_values($form['#post']['forum_access']['template']['taxonomy']));
+    $form_state['values']['forum_access']['template']['template_tid'] = $template_tid;
+    $form['template']['#collapsed'] = FALSE;
+
+    $settings = _forum_access_get_settings($template_tid);
+    foreach (array('view', 'create', 'update', 'delete') as $grant_type) {
+      if (empty($form[$grant_type])) {
+        continue;
+      }
+      foreach (element_children($form[$grant_type]) as $tid) {
+        $checked = array_search($tid, $settings[$grant_type]) !== FALSE;
+        $form[$grant_type][$tid]['#value'] = ($checked ? $tid : 0);
+      }
+    }
+    $form['interference']['advanced']['priority']['#value'] = $settings['priority'];
+    if ($settings['priority'] != 0) {
+      $form['interference']['advanced']['#collapsed'] = FALSE;
+    }
+  }
+  elseif (is_array(reset($form_state['values']['forum_access']['template']['taxonomy']))) {
+    $template_tid = reset(reset($form_state['values']['forum_access']['template']['taxonomy']));
+  }
+  if (isset($template_tid)) {
+    $form['template']['select_by_default']['#value'] = ($template_tid && $template_tid == variable_get('forum_access_default_template_tid', 0));
+    $form['template']['load_for_new']['#value'] = ($template_tid && $template_tid == variable_get('forum_access_new_template_tid', 0));
   }
   return $form;
 }
@@ -404,6 +463,22 @@ function _forum_access_form_validate($form, &$form_state) {
 
 function _forum_access_form_submit($form, &$form_state) {
   $access = $form_state['values']['forum_access']; // shortcut
+
+  // Save template choice:
+  $template_tid = reset(array_values($access['template']['taxonomy']));
+  if ($access['template']['select_by_default']) {
+    variable_set('forum_access_default_template_tid', $template_tid);
+  }
+  elseif (variable_get('forum_access_default_template_tid', 0) == $template_tid) {
+    variable_del('forum_access_default_template_tid');
+  }
+  if ($access['template']['load_for_new']) {
+    variable_set('forum_access_new_template_tid', $template_tid);
+  }
+  elseif (variable_get('forum_access_new_template_tid', 0) == $template_tid) {
+    variable_del('forum_access_new_template_tid');
+  }
+
   // check for changes
   $is_changed = FALSE;
   foreach (array('view', 'create', 'update', 'delete') as $grant_type) {
@@ -437,6 +512,9 @@ function _forum_access_form_submit($form, &$form_state) {
     );
     db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]), $fa_priority);
   }
+  $tid = $form_state['values']['tid'];
+  $link = l(t('edit'), 'admin/content/forum/edit/forum/'. $tid);
+  watchdog('access', 'Changed grants for %forum forum.', array('%forum' => $form_state['values']['name']), WATCHDOG_NOTICE, $link);
 
   if ($form_state['values']['form_id'] != 'forum_form_container') {
     if (!isset($access['update_choice']) || $access['update_choice'] == 2) {
@@ -524,6 +602,44 @@ function _forum_access_update_batch_finished($success, $results, $operations) {
 }
 
 /**
+ * Helper function to retrieve the settings for a forum.
+ */
+function _forum_access_get_settings($tid = NULL) {
+  $return = array('view' => array(), 'create' => array(), 'update' => array(), 'delete' => array(), 'priority' => 0);
+  if (!isset($tid)) {
+    // Default to all users can read; all logged in users can post.
+    $return['view'] = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
+    $return['create'] = array(DRUPAL_AUTHENTICATED_RID);
+  }
+  else {
+    $result = db_query("SELECT * FROM {forum_access} where tid=%d", $tid);
+    while ($access = db_fetch_object($result)) {
+      $row_received = TRUE;
+      if ($access->grant_view) {
+        $return['view'][] = $access->rid;
+      }
+      if ($access->grant_update) {
+        $return['update'][] = $access->rid;
+      }
+      if ($access->grant_delete) {
+        $return['delete'][] = $access->rid;
+      }
+      if ($access->grant_create) {
+        $return['create'][] = $access->rid;
+      }
+      if ($access->rid == DRUPAL_AUTHENTICATED_RID) {  // this is our reference
+        $return['priority'] = $access->priority;
+      }
+    }
+    if (empty($row_received)) {
+      // Return default settings if no records found in database.
+      $return = _forum_access_get_settings();
+    }
+  }
+  return $return;
+}
+
+/**
  * Remove unusable 'edit' links from overview form.
  */
 function _forum_access_forum_overview($form_id, &$form) {
@@ -546,16 +662,19 @@ function _forum_access_forum_overview($form_id, &$form) {
  */
 function _forum_access_content_access_admin_form() {
   $tr = 't';
-  $variables = array('!content_type' => $tr('content type'), '!Forum_Access' => 'Forum Access', '!Forum_Access_link' => l('Forum Access', 'admin/content/forum'));
+  $variables = array(
+    '!Forum_Access' => 'Forum Access', 
+    '!Forum_Access_link' => l('Forum Access', 'admin/content/forum')
+  );
   if (arg(3) == 'forum') {
-    drupal_set_message(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access_link settings, but !Forum_Access can only allow <i>more</i> access, not less.', $variables), 'warning');
+    drupal_set_message(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected in the !Forum_Access_link settings, but !Forum_Access can only allow <i>more</i> access, not less.', $variables), 'warning');
   }
   else {
     $vid = variable_get('forum_nav_vocabulary', '');
     $vocabulary = taxonomy_vocabulary_load($vid);
     if (isset($vocabulary->nodes[arg(3)]))
     {
-      drupal_set_message(t('Note: Nodes of this !content_type can be put inside forums, where access to them will also be controlled by !Forum_Access.<br />In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access_link settings, and vice versa, but any node access module can only allow <i>more</i> access, not less.', $variables), 'warning');
+      drupal_set_message(t('Note: Nodes of this content type can be put inside forums, where access to them will also be controlled by !Forum_Access.<br />In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access_link settings, and vice versa, but any node access module can only allow <i>more</i> access, not less.', $variables), 'warning');
     }
   }
 }
