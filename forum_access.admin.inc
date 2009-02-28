@@ -154,6 +154,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '#suffix' => '</div>',
     '#options' => $rids,
     '#default_value' => $settings['view'],
+    '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
   );
   $form['forum_access']['create'] = array(
     '#type' => 'checkboxes',
@@ -161,6 +162,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '#suffix' => '</div>',
     '#options' => $rids,
     '#default_value' => $settings['create'],
+    '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
   );
   if (!$container) {
     $form['forum_access']['update'] = array(
@@ -169,6 +171,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#suffix' => '</div>',
       '#options' => $rids,
       '#default_value' => $settings['update'],
+      '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
     );
     $form['forum_access']['delete'] = array(
       '#type' => 'checkboxes',
@@ -176,6 +179,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#suffix' => '</div>',
       '#options' => $rids,
       '#default_value' => $settings['delete'],
+      '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
     );
   }
   $form['forum_access']['clearer'] = array(
@@ -390,6 +394,46 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   $form['#submit'][] = '_forum_access_form_submit';
 }
 
+function _forum_access_forum_form_disable_checkboxes($element) {
+  global $user;
+  static $role_permissions = array();
+  $element_children = element_children($element);
+  if (empty($role_permissions)) {
+    $auth_permissions = '';
+    foreach ($element_children as $rid) {
+      $result = db_query('SELECT r.rid, p.perm FROM {role} r LEFT JOIN {permission} p ON r.rid = p.rid WHERE r.rid = %d', $rid);
+      while ($role = db_fetch_object($result)) {
+        $role_permissions[$role->rid] = $role->perm .', '. ($role->rid == DRUPAL_ANONYMOUS_RID ? '' : $auth_permissions);
+        if ($role->rid == DRUPAL_AUTHENTICATED_RID) {
+          $auth_permissions = $role->perm .', ';
+        }
+      }
+    }
+  }
+  $tr = 't';
+
+  foreach ($element_children as $rid) {
+    if (strstr($role_permissions[$rid], 'access content,') === FALSE) {
+      $element[$rid]['#disabled'] = TRUE;
+      $element[$rid]['#default_value'] = FALSE;
+      $element[$rid]['#prefix'] = '<span title="'. t("This role does not have the '@perm' permission.", array('@perm' => $tr('access content'))) .'">';
+      $element[$rid]['#suffix'] = "</span>";
+    }
+    if ($element['#parents'][1] == 'view' && strstr($role_permissions[$rid], 'administer forums,') !== FALSE) {
+      $element[$rid]['#title'] = '<em>'. $element[$rid]['#title'] .'</em>';
+      $element[$rid]['#prefix'] = '<span title="'. t("This role has the '@perm' permission, and granting '@View' enables the role holders to change the settings on this page, including @Access_control!", array('@perm' => $tr('administer forums'), '@View' => t('View'), '@Access_control' => t('Access control'))) .'">';
+      $element[$rid]['#suffix'] = "</span>";
+    }
+    elseif (strstr($role_permissions[$rid], 'administer nodes,') !== FALSE) {
+      $element[$rid]['#disabled'] = TRUE;
+      $element[$rid]['#default_value'] = TRUE;
+      $element[$rid]['#prefix'] = '<span title="'. t("This role has the '@perm' permission and thus full access to all nodes.", array('@perm' => $tr('administer nodes'))) .'">';
+      $element[$rid]['#suffix'] = "</span>";
+    }
+  }
+  return $element;
+}
+
 function _forum_access_forum_form_after_build_acl0($form, $form_state) {
   if (isset($form['#post']['forum_access']['template']['taxonomy']))
   {
@@ -486,7 +530,7 @@ function _forum_access_form_submit($form, &$form_state) {
       $defaults = $form['forum_access'][$grant_type]['#default_value'];
       $defaults = array_flip($defaults);
       foreach ($access[$grant_type] as $tid => $checked) {
-        $is_changed = $is_changed || (!empty($checked) != isset($defaults[$tid]));
+        $is_changed = $is_changed || (empty($form['forum_access'][$grant_type][$tid]['#disabled']) && !empty($checked) != isset($defaults[$tid]));
       }
     }
   }
@@ -502,6 +546,9 @@ function _forum_access_form_submit($form, &$form_state) {
     acl_save_form($access['acl'], $fa_priority);
   }
   foreach ($access['view'] as $rid => $checked) {
+    if (!empty($form['forum_access']['view'][$tid]['#disabled'])) {
+      continue;
+    }
     $grants[] = array(
       'realm' => 'forum_access',
       'gid' => $rid,

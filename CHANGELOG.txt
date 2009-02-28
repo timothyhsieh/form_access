@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Enhancements:
+    - Disable checkboxes for roles that have no or full access anyway.
     - #213957: Implement the ability to use the settings of an existing forum as a template.
     - Provide a choice of how/when to update the {node_access} table and only do it if necessary.
     - Tune presentation of configuration information.
