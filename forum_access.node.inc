@@ -40,7 +40,7 @@ function _forum_access_node_form($form_id, &$form) {
   // Ensure the forum they're trying to post to directly is allowed, otherwise
   // there will be much confusion.
   $forum_tid = arg(3);
-  if (is_numeric($forum_tid) && $forum_tid && !$tids[$forum_tid]) {
+  if (isset($forum_tid) && is_numeric($forum_tid) && !isset($tids[$forum_tid])) {
     drupal_access_denied();
     module_invoke_all('exit');
     exit;
