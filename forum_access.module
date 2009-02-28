@@ -203,6 +203,21 @@ function forum_access_preprocess_forum_list(&$variables) {
 }
 
 /**
+ * Implementation of $modulename_preprocess_$hook().
+ *
+ * Remove 'post' links from forum page for users who may not post.
+ */
+function forum_access_preprocess_forums(&$variables) {
+  if (!forum_access_access($variables['tid'], 'create')) {
+    foreach ($variables['links'] as $key => $link) {
+      if (substr($link['href'], 0, 9) == 'node/add/') {
+        unset($variables['links'][$key]);
+      }
+    }
+  }
+}
+
+/**
  * This is also required by ACL module.
  */
 function forum_access_enabled($set = NULL) {
