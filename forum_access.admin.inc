@@ -12,7 +12,7 @@
 /**
  * Rewrite the forum administration page with our new access rules.
  */
-function _forum_access_forum_form($form_id, &$form, $container) {
+function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   $tid = (isset($form['tid']['#value']) ? $form['tid']['#value'] : NULL);
   if (isset($tid) && !forum_access_access($tid, 'view')) {
     return;  // Deny access to (i.e. hide) the FA controls if the user doesn't have View access to the forum.
@@ -56,7 +56,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '!administer_forums'              => '<em>'. l($tr('administer forums'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
     '!administer_nodes'               => '<em>'. l($tr('administer nodes'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>',
   );
-  if (!$container) {
+  if (!$is_container) {
     $form['forum_access']['permissions'] = array(
       '#type' => 'fieldset',
       '#title' => $tr('Permissions information'),
@@ -68,12 +68,12 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#value' => '<div>'. t('Note that users need') .'<ul style="margin-top: 0"><li>'.
                            t('the !access_content and !access_comments permissions <strong>AND <em>View</em></strong> to be able to see content at all,', $variables) .'</li><li>'.
                            t('the !create_forum_topics (and similar) permissions <strong>AND <em>Post</em></strong> to be able to create forum content, and', $variables) .'</li><li>'.
-                           t('the !post_comments or !post_comments_without_approval permission to be able to post comments and replies;', $variables) .'</li><li>'.
+                           t('the !post_comments or !post_comments_without_approval permission <strong>AND <em>Post</em></strong> to be able to post comments/replies;', $variables) .'</li><li>'.
                            t('the !edit_own_forum_topics or !edit_any_forum_topics (and similar) permissions (<strong>OR <em>Edit</em></strong>) can be added if desired, <strong>plus</strong>', $variables) .'</li><li>'.
                            t('the !delete_own_forum_topics or !delete_any_forum_topics (and similar) permissions (<strong>OR <em>Delete</em></strong>) if desired;', $variables) .'</li><li>'.
-                           t('the !administer_comments permission to be able to administer comments and replies (everywhere!),', $variables) .'</li><li>'.
+                           t('the !administer_comments (global!) permission <strong>OR <em>Edit</em>/<em>Delete</em></strong> to be able to edit/delete comments;', $variables) .'</li><li>'.
                            t('the !administer_forums permission <strong>AND <em>View</em></strong> to be able to administer forums (and change access!).', $variables) .'</li></ul>'.
-                           t('Furthermore note that content which is not published is treated in a different way by Drupal: it can be viewed only by its author or by users with the !administer_nodes permission. Unpublished comments and replies are accessible to users with the !administer_comments permission only.', $variables) .'</div>',
+                           t('Furthermore note that content which is not published is treated in a different way by Drupal: it can be viewed only by its author or by users with the !administer_nodes permission. Unpublished comments and replies are accessible to users with <strong><em>Edit</em> OR <em>Delete</em></strong>, <strong>OR</strong> with the !administer_comments permission, but they are never counted on the forum page.', $variables) .'</div>',
     );
   }
 
@@ -113,7 +113,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   $form['forum_access']['headers']['view'] = array(
     '#type' => 'item',
     '#prefix' => '<div class="forum-access-div">',
-    '#title' => ($container ? t('View this container') : t('View this forum')),
+    '#title' => ($is_container ? t('View this container') : t('View this forum')),
     '#suffix' => '</div>',
   );
   $forum_vocabulary = taxonomy_vocabulary_load(variable_get('forum_nav_vocabulary', ''));
@@ -123,7 +123,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '#title' => t('See this container in the %Forums selection list', array('%Forums' => $forum_vocabulary->name)),
     '#suffix' => '</div>',
   );
-  if (!$container) {
+  if (!$is_container) {
     $form['forum_access']['headers']['create'] = array(  // overwrite!
       '#type' => 'item',
       '#prefix' => '<div class="forum-access-div">',
@@ -164,7 +164,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     '#default_value' => $settings['create'],
     '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
   );
-  if (!$container) {
+  if (!$is_container) {
     $form['forum_access']['update'] = array(
       '#type' => 'checkboxes',
       '#prefix' => '<div class="forum-access-div">',
@@ -185,7 +185,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   $form['forum_access']['clearer'] = array(
     '#value' => '<div class="forum-access-clearer"></div>',
   );
-  if ($container) {
+  if ($is_container) {
     $form['forum_access']['container_note'] = array(
       '#type' => 'item',
       '#description' => t('Users who can see any forum or container within this one should get the <strong><em>View</em></strong> grant. <br /> Users who can post to a forum within this container should get the <strong><em>See</em></strong> grant, so that this forum appears in the proper context in the selection list.', $variables),
@@ -209,7 +209,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     $form['forum_access']['acl'] = acl_edit_form($acl_id, t('Moderators'));
     $form['forum_access']['acl'][] = array(
       '#type' => 'markup',
-      '#value' => '<div>'. t('Moderators receive all grants above; to moderate comments, they also need !administer_comments (which is a global permission!).', $variables) .'</div>',
+      '#value' => '<div>'. t('Moderators receive all grants above.') .'</div>',
       '#weight' => -1,
     );
     $form['forum_access']['acl']['note'] = array(
@@ -226,7 +226,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
   }
   unset($na_modules['forum_access']);
   unset($na_modules['acl']);
-  if (count($na_modules) && !$container) {
+  if (count($na_modules) && !$is_container) {
     $form['forum_access']['interference'] = array(
       '#type' => 'fieldset',
       '#title' => t('Module interference'),
@@ -303,7 +303,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     );
   }
 
-  if (!$container) {
+  if (!$is_container) {
     $variables = array(
       '!Forum_Access'        => l('Forum Access', 'http://drupal.org/project/forum_access'),
       '!ACL'                 => l('ACL', 'http://drupal.org/project/acl'),
@@ -344,7 +344,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
     );
   }
 
-  if (!$container && isset($tid) && !node_access_needs_rebuild())
+  if (!$is_container && isset($tid) && !node_access_needs_rebuild())
   {
     $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $tid));
     $limit = 20;   // from _node_access_rebuild_batch_operation()
@@ -360,7 +360,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       '#options' => NULL,
       0 => array(
         '#type' => 'radio',
-        '#title' => t('all %count nodes immediately', array('%count' => $count)),
+        '#title' => t('for all %count nodes immediately', array('%count' => $count)),
         '#attributes' => array('title' => t('This option is the fastest, but with many nodes it can still take considerable time and memory. If it fails, it will leave your !node_access table in an inconsistent state.', array('!node_access' => '{node_access}'))),
         '#return_value' => 0,
         '#default_value' => ($count <= $threshold ? 0 : 1),
@@ -376,7 +376,7 @@ function _forum_access_forum_form($form_id, &$form, $container) {
       ),
       2 => array(
         '#type' => 'radio',
-        '#title' => t('rebuild all permissions later'),
+        '#title' => t('rebuild <strong>all</strong> permissions later'),
         '#attributes' => array('title' => t("This option will only set a flag to remind you to rebuild all permissions later; this is useful if you want to make multiple changes to your node access settings quickly and delay the updating until you're done.")),
         '#return_value' => 2,
         '#default_value' => ($count <= $threshold ? 0 : 1),
@@ -411,7 +411,8 @@ function _forum_access_forum_form_disable_checkboxes($element) {
     }
   }
   $tr = 't';
-
+  $moderator_rid = variable_get('forum_access_moderator_rid', NULL);
+  
   foreach ($element_children as $rid) {
     if (strstr($role_permissions[$rid], 'access content,') === FALSE) {
       $element[$rid]['#disabled'] = TRUE;
@@ -427,7 +428,9 @@ function _forum_access_forum_form_disable_checkboxes($element) {
     elseif (strstr($role_permissions[$rid], 'administer nodes,') !== FALSE) {
       $element[$rid]['#disabled'] = TRUE;
       $element[$rid]['#default_value'] = TRUE;
-      $element[$rid]['#prefix'] = '<span title="'. t("This role has the '@perm' permission and thus full access to all nodes.", array('@perm' => $tr('administer nodes'))) .'">';
+      $element[$rid]['#prefix'] = '<span title="'. ($rid != $moderator_rid
+                                                    ? t("This role has the '@perm' permission and thus full access to all nodes.", array('@perm' => $tr('administer nodes')))
+                                                    : t("This is the !Forum_Moderator role; it has the '@perm1' and '@perm2' permissions and thus full access to all nodes and comments.", array('!Forum_Moderator' => t('Forum Moderator'), '@perm1' => $tr('administer nodes'), '@perm2' => $tr('administer comments')))) .'">';
       $element[$rid]['#suffix'] = "</span>";
     }
   }
@@ -543,6 +546,11 @@ function _forum_access_form_submit($form, &$form_state) {
 
   $fa_priority = isset($access['interference']['advanced']['priority']) ? $access['interference']['advanced']['priority'] : 0;
   if (array_key_exists('acl', $access)) {
+    $moderators = unserialize($access['acl']['user_list']);
+    if (!empty($moderators)) {
+      module_load_include('node.inc', 'forum_access');
+      _forum_access_get_moderator_rid(TRUE);  // create the moderators role if it doesn't exist
+    }
     acl_save_form($access['acl'], $fa_priority);
   }
   foreach ($access['view'] as $rid => $checked) {
@@ -689,7 +697,7 @@ function _forum_access_get_settings($tid = NULL) {
 /**
  * Remove unusable 'edit' links from overview form.
  */
-function _forum_access_forum_overview($form_id, &$form) {
+function _forum_access_forum_overview(&$form, &$form_state) {
   global $user;
   if ($user->uid == 1) {
     return;
@@ -699,6 +707,28 @@ function _forum_access_forum_overview($form_id, &$form) {
       if (!forum_access_access($matches[1], 'view')) {
         unset($form[$key]['edit']['#value']);
       }
+    }
+  }
+}
+
+/**
+ * We must know when a role is deleted.
+ */
+function _forum_access_user_admin_role_form(&$form, &$form_state) {
+  $form['#submit'][] = '_forum_access_user_admin_role_submit';
+}
+
+/**
+ * If a role is deleted, we remove the grants it provided.
+ * Also, we complain if the Forum Moderator role is deleted.
+ */
+function _forum_access_user_admin_role_submit($form, &$form_state) {
+  if ($form_state['values']['op'] == $form_state['values']['delete']) {
+    $rid = $form_state['values']['rid'];
+    db_query("DELETE FROM {forum_access} WHERE rid = %d", $rid);
+    db_query("DELETE FROM {node_access} WHERE gid = %d AND realm = 'forum_access'", $rid);
+    if ($rid === variable_get('forum_access_moderator_rid', NULL)) {
+      drupal_set_message(t('The role you have just deleted is required by !Forum_Access; it will be recreated automatically.', array('!Forum_Access' => 'Forum Access')), 'error');
     }
   }
 }
@@ -725,3 +755,34 @@ function _forum_access_content_access_admin_form() {
     }
   }
 }
+
+/*
+ * Create the Forum Moderator role.
+ */
+function _forum_access_create_moderator_rid($verbose = FALSE) {  
+  $tr = 't';
+  $role = new stdClass();
+  $role->name = t('Forum Moderator');
+  $variables = array('!Forum_Access' => 'Forum Access', '%administer_comments' => $tr('administer comments'), '%administer_nodes' => $tr('administer nodes'), '%role' => $role->name);
+  if (drupal_write_record('role', $role))
+  {
+    $rid = $role->rid;
+    variable_set('forum_access_moderator_rid', $rid);
+    $permission = new stdClass();
+    $permission->rid = $rid;
+    $permission->perm = 'administer comments, administer nodes';
+    drupal_write_record('permission', $permission);
+    $msg = t('!Forum_Access has created a new role named %role and given it the %administer_nodes and %administer_comments permissions. This role is temporarily assigned to users when they access nodes or comments to which they have <strong><em>Edit</em></strong> access. You can change the name of the role as you like, but you must keep it unmodified otherwise.', $variables);
+    if ($verbose) {
+      drupal_set_message($msg, 'warning');
+    }
+    watchdog('user', $msg, NULL, WATCHDOG_NOTICE);
+    return $rid;
+  }
+  else {
+    $msg = t('!Forum_Access cannot create the moderator role!', $variables);
+    drupal_set_message($msg, 'error');
+    watchdog('user', $msg, NULL, WATCHDOG_ERROR);
+  }
+}
+

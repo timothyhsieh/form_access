@@ -55,50 +55,117 @@ function forum_access_node_access_records($node) {
 }
 
 /**
+ * Implementation of hook_init().
+ *
+ * Deny access to forum if the user does not have access to it.
+ * Enable moderator access on node/%, node/%/edit, comment/edit/%,
+ * and comment/delete/% where needed.
+ */
+function forum_access_init() {
+  global $user;
+  if ($user->uid == 1) {
+    return;
+  }
+  
+  switch (arg(0)) {
+    case 'forum':
+      if (is_numeric($tid = arg(1))) {
+        if (!forum_access_access($tid, 'view')) {
+          drupal_access_denied();
+          module_invoke_all('exit');
+          exit;
+        }
+      }
+      break;
+      
+    case 'comment':
+      if ((arg(1) == 'edit' || arg(1) == 'delete') && !user_access('administer comments')) {
+        if (is_numeric($cid = arg(2))) {  // comment/edit/%, comment/delete/%
+          $access[] = (arg(1) == 'edit' ? 'update' : 'delete'); 
+          $comment = _comment_load($cid);
+          $nid = $comment->nid;
+          // If the node turns out to be in a forum where we have update/delete
+          // access, then we need Moderator permissions now, so we can moderate
+          // this comment.
+          // We won't provide full Administrator access, though: we'll remove
+          // author and timestamp, for example.
+        }
+      }
+      break;
+      
+    case 'node':
+      if (is_numeric(arg(1))) {
+        $access[] = 'update';
+        if (arg(2) == 'edit' && !user_access('administer nodes')) {  // node/%/edit
+          $nid = arg(1);
+          // If the node turns out to be in a forum where we have update/delete
+          // access, then we already get limited edit capabilities from NA, but
+          // we need some more, e.g. publish/unpublish and comment status.
+          // In order to get these controls on the form, we need Moderator
+          // permissions now.
+          // We won't provide full Administrator access, though: we'll remove
+          // author and timestamp, for example.
+        }
+        if (arg(2) == NULL && !user_access('administer comments')) {  // node/%
+          $nid = arg(1);
+          // If the node turns out to be in a forum where we have update/delete
+          // access, then we'll get the 'Edit' link automatically from NA, but
+          // we'll need Moderator permissions, so that we can add the edit/delete
+          // comment links (*after* we've identified the other comment links). 
+        }
+      }
+      break;
+  }
+  if (isset($nid)) {
+    $node = node_load($nid);
+  }
+  if (isset($node->tid)) {
+    $tid = $node->tid;
+    foreach ($access as $a) {
+      if (forum_access_access($tid, $a)) {
+        module_load_include('node.inc', 'forum_access');
+        $user->_forum_access_moderator = TRUE;
+        if (arg(0) == 'comment' || arg(0) == 'node' && arg(2) == 'edit') {
+          _forum_access_enable_moderator();
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implementation of hook_form_alter().
  *
- * Remove inaccessible forums from the node form.
+ * Alter the node/comment create/edit forms and various admin forms.
  */
 function forum_access_form_alter(&$form, &$form_state, $form_id) {
   if (isset($form['type']) && $form['type']['#value'] .'_node_form' == $form_id) {
     module_load_include('node.inc', 'forum_access');
-    _forum_access_node_form($form_id, $form);
+    _forum_access_node_form($form, $form_state);
+  }
+  else if ($form_id == 'comment_form') {
+    module_load_include('node.inc', 'forum_access');
+    _forum_access_comment_form($form, $form_state);
   }
   else if ($form_id == 'forum_overview') {
     module_load_include('admin.inc', 'forum_access');
-    _forum_access_forum_overview($form_id, $form);
+    _forum_access_forum_overview($form, $form_state);
   }
   else if ($form_id == 'forum_form_container') {
     module_load_include('admin.inc', 'forum_access');
-    _forum_access_forum_form($form_id, $form, TRUE);
+    _forum_access_forum_form($form, $form_state, TRUE);
   }
   else if ($form_id == 'forum_form_forum') {
     module_load_include('admin.inc', 'forum_access');
-    _forum_access_forum_form($form_id, $form, FALSE);
+    _forum_access_forum_form($form, $form_state, FALSE);
   }
   else if ($form_id == 'user_admin_role') {
-    forum_access_user_admin_role_form($form_id, $form);
+    module_load_include('admin.inc', 'forum_access');
+    _forum_access_user_admin_role_form($form, $form_state);
   }
   else if ($form_id == 'content_access_admin_settings' && empty($_POST)) {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_content_access_admin_form();
-  }
-}
-
-/**
- * We must know when a role is deleted.
- */
-function forum_access_user_admin_role_form($form_id, &$form) {
-  $form['#submit'][] = 'forum_access_user_admin_role_submit';
-}
-
-/**
- * If a role is deleted, we remove the grants it provided.
- */
-function forum_access_user_admin_role_submit($form, &$form_state) {
-  if ($form_state['values']['op'] == $form_state['values']['delete']) {
-    db_query("DELETE FROM {forum_access} WHERE rid = %d", $form_state['values']['rid']);
-    db_query("DELETE FROM {node_access} WHERE gid = %d AND realm = 'forum_access'", $form_state['values']['rid']);
   }
 }
 
@@ -175,7 +242,7 @@ function forum_access_get_moderator_uids($tid) {
 }
 
 /**
- * Implementation of $modulename_preprocess_$hook().
+ * Implementation of $modulename_preprocess_$hook() for forum_list.
  *
  * Add forum_access_moderators to each forum,
  * containing a list of user objects.
@@ -203,9 +270,10 @@ function forum_access_preprocess_forum_list(&$variables) {
 }
 
 /**
- * Implementation of $modulename_preprocess_$hook().
+ * Implementation of $modulename_preprocess_$hook() for forums.
  *
- * Remove 'post' links from forum page for users who may not post.
+ * Remove 'post' links from forum page, if the user does not have the
+ * 'create' permission.
  */
 function forum_access_preprocess_forums(&$variables) {
   if (!forum_access_access($variables['tid'], 'create')) {
@@ -214,6 +282,46 @@ function forum_access_preprocess_forums(&$variables) {
         unset($variables['links'][$key]);
       }
     }
+  }
+}
+
+/**
+ * Implementation of hook_link_alter().
+ *
+ * Remove the 'Add new comment' link from nodes, if the user does not have the
+ * 'create' permission.
+ */
+function forum_access_link_alter(&$links, $node)
+{
+  global $user;
+  if ($user->uid != 1 && isset($node->tid) && isset($links['comment_add']) && !forum_access_access($node->tid, 'create')) {
+    unset($links['comment_add']);
+  }
+}
+
+/**
+ * Implementation of $modulename_preprocess_$hook() for box.
+ *
+ * Remove the in-line 'Post new comment' box, if it's empty
+ * (after _forum_access_comment_form()).
+ */
+function forum_access_preprocess_box(&$variables) {
+  $tr = 't';
+  if (empty($variables['content']) && ($variables['title'] == $tr('Post new comment') || $variables['title'] == $tr('Reply'))) {
+    $variables['title'] = '';
+  }
+}
+
+/**
+ * Implementation of $modulename_preprocess_$hook() for comment.
+ *
+ * Recreate comment links (they've already been themed), and
+ * remove those that aren't accessible to the user.
+ */
+function forum_access_preprocess_comment(&$variables) {
+  if (isset($variables['node']->tid)) {
+    module_load_include('node.inc', 'forum_access');
+    _forum_access_preprocess_comment($variables);
   }
 }
 
@@ -241,26 +349,6 @@ function forum_access_enable() {
 function forum_access_disable() {
   forum_access_enabled(FALSE);
   node_access_needs_rebuild();
-}
-
-/**
- * Implementation of hook_init().
- *
- * Deny access to forum if the user does not have access to it.
- */
-function forum_access_init() {
-  if (!function_exists('user_access')) {
-    // page is cached; bail.
-    return;
-  }
-
-  if (arg(0) == 'forum' && is_numeric(arg(1))) {
-    if (!forum_access_access(arg(1), 'view')) {
-      drupal_access_denied();
-      module_invoke_all('exit');
-      exit;
-    }
-  }
 }
 
 /**
@@ -318,7 +406,8 @@ function forum_access_node_access_explain($row) {
   static $roles = NULL;
   if ($row->realm == 'forum_access') {
     if (!isset($roles)) {
-      $roles = user_roles();
+      module_load_include('node.inc', 'forum_access');
+      $roles = _forum_access_get_all_roles();
     }
     if (isset($roles[$row->gid])) {
       return array($roles[$row->gid]);
@@ -326,4 +415,3 @@ function forum_access_node_access_explain($row) {
     return array('(unknown gid)');
   }
 }
-
