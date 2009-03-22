@@ -527,7 +527,7 @@ function _forum_access_form_submit($form, &$form_state) {
   }
 
   // check for changes
-  $is_changed = FALSE;
+  $is_changed = $is_new = strpos($_GET['q'], 'admin/content/forum/add/') === 0;
   foreach (array('view', 'create', 'update', 'delete') as $grant_type) {
     if (isset($form['forum_access'][$grant_type])) {
       $defaults = $form['forum_access'][$grant_type]['#default_value'];
@@ -571,7 +571,7 @@ function _forum_access_form_submit($form, &$form_state) {
   $link = l(t('edit'), 'admin/content/forum/edit/forum/'. $tid);
   watchdog('access', 'Changed grants for %forum forum.', array('%forum' => $form_state['values']['name']), WATCHDOG_NOTICE, $link);
 
-  if ($form_state['values']['form_id'] != 'forum_form_container') {
+  if (!$is_new && $form_state['values']['form_id'] != 'forum_form_container') {
     if (!isset($access['update_choice']) || $access['update_choice'] == 2) {
       node_access_needs_rebuild(TRUE);
     }
