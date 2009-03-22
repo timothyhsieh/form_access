@@ -68,7 +68,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
       '#value' => '<div>'. t('Note that users need') .'<ul style="margin-top: 0"><li>'.
                            t('the !access_content and !access_comments permissions <strong>AND <em>View</em></strong> to be able to see content at all,', $variables) .'</li><li>'.
                            t('the !create_forum_topics (and similar) permissions <strong>AND <em>Post</em></strong> to be able to create forum content, and', $variables) .'</li><li>'.
-                           t('the !post_comments or !post_comments_without_approval permission <strong>AND <em>Post</em></strong> to be able to post comments/replies;', $variables) .'</li><li>'.
+                           t('the !post_comments and (probably) !post_comments_without_approval permission <strong>AND <em>Post</em></strong> to be able to post comments/replies;', $variables) .'</li><li>'.
                            t('the !edit_own_forum_topics or !edit_any_forum_topics (and similar) permissions (<strong>OR <em>Edit</em></strong>) can be added if desired, <strong>plus</strong>', $variables) .'</li><li>'.
                            t('the !delete_own_forum_topics or !delete_any_forum_topics (and similar) permissions (<strong>OR <em>Delete</em></strong>) if desired;', $variables) .'</li><li>'.
                            t('the !administer_comments (global!) permission <strong>OR <em>Edit</em>/<em>Delete</em></strong> to be able to edit/delete comments;', $variables) .'</li><li>'.
