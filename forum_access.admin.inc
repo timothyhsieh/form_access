@@ -761,18 +761,21 @@ function _forum_access_content_access_admin_form() {
  */
 function _forum_access_create_moderator_rid($verbose = FALSE) {  
   $tr = 't';
+  $variables = array('!Forum_Access' => 'Forum Access', '%administer_comments' => $tr('administer comments'), '%administer_nodes' => $tr('administer nodes'));
+  $role_name = t('Forum Moderator');
   $role = new stdClass();
-  $role->name = t('Forum Moderator');
-  $variables = array('!Forum_Access' => 'Forum Access', '%administer_comments' => $tr('administer comments'), '%administer_nodes' => $tr('administer nodes'), '%role' => $role->name);
-  if (drupal_write_record('role', $role))
-  {
+  $role->name = $role_name;
+  for ($i = 2; $i <= 12; ++$i) {
+    $variables['%role'] = $role->name;
+    if (!db_result(db_query("SELECT COUNT(rid) FROM {role} WHERE name = '%s'", $role->name)) &&
+        drupal_write_record('role', $role)) {
     $rid = $role->rid;
     variable_set('forum_access_moderator_rid', $rid);
     $permission = new stdClass();
     $permission->rid = $rid;
     $permission->perm = 'administer comments, administer nodes';
     drupal_write_record('permission', $permission);
-    $msg = t('!Forum_Access has created a new role named %role and given it the %administer_nodes and %administer_comments permissions. This role is temporarily assigned to users when they access nodes or comments to which they have <strong><em>Edit</em></strong> access. You can change the name of the role as you like, but you must keep it unmodified otherwise.', $variables);
+      $msg = t('!Forum_Access has created a new role named %role and given it the %administer_nodes and %administer_comments permissions. This role is used internally by !Forum_Access. You can change the name of the role as you like, but you must keep it unmodified otherwise.', $variables);
     if ($verbose) {
       drupal_set_message($msg, 'warning');
     }
@@ -780,9 +783,14 @@ function _forum_access_create_moderator_rid($verbose = FALSE) {
     return $rid;
   }
   else {
-    $msg = t('!Forum_Access cannot create the moderator role!', $variables);
-    drupal_set_message($msg, 'error');
-    watchdog('user', $msg, NULL, WATCHDOG_ERROR);
+      $msg = t('!Forum_Access cannot create the %role role!', $variables);
+      watchdog('user', $msg, NULL, WATCHDOG_WARNING);
+      drupal_set_message($msg .' '. t('Is it already in use?'), 'error');
+      $role->name = $role_name ." $i";
   }
+  }
+  $msg = t('!Forum_Access has given up and will not work correctly! Rename one of the roles listed above, so that !Forum_Access can use its name.', $variables);
+  drupal_set_message($msg, 'error');
+  watchdog('user', $msg, NULL, WATCHDOG_CRITICAL);
 }
 
