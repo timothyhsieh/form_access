@@ -14,9 +14,6 @@
  */
 function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   $tid = (isset($form['tid']['#value']) ? $form['tid']['#value'] : NULL);
-  if (isset($tid) && !forum_access_access($tid, 'view')) {
-    return;  // Deny access to (i.e. hide) the FA controls if the user doesn't have View access to the forum.
-  }
 
   $rids = array();
   $result = db_query("SELECT r.rid, r.name FROM {role} r ORDER BY r.name");
@@ -183,7 +180,10 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
     );
   }
   $form['forum_access']['clearer'] = array(
-    '#value' => '<div class="forum-access-clearer"></div>',
+    '#type' => 'item',
+    '#prefix' => '<div class="forum-access-clearer">',
+    '#suffix' => '</div>',
+    '#description' => t('For explanations of special cases, hover your mouse over role names.'),
   );
   if ($is_container) {
     $form['forum_access']['container_note'] = array(
@@ -396,41 +396,42 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
 
 function _forum_access_forum_form_disable_checkboxes($element) {
   global $user;
-  static $role_permissions = array();
-  $element_children = element_children($element);
-  if (empty($role_permissions)) {
-    $auth_permissions = '';
-    foreach ($element_children as $rid) {
-      $result = db_query('SELECT r.rid, p.perm FROM {role} r LEFT JOIN {permission} p ON r.rid = p.rid WHERE r.rid = %d', $rid);
+  static $permissions_by_rid = array();
+  if (empty($permissions_by_rid)) {
+    $permissions_by_rid[DRUPAL_AUTHENTICATED_RID] = '';
+    $result = db_query('SELECT r.rid, p.perm FROM {role} r LEFT JOIN {permission} p ON r.rid = p.rid ORDER BY r.rid');
       while ($role = db_fetch_object($result)) {
-        $role_permissions[$role->rid] = $role->perm .', '. ($role->rid == DRUPAL_ANONYMOUS_RID ? '' : $auth_permissions);
-        if ($role->rid == DRUPAL_AUTHENTICATED_RID) {
-          $auth_permissions = $role->perm .', ';
-        }
-      }
+      $permissions_by_rid[$role->rid] = $role->perm .', '. ($role->rid != DRUPAL_ANONYMOUS_RID ? $permissions_by_rid[DRUPAL_AUTHENTICATED_RID] : '');
     }
   }
   $tr = 't';
   $moderator_rid = variable_get('forum_access_moderator_rid', NULL);
-  
+
+  $element_children = element_children($element);
   foreach ($element_children as $rid) {
-    if (strstr($role_permissions[$rid], 'access content,') === FALSE) {
+    if ($rid == $moderator_rid) {
+      $element[$rid]['#prefix'] = '<span title="'. t("This is the (temporary) @Forum_Moderator role; it has the '@administer_nodes' and '@administer_comments' permissions and is only used temporarily by @Forum_Access &mdash; do NOT give this role to any user!", array('@Forum_Moderator' => t('Forum Moderator'), '@administer_nodes' => $tr('administer nodes'), '@administer_comments' => $tr('administer comments'), '@Forum_Access' => 'Forum Access')) .'">';
+      $element[$rid]['#suffix'] = "</span>";
+      $element[$rid]['#default_value'] = TRUE;
       $element[$rid]['#disabled'] = TRUE;
-      $element[$rid]['#default_value'] = FALSE;
-      $element[$rid]['#prefix'] = '<span title="'. t("This role does not have the '@perm' permission.", array('@perm' => $tr('access content'))) .'">';
-      $element[$rid]['#suffix'] = "</span>";
     }
-    if ($element['#parents'][1] == 'view' && strstr($role_permissions[$rid], 'administer forums,') !== FALSE) {
+    elseif ($element['#parents'][1] == 'create') {
+      // Do nothing (Post is always mutable).
+    }
+    elseif ($element['#parents'][1] == 'view' && strstr($permissions_by_rid[$rid], 'administer forums,') !== FALSE) {
       $element[$rid]['#title'] = '<em>'. $element[$rid]['#title'] .'</em>';
-      $element[$rid]['#prefix'] = '<span title="'. t("This role has the '@perm' permission, and granting '@View' enables the role holders to change the settings on this page, including @Access_control!", array('@perm' => $tr('administer forums'), '@View' => t('View'), '@Access_control' => t('Access control'))) .'">';
+      $element[$rid]['#prefix'] = '<span title="'. t("This role has the '@administer_forums' permission, and granting '@View' enables the role holders to change the settings on this page, including @Access_control!", array('@administer_forums' => $tr('administer forums'), '@View' => t('View'), '@Access_control' => t('Access control'))) .'">';
+      if (strstr($permissions_by_rid[$rid], 'administer nodes,') !== FALSE) {
+        $element[$rid]['#prefix'] = str_replace('">', ' '. t("Because the role also has the '@administer_nodes' permission, it has full access to all nodes either way.", array('@administer_nodes' => $tr('administer nodes'))) .'">', $element[$rid]['#prefix']);
+      }
       $element[$rid]['#suffix'] = "</span>";
     }
-    elseif (strstr($role_permissions[$rid], 'administer nodes,') !== FALSE) {
+    elseif (strstr($permissions_by_rid[$rid], 'administer nodes,') !== FALSE) {
       $element[$rid]['#disabled'] = TRUE;
       $element[$rid]['#default_value'] = TRUE;
       $element[$rid]['#prefix'] = '<span title="'. ($rid != $moderator_rid
-                                                    ? t("This role has the '@perm' permission and thus full access to all nodes.", array('@perm' => $tr('administer nodes')))
-                                                    : t("This is the !Forum_Moderator role; it has the '@perm1' and '@perm2' permissions and thus full access to all nodes and comments.", array('!Forum_Moderator' => t('Forum Moderator'), '@perm1' => $tr('administer nodes'), '@perm2' => $tr('administer comments')))) .'">';
+                                                    ? t("This role has the '@administer_nodes' permission and thus full access to all nodes.", array('@administer_nodes' => $tr('administer nodes')))
+                                                    : t("This is the @Forum_Moderator role; it has the '@administer_nodes' and '@administer_comments' permissions and thus full access to all nodes and comments.", array('@Forum_Moderator' => t('Forum Moderator'), '@administer_nodes' => $tr('administer nodes'), '@administer_comments' => $tr('administer comments')))) .'">';
       $element[$rid]['#suffix'] = "</span>";
     }
   }
@@ -525,6 +526,8 @@ function _forum_access_form_submit($form, &$form_state) {
   elseif (variable_get('forum_access_new_template_tid', 0) == $template_tid) {
     variable_del('forum_access_new_template_tid');
   }
+  module_load_include('node.inc', 'forum_access');
+  $moderator_rid = _forum_access_get_moderator_rid(TRUE);  // create the moderators role if it doesn't exist
 
   // check for changes
   $is_changed = $is_new = strpos($_GET['q'], 'admin/content/forum/add/') === 0;
@@ -547,14 +550,10 @@ function _forum_access_form_submit($form, &$form_state) {
   $fa_priority = isset($access['interference']['advanced']['priority']) ? $access['interference']['advanced']['priority'] : 0;
   if (array_key_exists('acl', $access)) {
     $moderators = unserialize($access['acl']['user_list']);
-    if (!empty($moderators)) {
-      module_load_include('node.inc', 'forum_access');
-      _forum_access_get_moderator_rid(TRUE);  // create the moderators role if it doesn't exist
-    }
     acl_save_form($access['acl'], $fa_priority);
   }
   foreach ($access['view'] as $rid => $checked) {
-    if (!empty($form['forum_access']['view'][$rid]['#disabled'])) {
+    if ($rid == $moderator_rid) {
       continue;
     }
     $grants[] = array(
