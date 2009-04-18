@@ -554,7 +554,7 @@ function _forum_access_form_submit($form, &$form_state) {
     acl_save_form($access['acl'], $fa_priority);
   }
   foreach ($access['view'] as $rid => $checked) {
-    if (!empty($form['forum_access']['view'][$tid]['#disabled'])) {
+    if (!empty($form['forum_access']['view'][$rid]['#disabled'])) {
       continue;
     }
     $grants[] = array(
