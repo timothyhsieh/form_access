@@ -32,8 +32,7 @@ function forum_access_node_access_records($node) {
   }
 
   static $grants = array();
-  if (isset($node->tid) || isset($node->forum_tid)) {
-    $tid = (isset($node->tid) ? $node->tid : $node->forum_tid);
+  if ($tid = _forum_access_get_tid($node)) {
     if (!isset($grants[$tid])) {
       $result = db_query('SELECT * FROM {forum_access} WHERE tid = %d', $tid);
       while ($grant = db_fetch_object($result)) {
@@ -119,8 +118,7 @@ function forum_access_init() {
   if (isset($nid)) {
     $node = node_load($nid);
   }
-  if (isset($node->tid)) {
-    $tid = $node->tid;
+  if ($tid = _forum_access_get_tid($node)) {
     foreach ($access as $a) {
       if (forum_access_access($tid, $a)) {
         module_load_include('node.inc', 'forum_access');
@@ -294,7 +292,7 @@ function forum_access_preprocess_forums(&$variables) {
 function forum_access_link_alter(&$links, $node)
 {
   global $user;
-  if ($user->uid != 1 && isset($node->tid) && isset($links['comment_add']) && !forum_access_access($node->tid, 'create')) {
+  if ($user->uid != 1 && ($tid = _forum_access_get_tid($node)) && isset($links['comment_add']) && !forum_access_access($tid, 'create')) {
     unset($links['comment_add']);
   }
 }
@@ -397,6 +395,13 @@ function forum_access_access($tid, $type, $account = NULL) {
  */
 function _forum_access_get_roles($user) {
   return implode(', ', array_keys($user->roles));
+}
+
+/**
+ * Return the forum tid or FALSE.
+ */
+function _forum_access_get_tid($node) {
+  return (isset($node->forum_tid) ? $node->forum_tid : (isset($node->tid) ? $node->tid : FALSE));
 }
 
 /**

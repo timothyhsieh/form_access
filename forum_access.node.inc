@@ -117,8 +117,8 @@ function _forum_access_comment_form(&$form, &$form_state) {
   global $user;
   if ($user->uid != 1 && isset($form['nid']['#value'])) {
     $node = node_load($form['nid']['#value']);
-    if (isset($node->tid)) {
-      if (!forum_access_access($node->tid, 'create')) {
+    if ($tid = _forum_access_get_tid($node)) {
+      if (!forum_access_access($tid, 'create')) {
         switch (arg(0))
         {
           case 'node':

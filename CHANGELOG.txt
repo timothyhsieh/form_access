@@ -2,6 +2,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Bugs fixed:
+    - #410930: Work around a core bug that puts wrong values into $node->tid.
     - Tune the behavior of the administrative interface.
     - #413708: Make forums visible to users with 'administer nodes' permission.
     - #408560: Grants still not saved under some circumstances.
