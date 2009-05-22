@@ -1,7 +1,10 @@
 CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
+  Enhancements:
+    - #243076: Major update of Swedish translation.
   Bugs fixed:
+    - Fix minor structural bug.
     - #410930: Work around a core bug that puts wrong values into $node->tid.
     - Tune the behavior of the administrative interface.
     - #413708: Make forums visible to users with 'administer nodes' permission.

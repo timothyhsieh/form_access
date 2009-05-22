@@ -117,14 +117,14 @@ function forum_access_init() {
   }
   if (isset($nid)) {
     $node = node_load($nid);
-  }
-  if ($tid = _forum_access_get_tid($node)) {
-    foreach ($access as $a) {
-      if (forum_access_access($tid, $a)) {
-        module_load_include('node.inc', 'forum_access');
-        $user->_forum_access_moderator = TRUE;
-        if (arg(0) == 'comment' || arg(0) == 'node' && arg(2) == 'edit') {
-          _forum_access_enable_moderator();
+    if ($tid = _forum_access_get_tid($node)) {
+      foreach ($access as $a) {
+        if (forum_access_access($tid, $a)) {
+          module_load_include('node.inc', 'forum_access');
+          $user->_forum_access_moderator = TRUE;
+          if (arg(0) == 'comment' || arg(0) == 'node' && arg(2) == 'edit') {
+            _forum_access_enable_moderator();
+          }
         }
       }
     }
