@@ -1,6 +1,8 @@
 CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
+
+forum_access 6.x-1.x-BETA4 (2009-05-22):
   Enhancements:
     - #243076: Major update of Swedish translation.
   Bugs fixed:
