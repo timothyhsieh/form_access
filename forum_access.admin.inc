@@ -15,10 +15,10 @@
 function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   $tid = (isset($form['tid']['#value']) ? $form['tid']['#value'] : NULL);
 
-  $rids = array();
+  $roles = array();
   $result = db_query("SELECT r.rid, r.name FROM {role} r ORDER BY r.name");
   while ($obj = db_fetch_object($result)) {
-    $rids[$obj->rid] = $obj->name;
+    $roles[$obj->rid] = check_plain($obj->name);
   }
 
   if (isset($tid)) {  // edit
@@ -149,7 +149,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
     '#type' => 'checkboxes',
     '#prefix' => '<div class="forum-access-div">',
     '#suffix' => '</div>',
-    '#options' => $rids,
+    '#options' => $roles,
     '#default_value' => $settings['view'],
     '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
   );
@@ -157,7 +157,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
     '#type' => 'checkboxes',
     '#prefix' => '<div class="forum-access-div">',
     '#suffix' => '</div>',
-    '#options' => $rids,
+    '#options' => $roles,
     '#default_value' => $settings['create'],
     '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
   );
@@ -166,7 +166,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
       '#type' => 'checkboxes',
       '#prefix' => '<div class="forum-access-div">',
       '#suffix' => '</div>',
-      '#options' => $rids,
+      '#options' => $roles,
       '#default_value' => $settings['update'],
       '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
     );
@@ -174,7 +174,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
       '#type' => 'checkboxes',
       '#prefix' => '<div class="forum-access-div">',
       '#suffix' => '</div>',
-      '#options' => $rids,
+      '#options' => $roles,
       '#default_value' => $settings['delete'],
       '#process' => array('expand_checkboxes', '_forum_access_forum_form_disable_checkboxes'),
     );
