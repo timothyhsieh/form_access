@@ -1,6 +1,9 @@
 CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
+
+
+forum_access 6.x-1.x-RC1 (2009-06-03):
   Bugs fixed:
     - #472494: check_plain() the role names.
 
