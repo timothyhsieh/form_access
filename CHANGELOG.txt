@@ -1,7 +1,8 @@
 CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
-
+  Bugs fixed:
+    - Cast to VARCHAR rather than to CHAR for pgsql.
 
 forum_access 6.x-1.x-RC1 (2009-06-03):
   Bugs fixed:
