@@ -1,6 +1,8 @@
 CHANGELOG for Forum Access for Drupal 5
 
 Forum Access 5.x-1.x-dev:
+  Bugs fixed:
+    - Cast to VARCHAR rather than to CHAR for pgsql.
 
 Forum Access 5.x-1.12 (2009-05-23):
   Enhancements:
