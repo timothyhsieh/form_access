@@ -281,6 +281,9 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
             '#value' => '<div>'. t("The priority of @Content_Access ($ca_priority) is higher than the priority of !Forum_Access ($fa_priority), which means the latter is <strong>completely disabled</strong> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page, change the priority (under %Advanced) to 0, and clear all checkboxes.", $variables) .'</div>',
           );
         }
+        $form['forum_access']['interference']['by_content_access'][] = array(
+          '#value' => '<div>'. t("Alternatively, you can give !Forum_Access priority over @Content_Access by either raising the priority of !Forum_Access in every forum above the priority of @Content_Access, or by lowering the priority of @Content_Access for the content types in question below the priority of !Forum_Access.", $variables) .'</div>',
+        );
       }
       else {
         $form['forum_access']['interference'][] = array(
@@ -739,11 +742,17 @@ function _forum_access_user_admin_role_submit($form, &$form_state) {
 function _forum_access_content_access_admin_form() {
   $tr = 't';
   $variables = array(
+    '!Content_Access' => 'Content Access',
     '!Forum_Access' => 'Forum Access', 
-    '!Forum_Access_link' => l('Forum Access', 'admin/content/forum')
+    '!Forum_Access_link' => l('Forum Access', 'admin/content/forum'),
+    '%anonymous_user' => $tr('anonymous user'),
+    '%authenticated_user' => $tr('authenticated user'),
+    '%Advanced' => $tr('Advanced'),
   );
   if (arg(3) == 'forum') {
-    drupal_set_message(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected in the !Forum_Access_link settings, but !Forum_Access can only allow <i>more</i> access, not less.', $variables), 'warning');
+    drupal_set_message(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected in the !Forum_Access_link settings, but !Forum_Access can only allow <i>more</i> access, not less.', $variables)
+      .'<br /><span class="error">'. t('Specifically, any rights granted to the %anonymous_user and/or the %authenticated_user will <b>override</b> the settings of !Forum_Access!', $variables) .'</span>'
+      .'<br />'. t('To avoid conflicts with !Forum_Access settings, you may want to lower the priority of !Content_Access (under %Advanced below) below the priority of !Forum_Access for the content types that you want to be controlled by !Forum_Access.', $variables), 'warning');
   }
   else {
     $vid = variable_get('forum_nav_vocabulary', '');
