@@ -1,6 +1,6 @@
 CHANGELOG for Forum Access for Drupal 6
 
-forum_access 6.x-1.x-dev:
+forum_access 6.x-1.0 (2009-08-03):
   Enhancements:
     - Improve information on how to avoid conflicts with Content Access.
     - Improve wording of trouble-shooting text (string-only change).
