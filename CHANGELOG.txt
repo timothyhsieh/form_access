@@ -1,6 +1,8 @@
 CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
+  Enhancements:
+    - Improve wording of trouble-shooting text (string-only change).
   Bugs fixed:
     - Cast to VARCHAR rather than to CHAR for pgsql.
 
