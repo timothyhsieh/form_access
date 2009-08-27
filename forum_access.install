@@ -104,3 +104,12 @@ function forum_access_update_2() {
     'default'     => 0));
   return $ret;
 }
+
+/**
+ * Warn users upgrading from Drupal 5.
+ */
+function forum_access_update_6100() {
+  drupal_set_message('<b>Upgrading Forum Access from Drupal 5?&nbsp; Then please read:</b><br />In Drupal 5, comment posting was not restricted by Forum Access; users with <em>View</em> access (and the <em>post comments</em> permission) were always allowed to post forum comments. Starting with Drupal 6, posting comments is now restricted to users with <em>Post</em> access. If you prefer the old behavior, then go to '. l('Forum Settings', 'admin/content/forum/settings', array('fragment' => 'edit-forum-admin-settings-forum-access')) .' and turn <em>Drupal 5 legacy mode</em> on.', 'warning', FALSE);
+  return array();
+}
+

@@ -78,6 +78,9 @@ function forum_access_init() {
       break;
       
     case 'comment':
+      if (variable_get('forum_access_D5_legacy_mode', FALSE)) {
+        return;  // disable comment access control
+      }
       if ((arg(1) == 'edit' || arg(1) == 'delete') && !user_access('administer comments')) {
         if (is_numeric($cid = arg(2))) {  // comment/edit/%, comment/delete/%
           $access[] = (arg(1) == 'edit' ? 'update' : 'delete'); 
@@ -141,7 +144,7 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
     module_load_include('node.inc', 'forum_access');
     _forum_access_node_form($form, $form_state);
   }
-  else if ($form_id == 'comment_form') {
+  else if ($form_id == 'comment_form' && !variable_get('forum_access_D5_legacy_mode', FALSE)) {
     module_load_include('node.inc', 'forum_access');
     _forum_access_comment_form($form, $form_state);
   }
@@ -156,6 +159,10 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
   else if ($form_id == 'forum_form_forum') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_forum_form($form, $form_state, FALSE);
+  }
+  else if ($form_id == 'forum_admin_settings') {
+    module_load_include('admin.inc', 'forum_access');
+    _forum_access_forum_admin_settings_form($form, $form_state);
   }
   else if ($form_id == 'user_admin_role') {
     module_load_include('admin.inc', 'forum_access');
@@ -283,6 +290,9 @@ function forum_access_preprocess_forums(&$variables) {
   }
 }
 
+if (!variable_get('forum_access_D5_legacy_mode', FALSE))
+{  // LEGACY-MODE disables these methods
+
 /**
  * Implementation of hook_link_alter().
  *
@@ -322,6 +332,8 @@ function forum_access_preprocess_comment(&$variables) {
     _forum_access_preprocess_comment($variables);
   }
 }
+
+}  // End of !LEGACY-MODE
 
 /**
  * This is also required by ACL module.

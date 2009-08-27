@@ -2,6 +2,8 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+  Enhancement:
+    - #552636: Implement 'Drupal 5 legacy mode,' where posting comments and replies is always allowed, for backward compatibility.
   Bugs fixed:
     - Avoid Coder warning and improve installation information.
 
