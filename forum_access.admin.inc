@@ -534,16 +534,18 @@ function _forum_access_form_submit($form, &$form_state) {
 
   // check for changes
   $is_changed = $is_new = strpos($_GET['q'], 'admin/content/forum/add/') === 0;
+  $form_initial_values = $form;  // avoid Coder warning
+  $form_initial_values = $form_initial_values['forum_access'];
   foreach (array('view', 'create', 'update', 'delete') as $grant_type) {
-    if (isset($form['forum_access'][$grant_type])) {
-      $defaults = $form['forum_access'][$grant_type]['#default_value'];
+    if (isset($form_initial_values[$grant_type])) {
+      $defaults = $form_initial_values[$grant_type]['#default_value'];
       $defaults = array_flip($defaults);
       foreach ($access[$grant_type] as $tid => $checked) {
-        $is_changed = $is_changed || (empty($form['forum_access'][$grant_type][$tid]['#disabled']) && !empty($checked) != isset($defaults[$tid]));
+        $is_changed = $is_changed || (empty($form_initial_values[$grant_type][$tid]['#disabled']) && !empty($checked) != isset($defaults[$tid]));
       }
     }
   }
-  if (!$is_changed && $access['acl']['user_list'] == $form['forum_access']['acl']['user_list']['#default_value'] && $access['interference']['advanced']['priority'] == $form['forum_access']['interference']['advanced']['priority']['#default_value']) {
+  if (!$is_changed && $access['acl']['user_list'] == $form_initial_values['acl']['user_list']['#default_value'] && $access['interference']['advanced']['priority'] == $form_initial_values['interference']['advanced']['priority']['#default_value']) {
     drupal_set_message(t('The content access permissions are unchanged.'));
     return;
   }
