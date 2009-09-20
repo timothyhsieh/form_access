@@ -5,6 +5,7 @@ forum_access 6.x-1.x-dev:
   Enhancement:
     - #552636: Implement 'Drupal 5 legacy mode,' where posting comments and replies is always allowed, for backward compatibility.
   Bugs fixed:
+    - #493044: Fix missing initialization of the {forum_access} table during installation.
     - #578554: Fix a possible foreach() error message.
     - Avoid Coder warning and improve installation information.
 
