@@ -63,9 +63,9 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
     $form['forum_access']['permissions'][] = array(
       '#type' => 'markup',
       '#value' => '<div>'. t('Note that users need') .'<ul style="margin-top: 0"><li>'.
-    t('the !access_content and !access_comments permissions <strong>AND <em>View</em></strong> to be able to see this forum and its content at all,', $variables) .'</li><li>'.
+                           t('the !access_content and !access_comments permissions <strong>AND <em>View</em></strong> to be able to see this forum and its content at all,', $variables) .'</li><li>'.
                            t('the !create_forum_topics (and similar) permissions <strong>AND <em>Post</em></strong> to be able to create forum content, and', $variables) .'</li><li>'.
-    t('the !post_comments and (probably) !post_comments_without_approval permission <!TAG>AND <em>Post</em></!TAG> to be able to post comments/replies;', $variables + array('!TAG' => (variable_get('forum_access_D5_legacy_mode', FALSE) ? 'del title="'. t('Drupal 5 legacy mode') .'"' : 'strong'))) .'</li><li>'.
+                           t('the !post_comments and (probably) !post_comments_without_approval permission <!TAG>AND <em>Post</em></!TAG> to be able to post comments/replies;', $variables + array('!TAG' => (variable_get('forum_access_D5_legacy_mode', FALSE) ? 'del title="'. t('Drupal 5 legacy mode') .'"' : 'strong'))) .'</li><li>'.
                            t('the !edit_own_forum_topics or !edit_any_forum_topics (and similar) permissions (<strong>OR <em>Edit</em></strong>) can be added if desired, <strong>plus</strong>', $variables) .'</li><li>'.
                            t('the !delete_own_forum_topics or !delete_any_forum_topics (and similar) permissions (<strong>OR <em>Delete</em></strong>) if desired;', $variables) .'</li><li>'.
                            t('the !administer_comments (global!) permission <strong>OR <em>Edit</em>/<em>Delete</em></strong> to be able to edit/delete comments;', $variables) .'</li><li>'.
@@ -413,7 +413,7 @@ function _forum_access_forum_form_disable_checkboxes($element) {
   $element_children = element_children($element);
   foreach ($element_children as $rid) {
     if ($rid == $moderator_rid) {
-      $element[$rid]['#prefix'] = '<span title="'. t("This is the (temporary) @Forum_Moderator role; it has the '@administer_nodes' and '@administer_comments' permissions and is only used temporarily by @Forum_Access &mdash; do NOT give this role to any user!", array('@Forum_Moderator' => t('Forum Moderator'), '@administer_nodes' => $tr('administer nodes'), '@administer_comments' => $tr('administer comments'), '@Forum_Access' => 'Forum Access')) .'">';
+      $element[$rid]['#prefix'] = '<span title="'. t("This is the (temporary) @Forum_Moderator role; it has the '@administer_nodes' and '@administer_comments' permissions and is only used temporarily by @Forum_Access &mdash; do NOT give this role to any user!", array('@Forum_Moderator' => t('Forum Moderator'), '@administer_nodes' => $tr('administer nodes'), '@administer_comments' => $tr('administer comments'), '@Forum_Access' => 'Forum Access')) .'" class="forum-access-temporary-moderator">';
       $element[$rid]['#suffix'] = "</span>";
       $element[$rid]['#default_value'] = TRUE;
       $element[$rid]['#disabled'] = TRUE;
