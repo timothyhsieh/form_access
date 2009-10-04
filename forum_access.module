@@ -122,9 +122,9 @@ function forum_access_init() {
     $node = node_load($nid);
     if ($tid = _forum_access_get_tid($node)) {
       foreach ($access as $a) {
-        if (forum_access_access($tid, $a)) {
+        if ($level = forum_access_access($tid, $a)) {
           module_load_include('node.inc', 'forum_access');
-          $user->_forum_access_moderator = TRUE;
+          $user->_forum_access_moderator = $level;
           if (arg(0) == 'comment' || arg(0) == 'node' && arg(2) == 'edit') {
             _forum_access_enable_moderator();
           }
@@ -367,6 +367,13 @@ function forum_access_disable() {
  * $tid -- the tid of the forum
  * $type -- view, update, delete or create
  * $account -- the account to test for. If NULL use current user.
+ * 
+ * Return:
+ *   FALSE - access not granted
+ *   1     - access granted
+ *   2     - access granted for forum moderator
+ *   3     - user has 'administer nodes' (this occurs also when in
+ *           forum moderator mode!)
  */
 function forum_access_access($tid, $type, $account = NULL) {
   static $cache = array();
@@ -377,7 +384,7 @@ function forum_access_access($tid, $type, $account = NULL) {
 
   if ($account->uid == 1 ||
       user_access('administer nodes') && array_search($type, array('view', 'update', 'delete')) !== FALSE) {
-    return TRUE;
+    return 3;
   }
 
   if (!isset($cache[$account->uid][$tid][$type])) {
@@ -385,14 +392,14 @@ function forum_access_access($tid, $type, $account = NULL) {
     $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_%s = 1 AND tid = %d", $roles, $type, $tid));
 
     if ($result) {
-      $cache[$account->uid][$tid][$type] = TRUE;
+      $cache[$account->uid][$tid][$type] = 1;
     }
     else {
       // check our moderators too
       $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $tid));
       $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
       if ($result) {
-        $cache[$account->uid][$tid][$type] = TRUE;
+        $cache[$account->uid][$tid][$type] = 2;
       }
       else {
         $cache[$account->uid][$tid][$type] = FALSE;
