@@ -6,6 +6,7 @@ forum_access 6.x-1.x-dev:
     - Keep the admin from assigning the internal-use-only forum moderator role to a user.
     - #552636: Implement 'Drupal 5 legacy mode,' where posting comments and replies is always allowed, for backward compatibility.
   Bugs fixed:
+    - Fix some trailing spaces (no functional change).
     - #493044: Fix missing initialization of the {forum_access} table during installation.
     - #578554: Fix a possible foreach() error message.
     - Avoid Coder warning and improve installation information.

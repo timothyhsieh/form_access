@@ -386,9 +386,9 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
         '#parents' => array('forum_access', 'update_choice'),
       ),
       '#attributes' => array('class' => 'forum-access-flowed'),
-    );  
+    );
   }
-  
+
   // Move some stuff down so our block goes in a nice place.
   $form['submit']['#weight'] = 10;
   $form['delete']['#weight'] = 10;
@@ -450,7 +450,7 @@ function _forum_access_forum_form_after_build_acl0($form, $form_state) {
       $f = acl_edit_form($acl_id, 'DUMMY');
       $form['user_list']['#value'] = $f['user_list']['#default_value'];
     }
-  } 
+  }
   return $form;
 }
 
@@ -499,7 +499,7 @@ function _forum_access_forum_form_after_build($form, &$form_state) {
 
 function _forum_access_form_validate($form, &$form_state) {
   global $user;
-  
+
   if ($user->uid == 1) {
     return;
   }
@@ -775,7 +775,7 @@ function _forum_access_content_access_admin_form() {
   $tr = 't';
   $variables = array(
     '!Content_Access' => 'Content Access',
-    '!Forum_Access' => 'Forum Access', 
+    '!Forum_Access' => 'Forum Access',
     '!Forum_Access_link' => l('Forum Access', 'admin/content/forum'),
     '%anonymous_user' => $tr('anonymous user'),
     '%authenticated_user' => $tr('authenticated user'),
