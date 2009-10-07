@@ -222,7 +222,7 @@ function _forum_access_preprocess_comment(&$variables) {
   if (isset($links['comment_reply']) && (!preg_match('#<li class="[^"]*comment_reply[^"]*".*</li>#U', $variables['links']) || !forum_access_access($tid, 'create'))) {
     unset($links['comment_reply']);
   }
-  if (isset($links['comment_edit']) && !forum_access_access($tid, 'update')) {
+  if (isset($links['comment_edit']) && !forum_access_access($tid, 'update') && !comment_access('edit', $variables['comment'])) {
     unset($links['comment_edit']);
   }
   if (isset($links['comment_delete']) && !forum_access_access($tid, 'delete')) {
