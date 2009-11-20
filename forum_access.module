@@ -183,7 +183,7 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
   }
   else if ($form_id == 'user_profile_form') {
     module_load_include('admin.inc', 'forum_access');
-    _forum_access_user_profile_form_form($form, $form_state);
+    _forum_access_user_profile_form($form, $form_state);
   }
 }
 
@@ -365,6 +365,7 @@ function forum_access_enabled($set = NULL) {
  */
 function forum_access_enable() {
   node_access_needs_rebuild();
+  variable_del('forum_access_rids');  // clear cache
 }
 
 /**
@@ -442,6 +443,68 @@ function forum_access_user($op, &$edit, &$account, $category = NULL) {
         }
       }
       break;
+  }
+}
+
+/**
+ * Implementation of hook_menu_alter().
+ *
+ * Remove the 'Forum' menu item if no forums are visible.
+ */
+function forum_access_menu_alter(&$items) {
+  if (!empty($items['forum'])) {
+    //dpm($items['forum'], 'hook_menu_alter($items[\'forum\'])');
+    if (!empty($items['forum']['access callback']) || $items['forum']['access arguments'][0] != 'access content') {
+      drupal_set_message(t('Unexpected access specification for the %forum menu path; @Forum_Access cannot control its access.', array('%forum' => 'forum', '@Forum_Access' => 'Forum Access')), 'error');
+      return;
+    }
+    $items['forum']['access callback'] = '_forum_access_access_any_forum';
+    unset($items['forum']['access arguments']);
+  }
+}
+
+/**
+ * Access callback for the 'forum' menu item.
+ */
+function _forum_access_access_any_forum() {
+  global $user;
+  static $return;
+
+  if (!isset($return)) {
+    if ($user->uid == 1) {
+      return $return = TRUE;
+    }
+    if (!user_access('access content')) {
+      return $return = FALSE;
+    }
+    $rids = variable_get('forum_access_rids', NULL);
+    if (!isset($rids)) {
+      $result = db_query("SELECT fa.rid FROM {forum_access} fa WHERE fa.grant_view > 0 GROUP BY fa.rid");
+      while ($role = db_fetch_object($result)) {
+        $rids[] = $role->rid;
+      }
+      variable_set('forum_access_rids', $rids);
+    }
+    foreach ($rids as $rid) {
+      if (isset($user->roles[$rid])) {
+        return $return = TRUE;
+      }
+    }
+    $return = FALSE;
+  }
+  return $return;
+}
+
+/**
+ * Implementation of hook_taxonomy().
+ * 
+ * Delete {forum_access} records when forums are deleted.
+ */
+function forum_access_taxonomy($op, $type, $array = NULL) {
+  //dpm($array, "hook_taxonomy($op, $type)");
+  if ($type = 'term' && $op == 'delete' && $array['vid'] == variable_get('forum_nav_vocabulary', '')) {
+    db_query("DELETE FROM {forum_access} WHERE tid = %d", $array['tid']);
+    variable_del('forum_access_rids');  // clear cache
   }
 }
 

@@ -91,6 +91,7 @@ function forum_access_uninstall() {
   variable_del('forum_access_default_template_tid');
   variable_del('forum_access_new_template_tid');
   variable_del('forum_access_provide_moderators_template_variable');
+  variable_del('forum_access_rids');
 }
 
 /**
@@ -123,5 +124,19 @@ function forum_access_update_2() {
 function forum_access_update_6100() {
   drupal_set_message('<b>Upgrading Forum Access from Drupal 5?&nbsp; Then please read:</b><br />In Drupal 5, comment posting was not restricted by Forum Access; users with <em>View</em> access (and the <em>post comments</em> permission) were always allowed to post forum comments. Starting with Drupal 6, posting comments is now restricted to users with <em>Post</em> access. If you prefer the old behavior, then go to '. l('Forum Settings', 'admin/content/forum/settings', array('fragment' => 'edit-forum-admin-settings-forum-access')) .' and turn <em>Drupal 5 legacy mode</em> on.', 'warning', FALSE);
   return array();
+}
+
+/**
+ * Clean out {forum_access} table and remove Forum Moderator assignments.
+ */
+function forum_access_update_6101() {
+  $ret = array();
+  $forum_vid = variable_get('forum_nav_vocabulary', 0);
+  $ret[] = update_sql("DELETE FROM {forum_access} WHERE tid NOT IN (SELECT tid FROM {term_data} WHERE vid = $forum_vid)");
+  $ret[] = update_sql("DELETE FROM {forum_access} WHERE rid NOT IN (SELECT rid FROM {role})");
+  if ($moderator_rid = variable_get('forum_access_moderator_rid', FALSE)) {
+    $ret[] = update_sql("DELETE FROM {users_roles} WHERE rid = $moderator_rid");
+  }
+  return $ret;
 }
 
