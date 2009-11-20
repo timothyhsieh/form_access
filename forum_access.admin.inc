@@ -408,7 +408,7 @@ function _forum_access_forum_form_disable_checkboxes($element) {
     }
   }
   $tr = 't';
-  $moderator_rid = variable_get('forum_access_moderator_rid', NULL);
+  $moderator_rid = _forum_access_query_moderator_rid();
 
   $element_children = element_children($element);
   foreach ($element_children as $rid) {
@@ -761,7 +761,7 @@ function _forum_access_user_admin_role_submit($form, &$form_state) {
     $rid = $form_state['values']['rid'];
     db_query("DELETE FROM {forum_access} WHERE rid = %d", $rid);
     db_query("DELETE FROM {node_access} WHERE gid = %d AND realm = 'forum_access'", $rid);
-    if ($rid === variable_get('forum_access_moderator_rid', NULL)) {
+    if ($rid === _forum_access_query_moderator_rid()) {
       drupal_set_message(t('The role you have just deleted is required by !Forum_Access; it will be recreated automatically.', array('!Forum_Access' => 'Forum Access')), 'error');
     }
   }
@@ -796,7 +796,52 @@ function _forum_access_content_access_admin_form() {
   }
 }
 
-/*
+/**
+ * Keep the user from changing the permissions of the Forum Moderator role.
+ *
+ * Disable the checkboxes in the Forum Moderators column on
+ * admin/user/permissions.
+ */
+function _forum_access_user_admin_perm_form(&$form, &$form_state) {
+  $moderator_rid = _forum_access_query_moderator_rid();
+  if (isset($moderator_rid) && array_key_exists($moderator_rid, $form['role_names'])) {
+    drupal_set_message(t('The %role role is used internally by the @Forum_Access module and must not be changed!', array('%role' => $form['role_names'][$moderator_rid]['#value'], '@Forum_Access' => 'Forum Access')), 'warning');
+    $form['checkboxes'][$moderator_rid]['#disabled'] = TRUE;
+  }
+}
+
+/**
+ * Keep the user from bulk-assigning the Forum Moderator role.
+ *
+ * Remove the Forum Moderator role from the selection list on
+ * admin/user/user.
+ */
+function _forum_access_user_admin_account_form(&$form, &$form_state) {
+  $moderator_rid = _forum_access_query_moderator_rid();
+  if (isset($moderator_rid)) {
+    unset($form['options']['operation']['#options'][t('Add a role to the selected users')]["add_role-$moderator_rid"]);
+  }
+}
+
+/**
+ * Keep the user from assigning the Forum Moderator role.
+ *
+ * Disable the Forum Moderator checkbox on user/UID/edit.
+ */
+function _forum_access_user_profile_form_form(&$form, &$form_state) {
+  $moderator_rid = _forum_access_query_moderator_rid();
+  if (isset($moderator_rid)) {
+    $form['account']['roles'][$moderator_rid] = array(
+      '#type' => 'checkbox',
+      '#title' => $form['account']['roles']['#options'][$moderator_rid] .' ('. t('reserved for internal use by the @Forum_Access module', array('@Forum_Access' => 'Forum Access')) .')',
+      '#default_value' => in_array($moderator_rid, $form['account']['roles']['#default_value']),
+      '#disabled' => TRUE,
+    );
+    unset($form['account']['roles']['#options'][$moderator_rid]);
+  }
+}
+
+/**
  * Create the Forum Moderator role.
  */
 function _forum_access_create_moderator_rid($verbose = FALSE) {  

@@ -3,6 +3,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Enhancement:
+    - Keep the admin from changing the permissions of the internal-use-only forum moderator role and make it even more difficult to assign the role to a user.
     - Keep the admin from assigning the internal-use-only forum moderator role to a user.
     - #552636: Implement 'Drupal 5 legacy mode,' where posting comments and replies is always allowed, for backward compatibility.
   Bugs fixed:

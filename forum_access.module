@@ -140,6 +140,7 @@ function forum_access_init() {
  * Alter the node/comment create/edit forms and various admin forms.
  */
 function forum_access_form_alter(&$form, &$form_state, $form_id) {
+  //dpm($form, "form_id($form_id)");
   if (isset($form['type']) && $form['type']['#value'] .'_node_form' == $form_id) {
     module_load_include('node.inc', 'forum_access');
     _forum_access_node_form($form, $form_state);
@@ -172,6 +173,18 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_content_access_admin_form();
   }
+  else if ($form_id == 'user_admin_perm') {
+    module_load_include('admin.inc', 'forum_access');
+    _forum_access_user_admin_perm_form($form, $form_state);
+  }
+  else if ($form_id == 'user_admin_account') {
+    module_load_include('admin.inc', 'forum_access');
+    _forum_access_user_admin_account_form($form, $form_state);
+  }
+  else if ($form_id == 'user_profile_form') {
+    module_load_include('admin.inc', 'forum_access');
+    _forum_access_user_profile_form_form($form, $form_state);
+  }
 }
 
 /**
@@ -183,6 +196,7 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
  */
 function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
   global $user;
+  //dpm($query, "hook_db_rewrite_sql($primary_table.$primary_field)");
   if ($primary_field == 'tid' && $user->uid != 1 && !(strstr($_GET['q'], 'admin/content/forum') !== FALSE && user_access('administer forums'))) {
     $roles = _forum_access_get_roles($user);
     $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
@@ -415,20 +429,29 @@ function forum_access_access($tid, $type, $account = NULL) {
 function forum_access_user($op, &$edit, &$account, $category = NULL) {
   switch ($op) {
     case 'validate':
-      $rid = variable_get('forum_access_moderator_rid', NULL);
+      $rid = _forum_access_query_moderator_rid();
       if (!empty($rid)) {
         if (isset($edit['roles'][$rid]) && $edit['roles'][$rid]) {
           $roles = user_roles();
           $variables = array(
-            '!Forum_Access' => 'Forum Access',
+            '@Forum_Access' => 'Forum Access',
             '%Role' => $roles[$rid],
           );
-          drupal_set_message(t('The %Role role is reserved for !Forum_Access! It has been removed.', $variables), 'warning');
+          drupal_set_message(t('The %Role role is reserved for internal use by the @Forum_Access module! It was not assigned.', $variables), 'warning');
           unset($edit['roles'][$rid]);
         }
       }
       break;
   }
+}
+
+/**
+ * Return the rid of the Forum Moderator role or NULL if the role does not
+ * exist.
+ */
+function _forum_access_query_moderator_rid()
+{
+  return variable_get('forum_access_moderator_rid', NULL);
 }
 
 /**
