@@ -8,6 +8,7 @@ forum_access 6.x-1.x-dev:
     - Keep the admin from assigning the internal-use-only forum moderator role to a user.
     - #552636: Implement 'Drupal 5 legacy mode,' where posting comments and replies is always allowed, for backward compatibility.
   Bugs fixed:
+    - #639196: Fix error on secondary user profile pages.
     - #597616, #560238: Allow editing own unreplied-to comments even without permission, as core does.
     - Distinguish between grants as moderator or as normal user.
     - Fix some trailing spaces (no functional change).

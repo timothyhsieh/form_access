@@ -831,8 +831,9 @@ function _forum_access_user_admin_account_form(&$form, &$form_state) {
  * Disable the Forum Moderator checkbox on user/UID/edit.
  */
 function _forum_access_user_profile_form(&$form, &$form_state) {
+  //dpm($form, '_forum_access_user_profile_form()');
   $moderator_rid = _forum_access_query_moderator_rid();
-  if (isset($moderator_rid)) {
+  if (isset($moderator_rid) && isset($form['account']['roles']['#options'][$moderator_rid])) {
     $form['account']['roles'][$moderator_rid] = array(
       '#type' => 'checkbox',
       '#title' => $form['account']['roles']['#options'][$moderator_rid] .' ('. t('reserved for internal use by the @Forum_Access module', array('@Forum_Access' => 'Forum Access')) .')',
