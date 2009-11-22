@@ -136,6 +136,7 @@ function forum_access_update_6101() {
   $ret[] = update_sql("DELETE FROM {forum_access} WHERE rid NOT IN (SELECT rid FROM {role})");
   if ($moderator_rid = variable_get('forum_access_moderator_rid', FALSE)) {
     $ret[] = update_sql("DELETE FROM {users_roles} WHERE rid = $moderator_rid");
+    $ret[] = update_sql("UPDATE {permission} SET perm = 'administer comments, administer nodes' WHERE rid = $moderator_rid");
   }
   return $ret;
 }
