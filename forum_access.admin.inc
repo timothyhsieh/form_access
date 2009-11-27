@@ -807,7 +807,7 @@ function _forum_access_content_access_admin_form() {
 function _forum_access_user_admin_perm_form(&$form, &$form_state) {
   $moderator_rid = _forum_access_query_moderator_rid();
   if (isset($moderator_rid) && array_key_exists($moderator_rid, $form['role_names'])) {
-    drupal_set_message(t('The %role role is used internally by the @Forum_Access module and must not be changed!', array('%role' => $form['role_names'][$moderator_rid]['#value'], '@Forum_Access' => 'Forum Access')), 'warning');
+    drupal_set_message(t('The %role role is used internally by the @Forum_Access module and must not be changed!', array('%role' => $form['role_names'][$moderator_rid]['#value'], '@Forum_Access' => 'Forum Access')), 'warning', FALSE);
     $form['checkboxes'][$moderator_rid]['#disabled'] = TRUE;
   }
 }
