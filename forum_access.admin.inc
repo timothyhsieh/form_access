@@ -14,6 +14,9 @@
  */
 function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   $tid = (isset($form['tid']['#value']) ? $form['tid']['#value'] : NULL);
+  if (isset($tid) && !forum_access_access($tid, 'view')) {
+    return drupal_access_denied();  // Deny access if the user doesn't have View access.
+  }
 
   $roles = array();
   $result = db_query("SELECT r.rid, r.name FROM {role} r ORDER BY r.name");
