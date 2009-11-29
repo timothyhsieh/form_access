@@ -19,7 +19,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   }
 
   $roles = array();
-  $result = db_query("SELECT r.rid, r.name FROM {role} r ORDER BY r.name");
+  $result = db_query(db_rewrite_sql("SELECT r.rid, r.name FROM {role} r ORDER BY r.name", 'r', 'rid'));
   while ($obj = db_fetch_object($result)) {
     $roles[$obj->rid] = check_plain($obj->name);
   }
@@ -411,7 +411,7 @@ function _forum_access_forum_form_disable_checkboxes($element) {
     }
   }
   $tr = 't';
-  $moderator_rid = _forum_access_query_moderator_rid();
+  $moderator_rid = forum_access_query_moderator_rid();
 
   $element_children = element_children($element);
   foreach ($element_children as $rid) {
@@ -766,7 +766,7 @@ function _forum_access_user_admin_role_submit($form, &$form_state) {
     $rid = $form_state['values']['rid'];
     db_query("DELETE FROM {forum_access} WHERE rid = %d", $rid);
     db_query("DELETE FROM {node_access} WHERE gid = %d AND realm = 'forum_access'", $rid);
-    if ($rid === _forum_access_query_moderator_rid()) {
+    if ($rid === forum_access_query_moderator_rid()) {
       drupal_set_message(t('The role you have just deleted is required by !Forum_Access; it will be recreated automatically.', array('!Forum_Access' => 'Forum Access')), 'error');
     }
   }
@@ -808,7 +808,7 @@ function _forum_access_content_access_admin_form() {
  * admin/user/permissions.
  */
 function _forum_access_user_admin_perm_form(&$form, &$form_state) {
-  $moderator_rid = _forum_access_query_moderator_rid();
+  $moderator_rid = forum_access_query_moderator_rid();
   if (isset($moderator_rid) && array_key_exists($moderator_rid, $form['role_names'])) {
     drupal_set_message(t('The %role role is used internally by the @Forum_Access module and must not be changed!', array('%role' => $form['role_names'][$moderator_rid]['#value'], '@Forum_Access' => 'Forum Access')), 'warning', FALSE);
     $form['checkboxes'][$moderator_rid]['#disabled'] = TRUE;
@@ -822,7 +822,7 @@ function _forum_access_user_admin_perm_form(&$form, &$form_state) {
  * admin/user/user.
  */
 function _forum_access_user_admin_account_form(&$form, &$form_state) {
-  $moderator_rid = _forum_access_query_moderator_rid();
+  $moderator_rid = forum_access_query_moderator_rid();
   if (isset($moderator_rid)) {
     unset($form['options']['operation']['#options'][t('Add a role to the selected users')]["add_role-$moderator_rid"]);
   }
@@ -835,7 +835,7 @@ function _forum_access_user_admin_account_form(&$form, &$form_state) {
  */
 function _forum_access_user_profile_form(&$form, &$form_state) {
   //dpm($form, '_forum_access_user_profile_form()');
-  $moderator_rid = _forum_access_query_moderator_rid();
+  $moderator_rid = forum_access_query_moderator_rid();
   if (isset($moderator_rid) && isset($form['account']['roles']['#options'][$moderator_rid])) {
     $form['account']['roles'][$moderator_rid] = array(
       '#type' => 'checkbox',

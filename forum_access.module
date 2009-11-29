@@ -206,8 +206,16 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
                     LEFT JOIN {acl_user} aclu_fa ON aclu_fa.acl_id = acl_fa.acl_id AND aclu_fa.uid = $user->uid";
     $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu_fa.uid = $user->uid";
     $sql['distinct'] = 1;
-    return $sql;
   }
+  elseif ($primary_field == 'rid' && strpos($query, 'FROM {role}') !== FALSE && strpos($_GET['q'], 'admin/content/forum') === FALSE) {
+    $moderator_rid = forum_access_query_moderator_rid();
+    $sql['where'] = "$primary_table.rid <> $moderator_rid";
+  }
+  else {
+    return;
+  }
+  //dpm($sql, "rewritten:");
+  return $sql;
 }
 
 /**
@@ -430,7 +438,7 @@ function forum_access_access($tid, $type, $account = NULL) {
 function forum_access_user($op, &$edit, &$account, $category = NULL) {
   switch ($op) {
     case 'validate':
-      $rid = _forum_access_query_moderator_rid();
+      $rid = forum_access_query_moderator_rid();
       if (!empty($rid)) {
         if (isset($edit['roles'][$rid]) && $edit['roles'][$rid]) {
           $roles = user_roles();
@@ -512,7 +520,7 @@ function forum_access_taxonomy($op, $type, $array = NULL) {
  * Return the rid of the Forum Moderator role or NULL if the role does not
  * exist.
  */
-function _forum_access_query_moderator_rid()
+function forum_access_query_moderator_rid()
 {
   return variable_get('forum_access_moderator_rid', NULL);
 }

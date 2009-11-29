@@ -180,7 +180,7 @@ function _forum_access_disable_moderator() {
  */
 function _forum_access_get_moderator_rid($verbose = FALSE)
 {
-  $rid = _forum_access_query_moderator_rid();
+  $rid = forum_access_query_moderator_rid();
   if ($rid !== NULL) {
     if (db_result(db_query("SELECT COUNT(rid) FROM {role} WHERE rid = %d", $rid)) == 1) {
       return $rid;
@@ -195,7 +195,7 @@ function _forum_access_get_moderator_rid($verbose = FALSE)
  */
 function _forum_access_get_all_roles() { 
   $roles = user_roles();
-  $moderator_rid = _forum_access_query_moderator_rid();
+  $moderator_rid = forum_access_query_moderator_rid();
   if (isset($roles[$moderator_rid])) {
     $roles[$moderator_rid] .= ' '. t('(!Forum_Access temporary role, does not need any grants.)', array('!Forum_Access' => 'Forum Access'));
   }
