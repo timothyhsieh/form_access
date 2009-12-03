@@ -813,6 +813,20 @@ function _forum_access_user_admin_perm_form(&$form, &$form_state) {
     drupal_set_message(t('The %role role is used internally by the @Forum_Access module and must not be changed!', array('%role' => $form['role_names'][$moderator_rid]['#value'], '@Forum_Access' => 'Forum Access')), 'warning', FALSE);
     $form['checkboxes'][$moderator_rid]['#disabled'] = TRUE;
   }
+  array_unshift($form['#submit'], '_forum_access_user_admin_perm_form_submit');
+}
+
+/**
+ * Submit handler for the admin/user/permissions form.
+ *
+ * Avoid losing the Forum Moderators record by removing the (empty!) FM values
+ * before the real handler gets them.
+ */
+function _forum_access_user_admin_perm_form_submit($form, &$form_state) {
+  $moderator_rid = forum_access_query_moderator_rid();
+  if (isset($moderator_rid)) {
+    unset($form_state['values'][$moderator_rid]);
+  }
 }
 
 /**

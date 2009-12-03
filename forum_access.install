@@ -141,3 +141,20 @@ function forum_access_update_6101() {
   return $ret;
 }
 
+/**
+ * Set the proper permissions for the Forum Moderator role.
+ */
+function forum_access_update_6102() {
+  $ret = array();
+  $moderator_rid = forum_access_query_moderator_rid();
+  if (isset($moderator_rid)) {
+    if (db_result(db_query("SELECT COUNT(*) FROM {permission} WHERE rid = $moderator_rid"))) {
+      $ret[] = update_sql("UPDATE {permission} SET perm = 'administer comments, administer nodes' WHERE rid = $moderator_rid");
+    }
+    else {
+      $ret[] = update_sql("INSERT INTO {permission} (rid, perm) VALUES ($moderator_rid, 'administer comments, administer nodes')");
+    }
+  }
+  return $ret;
+}
+
