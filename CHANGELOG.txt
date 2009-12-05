@@ -2,6 +2,8 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+  Bugs fixed:
+    - #652226: Fix possible interference with the Image Gallery Access module.
 
 
 forum_access 6.x-1.2 (2009-12-04):

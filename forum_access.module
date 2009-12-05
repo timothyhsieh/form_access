@@ -209,7 +209,9 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
   }
   elseif ($primary_field == 'rid' && strpos($query, 'FROM {role}') !== FALSE && strpos($_GET['q'], 'admin/content/forum') === FALSE) {
     $moderator_rid = forum_access_query_moderator_rid();
-    $sql['where'] = "$primary_table.rid <> $moderator_rid";
+    if (!empty($moderator_rid)) {
+      $sql['where'] = "$primary_table.rid <> $moderator_rid";
+    }
   }
   else {
     return;
