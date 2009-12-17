@@ -468,15 +468,18 @@ function forum_access_menu_alter(&$items) {
       drupal_set_message(t('Unexpected access specification for the %forum menu path; @Forum_Access cannot control its access.', array('%forum' => 'forum', '@Forum_Access' => 'Forum Access')), 'error');
       return;
     }
-    $items['forum']['access callback'] = '_forum_access_access_any_forum';
+    $items['forum']['access callback'] = '_forum_access_access_a_forum';
     unset($items['forum']['access arguments']);
   }
 }
 
 /**
  * Access callback for the 'forum' menu item.
+ *
+ * Returns TRUE if the user has at least one role that can access
+ * at least one forum.
  */
-function _forum_access_access_any_forum() {
+function _forum_access_access_a_forum() {
   global $user;
   static $return;
 
@@ -489,6 +492,7 @@ function _forum_access_access_any_forum() {
     }
     $rids = variable_get('forum_access_rids', NULL);
     if (!isset($rids)) {
+      $rids = array();
       $result = db_query("SELECT fa.rid FROM {forum_access} fa WHERE fa.grant_view > 0 GROUP BY fa.rid");
       while ($role = db_fetch_object($result)) {
         $rids[] = $role->rid;
