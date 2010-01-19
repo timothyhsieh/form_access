@@ -408,7 +408,7 @@ function forum_access_access($tid, $type, $account = NULL) {
   }
 
   if ($account->uid == 1 ||
-      user_access('administer nodes') && array_search($type, array('view', 'update', 'delete')) !== FALSE) {
+      user_access('administer nodes', $account) && array_search($type, array('view', 'update', 'delete')) !== FALSE) {
     return 3;
   }
 
