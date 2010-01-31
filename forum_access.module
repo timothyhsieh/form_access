@@ -198,24 +198,34 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
 function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
   global $user;
   //dpm($query, "hook_db_rewrite_sql($primary_table.$primary_field)");
-  if ($primary_field == 'tid' && $user->uid != 1 && !user_access('administer nodes') && !($_GET['q'] == 'admin/content/forum' && user_access('administer forums'))) {
-    $roles = _forum_access_get_roles($user);
-    $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
-                    LEFT JOIN {acl} acl_fa ON acl_fa.name = ". ($GLOBALS['db_type'] == 'pgsql' ? 'CAST(' : '')
-                                                          ."$primary_table.tid". ($GLOBALS['db_type'] == 'pgsql' ? ' AS VARCHAR)' : '')
-                                                                            ." AND acl_fa.module = 'forum_access'
-                    LEFT JOIN {acl_user} aclu_fa ON aclu_fa.acl_id = acl_fa.acl_id AND aclu_fa.uid = $user->uid";
-    $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu_fa.uid = $user->uid";
-    $sql['distinct'] = 1;
-  }
-  elseif ($primary_field == 'rid' && strpos($query, 'FROM {role}') !== FALSE && strpos($_GET['q'], 'admin/content/forum') === FALSE) {
-    $moderator_rid = forum_access_query_moderator_rid();
-    if (!empty($moderator_rid)) {
-      $sql['where'] = "$primary_table.rid <> $moderator_rid";
-    }
-  }
-  else {
-    return;
+  $sql = NULL;
+  switch ($primary_field) {
+    case 'tid':
+      if ($user->uid == 1
+        || user_access('administer nodes') && arg(0) != 'forum' && $_GET['q'] != 'node/add/forum'
+        || user_access('administer forums') && $_GET['q'] == 'admin/content/forum') {
+        break;
+      }
+      $roles = _forum_access_get_roles($user);
+      $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
+                      LEFT JOIN {acl} acl_fa ON acl_fa.name = ". ($GLOBALS['db_type'] == 'pgsql' ? 'CAST(' : '')
+                                                            ."$primary_table.tid". ($GLOBALS['db_type'] == 'pgsql' ? ' AS VARCHAR)' : '')
+                                                                              ." AND acl_fa.module = 'forum_access'
+                      LEFT JOIN {acl_user} aclu_fa ON aclu_fa.acl_id = acl_fa.acl_id AND aclu_fa.uid = $user->uid";
+      $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu_fa.uid = $user->uid";
+      $sql['distinct'] = 1;
+      break;
+
+    case 'rid':
+      if (strpos($query, 'FROM {role}') === FALSE
+        || strpos($_GET['q'] .'/', 'admin/content/forum/') === 0) {
+        break;
+      }
+      $moderator_rid = forum_access_query_moderator_rid();
+      if (!empty($moderator_rid)) {
+        $sql['where'] = "$primary_table.rid <> $moderator_rid";
+      }
+      break;
   }
   //dpm($sql, "rewritten:");
   return $sql;
