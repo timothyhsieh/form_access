@@ -3,6 +3,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Bugs fixed:
+    - #699918: Give forum moderators access to the File attachments fieldset.
     - Another 'administer nodes' fix.
     - Clarify hook_db_rewrite_sql() code.
     - #695690: Fix handling of 'administer nodes' permission.

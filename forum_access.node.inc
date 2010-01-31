@@ -76,7 +76,7 @@ function _forum_access_node_form(&$form, &$form_state) {
     // normally have. Remove controls that should be reserved to true node
     // administrators.
     _forum_access_disable_moderator();  // not needed anymore
-    $allowed_elements = variable_get('forum_access_allowed_node_edit_elements', array('nid', 'vid', 'uid', 'created', 'type', 'changed', 'title', 'shadow', 'body_field', 'revision_information', 'form_build_id', 'form_token', 'form_id', 'comment_settings', 'taxonomy'));
+    $allowed_elements = variable_get('forum_access_allowed_node_edit_elements', array('nid', 'vid', 'uid', 'created', 'type', 'changed', 'title', 'shadow', 'body_field', 'revision_information', 'form_build_id', 'form_token', 'form_id', 'comment_settings', 'taxonomy', 'attachments'));
     $allowed_options = variable_get('forum_access_allowed_node_edit_options', array('status', 'sticky', 'subscriptions_notify'));
     foreach (element_children($form) as $key) {
       switch ($key) {
