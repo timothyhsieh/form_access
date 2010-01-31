@@ -21,8 +21,8 @@ function _forum_access_node_form(&$form, &$form_state) {
     return;
   }
 
-  // Node administrators are all powerful and do NOT get their forms rewritten here.
-  if (user_access('administer nodes')) {
+  // True node administrators are all powerful and do NOT get their forms rewritten here.
+  if (user_access('administer nodes') && empty($user->_forum_access_moderator)) {
     return;
   }
 
