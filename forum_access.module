@@ -32,7 +32,20 @@ function forum_access_node_access_records($node) {
   }
 
   static $grants = array();
-  if ($tid = _forum_access_get_tid($node)) {
+  $tid = _forum_access_get_tid($node);
+
+  // Set proper grants for nodecomment comment nodes.
+  if (isset($node->comment_target_nid)) {
+    if ($changed_tid = _forum_access_changed_tid()) {
+      $tid = $changed_tid;  // the topic node hasn't been saved yet!
+    }
+    else {
+      $node = node_load($node->comment_target_nid);
+      $tid = _forum_access_get_tid($node);
+    }
+  }
+
+  if ($tid) {
     if (!isset($grants[$tid])) {
       $result = db_query('SELECT * FROM {forum_access} WHERE tid = %d', $tid);
       while ($grant = db_fetch_object($result)) {
@@ -242,6 +255,14 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   $vid = variable_get('forum_nav_vocabulary', '');
   $vocabulary = taxonomy_vocabulary_load($vid);
   if (empty($vocabulary) || !in_array($node->type, $vocabulary->nodes)) {
+    if ($op == 'insert' && isset($node->comment_target_nid)) {
+      // Set moderator on nodecomment.
+      $topic_node = node_load($node->comment_target_nid);
+      if ($topic_tid = _forum_access_get_tid($topic_node)) {
+        $acl_id = acl_get_id_by_name('forum_access', $topic_tid);
+        acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
+      }
+    }
     return;
   }
 
@@ -249,21 +270,36 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
     case 'presave':
       $old_tid = db_result(db_query('SELECT tid FROM {forum} WHERE nid = %d', $node->nid));
       break;
-      
+
     case 'update':
       if (!empty($old_tid)) {
         if (!empty($node->tid) && $node->tid == $old_tid) {
           return;
         }
-        $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $old_tid));
-        acl_node_remove_acl($node->nid, $acl_id);
+        acl_node_clear_acls($node->nid, 'forum_access');
+
+        if (module_exists('nodecomment')) {
+          _forum_access_changed_tid($node->tid);
+          $result = db_query('SELECT cid FROM {node_comments} WHERE nid = %d', $node->nid);
+          while ($row = db_fetch_object($result)) {
+            acl_node_clear_acls($row->cid, 'forum_access');
+          }
+        }
       }
       // Deliberate no break -- for changed and for previously unassigned terms we need an insert.
 
     case 'insert':
       if (!empty($node->tid)) {
-        $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $node->tid));
+        $acl_id = acl_get_id_by_name('forum_access', $node->tid);
         acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
+
+        if (isset($old_tid) && module_exists('nodecomment')) {
+          $result = db_query('SELECT cid FROM {node_comments} WHERE nid = %d', $node->nid);
+          while ($row = db_fetch_object($result)) {
+            acl_node_add_acl($row->cid, $acl_id, 1, 1, 1);
+            node_access_acquire_grants(node_load($row->cid));
+          }
+        }
       }
       $old_tid = NULL;
       break;
@@ -431,7 +467,7 @@ function forum_access_access($tid, $type, $account = NULL, $administer_nodes_see
     }
     else {
       // check our moderators too
-      $acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $tid));
+      $acl_id = acl_get_id_by_name('forum_access', $node->tid);
       $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
       if ($result) {
         $cache[$account->uid][$tid][$type] = 2;
@@ -553,6 +589,17 @@ function _forum_access_get_roles($user) {
  */
 function _forum_access_get_tid($node) {
   return (isset($node->forum_tid) ? $node->forum_tid : (isset($node->tid) ? $node->tid : FALSE));
+}
+
+/**
+ * Save and return the $tid.
+ */
+function _forum_access_changed_tid($tid = NULL) {
+  static $saved_tid = NULL;
+  if (!empty($tid)) {
+    $saved_tid = $tid;
+  }
+  return $saved_tid;
 }
 
 /**

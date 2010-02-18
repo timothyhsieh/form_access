@@ -2,6 +2,8 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+  Enhancements:
+    - Add support for nodecomment comment nodes.
   Bugs fixed:
     - #692106: Fix moderator cannot edit comments.
 
