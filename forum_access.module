@@ -467,7 +467,7 @@ function forum_access_access($tid, $type, $account = NULL, $administer_nodes_see
     }
     else {
       // check our moderators too
-      $acl_id = acl_get_id_by_name('forum_access', $node->tid);
+      $acl_id = acl_get_id_by_name('forum_access', $tid);
       $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
       if ($result) {
         $cache[$account->uid][$tid][$type] = 2;
