@@ -7,16 +7,26 @@
 function forum_access_install() {
   drupal_install_schema('forum_access');
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'forum_access'");
-  
+
   if ($vid = variable_get('forum_nav_vocabulary', FALSE)) {
-    foreach (array(DRUPAL_ANONYMOUS_RID => 0, DRUPAL_AUTHENTICATED_RID => 1) as $rid => $grant_create) {
-      db_query("
-        INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority)
-        SELECT t.tid, %d, 1, 0, 0, %d, 0
-          FROM {forum_access} fa RIGHT JOIN {term_data} t ON fa.tid = t.tid AND t.vid = %d AND fa.rid <> %d
-            WHERE fa.tid IS NULL",
-        $rid, $grant_create, DRUPAL_AUTHENTICATED_RID, $vid
-      );
+    $result = db_query("
+      SELECT t.tid
+        FROM {term_data} t
+        LEFT JOIN {forum_access} fa ON t.tid = fa.tid
+        WHERE fa.tid IS NULL AND t.vid = %d
+      ", $vid);
+    $grant_create_by_rid = array(
+      DRUPAL_ANONYMOUS_RID => 0,
+      DRUPAL_AUTHENTICATED_RID => 1,
+    );
+    while ($td = db_fetch_object($result)) {
+      foreach ($grant_create_by_rid as $rid => $grant_create) {
+        db_query("
+          INSERT INTO {forum_access}
+          (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority)
+          VALUES(%d, %d, 1, 0, 0, %d, 0)
+        ", $td->tid, $rid, $grant_create);
+      }
     }
   }
 }
@@ -153,6 +163,27 @@ function forum_access_update_6102() {
     }
     else {
       $ret[] = update_sql("INSERT INTO {permission} (rid, perm) VALUES ($moderator_rid, 'administer comments, administer nodes')");
+    }
+  }
+  return $ret;
+}
+
+/**
+ * Remove bogus rows from the {forum_access} table.
+ */
+function forum_access_update_6103() {
+  $ret = array();
+  if ($vid = variable_get('forum_nav_vocabulary', FALSE)) {
+    $ret[] = update_sql("
+      DELETE FROM {forum_access}
+      WHERE tid NOT IN (
+        SELECT t.tid
+        FROM {term_data} t
+        WHERE t.vid = $vid
+      )
+    ");
+    if ($ret[0]['success'] && $affected_rows = db_affected_rows()) {
+      $ret[0]['query'] = $ret[0]['query'] .'<br />'. $affected_rows .' bogus rows purged.';
     }
   }
   return $ret;
