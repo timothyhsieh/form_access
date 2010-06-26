@@ -218,7 +218,7 @@ function _forum_access_preprocess_comment(&$variables) {
   if (isset($links['comment_delete']) && !forum_access_access($tid, 'delete', NULL, FALSE)) {
     unset($links['comment_delete']);
   }
-  foreach(array_keys($links) as $link) {
+  foreach (array_keys($links) as $link) {
     if (!in_array($link, array('comment_reply', 'comment_edit', 'comment_delete')) && !preg_match('#<li class="[^"]*'. $link .'[^"]*"(.|\n)*</li>#U', $variables['links'])) {
       unset($links[$link]);   // eliminate possible additional unknown links that came in for 'administer_comments'
     }
