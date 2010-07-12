@@ -128,7 +128,7 @@ function forum_access_update_1() {
 function forum_access_update_2() {
   $ret = array();
   db_add_field($ret, 'forum_access', 'priority', array(
-    'description' => t('The priority of this grant.'),
+    'description' => 'The priority of this grant.',
     'type'        => 'int',
     'size'        => 'small',
     'not null'    => TRUE,
