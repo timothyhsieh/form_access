@@ -43,18 +43,18 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
 
   $tr = 't';
   $variables = array(
-    '!access_content'                 => '<em>'. l($tr('access content'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>',
-    '!access_comments'                => '<em>'. l($tr('access comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
-    '!create_forum_topics'            => '<em>'. l($tr('create forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
-    '!post_comments'                  => '<em>'. l($tr('post comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
-    '!post_comments_without_approval' => '<em>'. l($tr('post comments without approval'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
-    '!edit_own_forum_topics'          => '<em>'. l($tr('edit own forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
-    '!edit_any_forum_topics'          => '<em>'. l($tr('edit any forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
-    '!delete_own_forum_topics'        => '<em>'. l($tr('delete own forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
-    '!delete_any_forum_topics'        => '<em>'. l($tr('delete any forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
-    '!administer_comments'            => '<em>'. l($tr('administer comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)). '</em>',
-    '!administer_forums'              => '<em>'. l($tr('administer forums'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)). '</em>',
-    '!administer_nodes'               => '<em>'. l($tr('administer nodes'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)). '</em>',
+    '!access_content'                 => '<em>'. l($tr('access content'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)) .'</em>',
+    '!access_comments'                => '<em>'. l($tr('access comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)) .'</em>',
+    '!create_forum_topics'            => '<em>'. l($tr('create forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)) .'</em>',
+    '!post_comments'                  => '<em>'. l($tr('post comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)) .'</em>',
+    '!post_comments_without_approval' => '<em>'. l($tr('post comments without approval'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)) .'</em>',
+    '!edit_own_forum_topics'          => '<em>'. l($tr('edit own forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)) .'</em>',
+    '!edit_any_forum_topics'          => '<em>'. l($tr('edit any forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)) .'</em>',
+    '!delete_own_forum_topics'        => '<em>'. l($tr('delete own forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)) .'</em>',
+    '!delete_any_forum_topics'        => '<em>'. l($tr('delete any forum topics'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)) .'</em>',
+    '!administer_comments'            => '<em>'. l($tr('administer comments'), 'admin/user/permissions', array('fragment' => 'module-comment', 'html' => TRUE)) .'</em>',
+    '!administer_forums'              => '<em>'. l($tr('administer forums'), 'admin/user/permissions', array('fragment' => 'module-forum', 'html' => TRUE)) .'</em>',
+    '!administer_nodes'               => '<em>'. l($tr('administer nodes'), 'admin/user/permissions', array('fragment' => 'module-node', 'html' => TRUE)) .'</em>',
   );
   if (!$is_container) {
     $form['forum_access']['permissions'] = array(
@@ -336,7 +336,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
       '#type' => 'item',
       '#value' => '<div>'.    t("In case of problems, follow these steps until you've got it worked out:") .'<ol style="margin-top: 0"><li>'.
                               t("Update to the 'recommended' !Forum_Access and !ACL releases for your version of Drupal.", $variables) .'</li><li>'.
-        (count($na_modules) ? t("Read %Module_interference above and update your other node access modules.", $variables) .'</li><li>' : '').
+        (count($na_modules) ? t("Read %Module_interference above and update your other node access modules.", $variables) .'</li><li>' : '') .
                               t("Check the release notes of the development snapshots for issues that might have been fixed in !Forum_Access-dev or !ACL-dev since the latest release.", $variables) .'</li><li>'.
                               t("Install the %devel_node_access module (!DNA, part of the !Devel module) and enable its !debug_mode: !DNA will show you all the grants that actually control your nodes in a footer block on each node's page.", $variables) .'</li><li>'.
                               t("Additional insight can be gained from !dna_summary and by enabling the second !DNA block.", $variables) .'</li><li>'.
@@ -350,8 +350,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
     );
   }
 
-  if (!$is_container && isset($tid) && !node_access_needs_rebuild())
-  {
+  if (!$is_container && isset($tid) && !node_access_needs_rebuild()) {
     $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $tid));
     $limit = 20;   // from _node_access_rebuild_batch_operation()
     $threshold = variable_get('forum_access_batch_threshold', $limit);  // change the variable if you want
@@ -445,8 +444,7 @@ function _forum_access_forum_form_disable_checkboxes($element) {
 }
 
 function _forum_access_forum_form_after_build_acl0($form, $form_state) {
-  if (isset($form['#post']['forum_access']['template']['taxonomy']))
-  {
+  if (isset($form['#post']['forum_access']['template']['taxonomy'])) {
     // Get ACL's user_list for the template and replace it before ACL's after_build function gets its shot at it.
     $template_tid = reset(array_values($form['#post']['forum_access']['template']['taxonomy']));
     if ($acl_id = db_result(db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND name = '%d'", $template_tid))) {
@@ -468,8 +466,7 @@ function _forum_access_forum_form_after_build_acl2($form, $form_state) {
 }
 
 function _forum_access_forum_form_after_build($form, &$form_state) {
-  if (isset($form_state['clicked_button']['#name']) && $form_state['clicked_button']['#name'] == $form['template']['load_button']['#name'])
-  {
+  if (isset($form_state['clicked_button']['#name']) && $form_state['clicked_button']['#name'] == $form['template']['load_button']['#name']) {
     // Load a setting from a template:
     $template_tid = reset(array_values($form['#post']['forum_access']['template']['taxonomy']));
     $form_state['values']['forum_access']['template']['template_tid'] = $template_tid;
@@ -575,7 +572,8 @@ function _forum_access_form_submit($form, &$form_state) {
     db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]), $fa_priority);
   }
   $tid = $form_state['values']['tid'];
-  $link = l(t('edit'), 'admin/content/forum/edit/forum/'. $tid);
+  $tr = 't';
+  $link = l($tr('edit'), 'admin/content/forum/edit/forum/'. $tid);
   watchdog('access', 'Changed grants for %forum forum.', array('%forum' => $form_state['values']['name']), WATCHDOG_NOTICE, $link);
 
   if (!$is_new && $form_state['values']['form_id'] != 'forum_form_container') {
@@ -797,8 +795,7 @@ function _forum_access_content_access_admin_form() {
   else {
     $vid = variable_get('forum_nav_vocabulary', '');
     $vocabulary = taxonomy_vocabulary_load($vid);
-    if (isset($vocabulary->nodes[arg(3)]))
-    {
+    if (isset($vocabulary->nodes[arg(3)])) {
       drupal_set_message(t('Note: Nodes of this content type can be put inside forums, where access to them will also be controlled by !Forum_Access.<br />In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access_link settings, and vice versa, but any node access module can only allow <i>more</i> access, not less.', $variables), 'warning');
     }
   }
@@ -894,7 +891,7 @@ function _forum_access_create_moderator_rid($verbose = FALSE) {
       $msg = t('!Forum_Access cannot create the %role role!', $variables);
       watchdog('user', $msg, NULL, WATCHDOG_WARNING);
       drupal_set_message($msg .' '. t('Is it already in use?'), 'error');
-      $role->name = $role_name ." $i";
+      $role->name = $role_name .' '. $i;
     }
   }
   $msg = t('!Forum_Access has given up and will not work correctly! Rename one of the roles listed above, so that !Forum_Access can use its name.', $variables);

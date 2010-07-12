@@ -37,7 +37,7 @@ function forum_access_node_access_records($node) {
   // Set proper grants for nodecomment comment nodes.
   if (isset($node->comment_target_nid)) {
     if ($changed_tid = _forum_access_changed_tid()) {
-      $tid = $changed_tid;  // the topic node hasn't been saved yet!
+      $tid = $changed_tid; // the topic node hasn't been saved yet!
     }
     else {
       $node = node_load($node->comment_target_nid);
@@ -78,7 +78,7 @@ function forum_access_init() {
   if ($user->uid == 1) {
     return;
   }
-  
+
   switch (arg(0)) {
     case 'forum':
       if (is_numeric($tid = arg(1))) {
@@ -89,14 +89,14 @@ function forum_access_init() {
         }
       }
       break;
-      
+
     case 'comment':
       if (variable_get('forum_access_D5_legacy_mode', FALSE)) {
-        return;  // disable comment access control
+        return; // disable comment access control
       }
       if ((arg(1) == 'edit' || arg(1) == 'delete') && !user_access('administer comments')) {
-        if (is_numeric($cid = arg(2))) {  // comment/edit/%, comment/delete/%
-          $access[] = (arg(1) == 'edit' ? 'update' : 'delete'); 
+        if (is_numeric($cid = arg(2))) { // comment/edit/%, comment/delete/%
+          $access[] = (arg(1) == 'edit' ? 'update' : 'delete');
           $comment = _comment_load($cid);
           $nid = $comment->nid;
           // If the node turns out to be in a forum where we have update/delete
@@ -107,11 +107,11 @@ function forum_access_init() {
         }
       }
       break;
-      
+
     case 'node':
       if (is_numeric(arg(1))) {
         $access[] = 'update';
-        if (arg(2) == 'edit' && !user_access('administer nodes')) {  // node/%/edit
+        if (arg(2) == 'edit' && !user_access('administer nodes')) { // node/%/edit
           $nid = arg(1);
           // If the node turns out to be in a forum where we have update/delete
           // access, then we already get limited edit capabilities from NA, but
@@ -121,12 +121,12 @@ function forum_access_init() {
           // We won't provide full Administrator access, though: we'll remove
           // author and timestamp, for example.
         }
-        if (arg(2) == NULL && !user_access('administer comments')) {  // node/%
+        if (arg(2) == NULL && !user_access('administer comments')) { // node/%
           $nid = arg(1);
           // If the node turns out to be in a forum where we have update/delete
           // access, then we'll get the 'Edit' link automatically from NA, but
           // we'll need Moderator permissions, so that we can add the edit/delete
-          // comment links (*after* we've identified the other comment links). 
+          // comment links (*after* we've identified the other comment links).
         }
       }
       break;
@@ -135,7 +135,7 @@ function forum_access_init() {
     $node = node_load($nid);
     if ($tid = _forum_access_get_tid($node)) {
       foreach ($access as $a) {
-        if (forum_access_access($tid, $a) > 1) {
+        if (forum_access_access($tid, $a) > 1) { // moderator?
           $user->_forum_access_moderator = TRUE;
           if (arg(0) == 'comment' || arg(0) == 'node' && arg(2) == 'edit') {
             module_load_include('node.inc', 'forum_access');
@@ -159,43 +159,43 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
     module_load_include('node.inc', 'forum_access');
     _forum_access_node_form($form, $form_state);
   }
-  else if ($form_id == 'comment_form' && !variable_get('forum_access_D5_legacy_mode', FALSE)) {
+  elseif ($form_id == 'comment_form' && !variable_get('forum_access_D5_legacy_mode', FALSE)) {
     module_load_include('node.inc', 'forum_access');
     _forum_access_comment_form($form, $form_state);
   }
-  else if ($form_id == 'forum_overview') {
+  elseif ($form_id == 'forum_overview') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_forum_overview($form, $form_state);
   }
-  else if ($form_id == 'forum_form_container') {
+  elseif ($form_id == 'forum_form_container') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_forum_form($form, $form_state, TRUE);
   }
-  else if ($form_id == 'forum_form_forum') {
+  elseif ($form_id == 'forum_form_forum') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_forum_form($form, $form_state, FALSE);
   }
-  else if ($form_id == 'forum_admin_settings') {
+  elseif ($form_id == 'forum_admin_settings') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_forum_admin_settings_form($form, $form_state);
   }
-  else if ($form_id == 'user_admin_role') {
+  elseif ($form_id == 'user_admin_role') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_user_admin_role_form($form, $form_state);
   }
-  else if ($form_id == 'content_access_admin_settings' && empty($_POST)) {
+  elseif ($form_id == 'content_access_admin_settings' && empty($_POST)) {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_content_access_admin_form();
   }
-  else if ($form_id == 'user_admin_perm') {
+  elseif ($form_id == 'user_admin_perm') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_user_admin_perm_form($form, $form_state);
   }
-  else if ($form_id == 'user_admin_account') {
+  elseif ($form_id == 'user_admin_account') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_user_admin_account_form($form, $form_state);
   }
-  else if ($form_id == 'user_profile_form') {
+  elseif ($form_id == 'user_profile_form') {
     module_load_include('admin.inc', 'forum_access');
     _forum_access_user_profile_form($form, $form_state);
   }
@@ -219,7 +219,7 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
         || user_access('administer forums') && $_GET['q'] == 'admin/content/forum') {
         break;
       }
-      $roles = _forum_access_get_roles($user);
+      $roles = implode(', ', array_keys($user->roles));
       $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
                       LEFT JOIN {acl} acl_fa ON acl_fa.name = ". ($GLOBALS['db_type'] == 'pgsql' ? 'CAST(' : '')
                                                             ."$primary_table.tid". ($GLOBALS['db_type'] == 'pgsql' ? ' AS VARCHAR)' : '')
@@ -329,8 +329,7 @@ function forum_access_get_moderator_uids($tid) {
 function forum_access_preprocess_forum_list(&$variables) {
   if (variable_get('forum_access_provide_moderators_template_variable', FALSE)) {
     static $users;
-    foreach ($variables['forums'] as $tid => $forum)
-    {
+    foreach ($variables['forums'] as $tid => $forum) {
       $moderators = array();
       if ($uids = forum_access_get_moderator_uids($tid)) {
         foreach ($uids as $uid) {
@@ -361,8 +360,8 @@ function forum_access_preprocess_forums(&$variables) {
   }
 }
 
-if (!variable_get('forum_access_D5_legacy_mode', FALSE))
-{  // LEGACY-MODE disables these methods
+if (!variable_get('forum_access_D5_legacy_mode', FALSE)) {
+  // LEGACY-MODE disables these methods
 
 /**
  * Implementation of hook_link_alter().
@@ -370,8 +369,7 @@ if (!variable_get('forum_access_D5_legacy_mode', FALSE))
  * Remove the 'Add new comment' link from nodes, if the user does not have the
  * 'create' permission.
  */
-function forum_access_link_alter(&$links, $node)
-{
+function forum_access_link_alter(&$links, $node) {
   global $user;
   if ($user->uid != 1 && ($tid = _forum_access_get_tid($node)) && isset($links['comment_add']) && !forum_access_access($tid, 'create')) {
     unset($links['comment_add']);
@@ -404,13 +402,13 @@ function forum_access_preprocess_comment(&$variables) {
   }
 }
 
-}  // End of !LEGACY-MODE
+} // End of !LEGACY-MODE
 
 /**
  * This is also required by ACL module.
  */
 function forum_access_enabled($set = NULL) {
-  static $enabled = true;
+  static $enabled = TRUE;
   if ($set !== NULL) {
     $enabled = $set;
   }
@@ -422,7 +420,7 @@ function forum_access_enabled($set = NULL) {
  */
 function forum_access_enable() {
   node_access_needs_rebuild();
-  variable_del('forum_access_rids');  // clear cache
+  variable_del('forum_access_rids'); // clear cache
 }
 
 /**
@@ -440,7 +438,7 @@ function forum_access_disable() {
  * $type -- view, update, delete or create
  * $account -- the account to test for. If NULL use current user.
  * $administer_nodes_sees_everything -- pass FALSE to ignore the 'administer nodes' permission
- * 
+ *
  * Return:
  *   FALSE - access not granted
  *   1     - access granted
@@ -459,8 +457,8 @@ function forum_access_access($tid, $type, $account = NULL, $administer_nodes_see
   }
 
   if (!isset($cache[$account->uid][$tid][$type])) {
-    $roles = _forum_access_get_roles($account);
-    $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_%s = 1 AND tid = %d", $roles, $type, $tid));
+    $roles = array_keys($account->roles);
+    $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (". db_placeholders($roles) .") AND grant_". $type ." = 1 AND tid = %d", $roles, $tid));
 
     if ($result) {
       $cache[$account->uid][$tid][$type] = 1;
@@ -557,14 +555,14 @@ function _forum_access_access_a_forum() {
 
 /**
  * Implementation of hook_taxonomy().
- * 
+ *
  * Delete {forum_access} records when forums are deleted.
  */
 function forum_access_taxonomy($op, $type, $array = NULL) {
   //dpm($array, "hook_taxonomy($op, $type)");
   if ($type = 'term' && $op == 'delete' && $array['vid'] == variable_get('forum_nav_vocabulary', '')) {
     db_query("DELETE FROM {forum_access} WHERE tid = %d", $array['tid']);
-    variable_del('forum_access_rids');  // clear cache
+    variable_del('forum_access_rids'); // clear cache
   }
 }
 
@@ -572,16 +570,8 @@ function forum_access_taxonomy($op, $type, $array = NULL) {
  * Return the rid of the Forum Moderator role or NULL if the role does not
  * exist.
  */
-function forum_access_query_moderator_rid()
-{
+function forum_access_query_moderator_rid() {
   return variable_get('forum_access_moderator_rid', NULL);
-}
-
-/**
- * Get the roles of a user.
- */
-function _forum_access_get_roles($user) {
-  return implode(', ', array_keys($user->roles));
 }
 
 /**

@@ -3,6 +3,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Enhancements:
+    - Fix Coder warnings (no functional change).
     - Add support for nodecomment comment nodes.
   Bugs fixed:
     - #666908: Fix initialization of {forum_access} table and remove bogus rows.

@@ -2,6 +2,12 @@
 // $Id$
 
 /**
+ * @file
+ * Install, update and uninstall functions for the forum_access module.
+ *
+ */
+
+/**
  * Implementation of hook_install().
  */
 function forum_access_install() {
@@ -36,48 +42,48 @@ function forum_access_install() {
  */
 function forum_access_schema() {
   $schema['forum_access'] = array(
-    'description'     => t('The base Forum Access Control table.'),
+    'description'     => 'The base Forum Access Control table.',
     'fields'          => array(
       'tid'           => array(
-        'description' => t('The {term_data}.tid to which this {forum_access} entry applies.'),
+        'description' => 'The {term_data}.tid to which this {forum_access} entry applies.',
         'type'        => 'int',
         'not null'    => TRUE,
         'default'     => 0),
       'rid'           => array(
-        'description' => t('The {role}.rid to which this {forum_access} entry applies.'),
+        'description' => 'The {role}.rid to which this {forum_access} entry applies.',
         'type'        => 'int',
         'not null'    => TRUE,
         'default'     => 0),
       'grant_view'    => array(
-        'description' => t('Whether to grant "view" permission.'),
+        'description' => 'Whether to grant "view" permission.',
         'type'        => 'int',
         'size'        => 'tiny',
         'unsigned'    => TRUE,
         'not null'    => TRUE,
         'default'     => 0),
       'grant_update'  => array(
-        'description' => t('Whether to grant "update" permission.'),
+        'description' => 'Whether to grant "update" permission.',
         'type'        => 'int',
         'size'        => 'tiny',
         'unsigned'    => TRUE,
         'not null'    => TRUE,
         'default'     => 0),
       'grant_delete'  => array(
-        'description' => t('Whether to grant "delete" permission.'),
+        'description' => 'Whether to grant "delete" permission.',
         'type'        => 'int',
         'size'        => 'tiny',
         'unsigned'    => TRUE,
         'not null'    => TRUE,
         'default'     => 0),
       'grant_create'  => array(
-        'description' => t('Whether to grant "create" permission.'),
+        'description' => 'Whether to grant "create" permission.',
         'type'        => 'int',
         'size'        => 'tiny',
         'unsigned'    => TRUE,
         'not null'    => TRUE,
         'default'     => 0),
       'priority'  => array(
-        'description' => t('The priority of this grant.'),
+        'description' => 'The priority of this grant.',
         'type'        => 'int',
         'size'        => 'small',
         'not null'    => TRUE,
@@ -98,7 +104,9 @@ function forum_access_uninstall() {
   variable_del('forum_access_allowed_node_edit_elements');
   variable_del('forum_access_allowed_node_edit_options');
   variable_del('forum_access_batch_threshold');
+  variable_del('forum_access_D5_legacy_mode');
   variable_del('forum_access_default_template_tid');
+  variable_del('forum_access_moderator_rid');
   variable_del('forum_access_new_template_tid');
   variable_del('forum_access_provide_moderators_template_variable');
   variable_del('forum_access_rids');
@@ -109,8 +117,8 @@ function forum_access_uninstall() {
  */
 function forum_access_update_1() {
   $ret = array();
-  db_query("DELETE FROM {forum_access} WHERE rid NOT IN (SELECT rid from {role})");
-  db_query("DELETE FROM {node_access} WHERE realm = 'forum_access' AND gid NOT IN (SELECT rid from {role})");
+  $ret[] = update_sql("DELETE FROM {forum_access} WHERE rid NOT IN (SELECT rid from {role})");
+  $ret[] = update_sql("DELETE FROM {node_access} WHERE realm = 'forum_access' AND gid NOT IN (SELECT rid from {role})");
   return $ret;
 }
 
@@ -158,7 +166,7 @@ function forum_access_update_6102() {
   $ret = array();
   $moderator_rid = forum_access_query_moderator_rid();
   if (isset($moderator_rid)) {
-    if (db_result(db_query("SELECT COUNT(*) FROM {permission} WHERE rid = $moderator_rid"))) {
+    if (db_result(db_query("SELECT COUNT(*) FROM {permission} WHERE rid = %d", $moderator_rid))) {
       $ret[] = update_sql("UPDATE {permission} SET perm = 'administer comments, administer nodes' WHERE rid = $moderator_rid");
     }
     else {

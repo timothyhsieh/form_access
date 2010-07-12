@@ -26,8 +26,8 @@ function _forum_access_node_form(&$form, &$form_state) {
     return;
   }
 
-  $roles = _forum_access_get_roles($user);
-  $result = db_query("SELECT tid FROM {forum_access} WHERE rid IN (%s) AND grant_create = 1", $roles);
+  $roles = array_keys($user->roles);
+  $result = db_query("SELECT tid FROM {forum_access} WHERE rid IN (". db_placeholders($roles) .") AND grant_create = 1", $roles);
   while ($obj = db_fetch_object($result)) {
     $tids[$obj->tid] = $obj->tid;
   }
@@ -75,7 +75,7 @@ function _forum_access_node_form(&$form, &$form_state) {
     // We gave this user the 'administer nodes' permission, which he doesn't
     // normally have. Remove controls that should be reserved to true node
     // administrators.
-    _forum_access_disable_moderator();  // not needed anymore
+    _forum_access_disable_moderator(); // not needed anymore
     $allowed_elements = variable_get('forum_access_allowed_node_edit_elements', array('nid', 'vid', 'uid', 'created', 'type', 'changed', 'title', 'shadow', 'body_field', 'revision_information', 'form_build_id', 'form_token', 'form_id', 'comment_settings', 'taxonomy', 'attachments'));
     $allowed_options = variable_get('forum_access_allowed_node_edit_options', array('status', 'sticky', 'subscriptions_notify'));
     foreach (element_children($form) as $key) {
@@ -120,10 +120,9 @@ function _forum_access_comment_form(&$form, &$form_state) {
     $node = node_load($form['nid']['#value']);
     if ($tid = _forum_access_get_tid($node)) {
       if (!forum_access_access($tid, 'create')) {
-        switch (arg(0))
-        {
+        switch (arg(0)) {
           case 'node':
-            $form = NULL;  // remove the in-line comment form
+            $form = NULL; // remove the in-line comment form
             break;
           case 'comment':
             drupal_access_denied();
@@ -151,7 +150,7 @@ function _forum_access_enable_moderator() {
   global $user;
   $rid = _forum_access_get_moderator_rid();
   $user->roles[$rid] = '(forum_access temporary)';
-  user_access('', NULL, TRUE);  // clear the permissions cache to activate the new role
+  user_access('', NULL, TRUE); // clear the permissions cache to activate the new role
 }
 
 /*
@@ -161,15 +160,14 @@ function _forum_access_disable_moderator() {
   global $user;
   $rid = _forum_access_get_moderator_rid();
   unset($user->roles[$rid]);
-  user_access('', NULL, TRUE);  // clear the permissions cache to revert to normal
+  user_access('', NULL, TRUE); // clear the permissions cache to revert to normal
 }
 
 /*
  * Retrieve the rid of the Forum Moderator role; if the role does not exist,
  * then create it.
  */
-function _forum_access_get_moderator_rid($verbose = FALSE)
-{
+function _forum_access_get_moderator_rid($verbose = FALSE) {
   $rid = forum_access_query_moderator_rid();
   if ($rid !== NULL) {
     if (db_result(db_query("SELECT COUNT(rid) FROM {role} WHERE rid = %d", $rid)) == 1) {
@@ -183,7 +181,7 @@ function _forum_access_get_moderator_rid($verbose = FALSE)
 /*
  * Return the roles for forum_access_node_access_explain().
  */
-function _forum_access_get_all_roles() { 
+function _forum_access_get_all_roles() {
   $roles = user_roles();
   $moderator_rid = forum_access_query_moderator_rid();
   if (isset($roles[$moderator_rid])) {
@@ -199,7 +197,7 @@ function _forum_access_get_all_roles() {
 function _forum_access_preprocess_comment(&$variables) {
   global $user;
   if (!empty($user->_forum_access_moderator)) {
-    _forum_access_enable_moderator();  // this allows us to retrieve the comment links (without setting precedent!)
+    _forum_access_enable_moderator(); // this allows us to retrieve the comment links (without setting precedent!)
   }
 
   $tid = $variables['node']->tid;
@@ -220,7 +218,7 @@ function _forum_access_preprocess_comment(&$variables) {
   }
   foreach (array_keys($links) as $link) {
     if (!in_array($link, array('comment_reply', 'comment_edit', 'comment_delete')) && !preg_match('#<li class="[^"]*'. $link .'[^"]*"(.|\n)*</li>#U', $variables['links'])) {
-      unset($links[$link]);   // eliminate possible additional unknown links that came in for 'administer_comments'
+      unset($links[$link]); // eliminate possible additional unknown links that came in for 'administer_comments'
     }
   }
   if (empty($links)) {
