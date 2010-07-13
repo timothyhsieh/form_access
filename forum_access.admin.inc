@@ -389,6 +389,10 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
       ),
       '#attributes' => array('class' => 'forum-access-flowed'),
     );
+    $form['forum_access']['force_update'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Update even if unchanged'),
+    );
   }
 
   // Move some stuff down so our block goes in a nice place.
@@ -534,6 +538,7 @@ function _forum_access_form_submit($form, &$form_state) {
 
   // check for changes
   $is_changed = $is_new = strpos($_GET['q'], 'admin/content/forum/add/') === 0;
+  $is_changed = $is_changed || !empty($access['force_update']);
   $form_initial_values = $form;  // avoid Coder warning
   $form_initial_values = $form_initial_values['forum_access'];
   foreach (array('view', 'create', 'update', 'delete') as $grant_type) {
@@ -864,7 +869,7 @@ function _forum_access_user_profile_form(&$form, &$form_state) {
 /**
  * Create the Forum Moderator role.
  */
-function _forum_access_create_moderator_rid($verbose = FALSE) {  
+function _forum_access_create_moderator_rid($verbose = FALSE) {
   $tr = 't';
   $variables = array('!Forum_Access' => 'Forum Access', '%administer_comments' => $tr('administer comments'), '%administer_nodes' => $tr('administer nodes'));
   $role_name = t('Forum Moderator');
