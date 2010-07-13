@@ -32,6 +32,7 @@ function forum_access_node_access_records($node) {
   }
 
   static $grants = array();
+  static $node_admins;
   $tid = _forum_access_get_tid($node);
 
   // Set proper grants for nodecomment comment nodes.
@@ -47,8 +48,14 @@ function forum_access_node_access_records($node) {
 
   if ($tid) {
     if (!isset($grants[$tid])) {
+      if (!isset($node_admins)) {
+        $node_admins = user_roles(FALSE, 'administer nodes');
+      }
       $result = db_query('SELECT * FROM {forum_access} WHERE tid = %d', $tid);
       while ($grant = db_fetch_object($result)) {
+        if (isset($node_admins[$grant->rid])) {
+          continue; // Don't provide any useless grants!
+        }
         $grants[$tid][] = array(
           'realm' => 'forum_access',
           'gid' => $grant->rid,
@@ -82,7 +89,7 @@ function forum_access_init() {
   switch (arg(0)) {
     case 'forum':
       if (is_numeric($tid = arg(1))) {
-        if (!forum_access_access($tid, 'view', NULL, FALSE)) {
+        if (!forum_access_access($tid, 'view')) {
           drupal_access_denied();
           module_invoke_all('exit');
           exit;
@@ -215,9 +222,15 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
   switch ($primary_field) {
     case 'tid':
       if ($user->uid == 1
-        || user_access('administer nodes') && arg(0) != 'forum' && $_GET['q'] != 'node/add/forum'
+        || user_access('administer nodes') && strpos($_GET['q'], 'node/add/forum') === FALSE
         || user_access('administer forums') && $_GET['q'] == 'admin/content/forum') {
         break;
+      }
+      if (strpos($_GET['q'], 'node/add/forum') !== FALSE) {
+        $required_access = 'create';
+      }
+      else {
+        $required_access = 'view';
       }
       $roles = implode(', ', array_keys($user->roles));
       $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
@@ -225,7 +238,7 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
                                                             ."$primary_table.tid". ($GLOBALS['db_type'] == 'pgsql' ? ' AS VARCHAR)' : '')
                                                                               ." AND acl_fa.module = 'forum_access'
                       LEFT JOIN {acl_user} aclu_fa ON aclu_fa.acl_id = acl_fa.acl_id AND aclu_fa.uid = $user->uid";
-      $sql['where'] = "(fa.grant_view >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu_fa.uid = $user->uid";
+      $sql['where'] = "(fa.grant_$required_access >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu_fa.uid = $user->uid";
       $sql['distinct'] = 1;
       break;
 

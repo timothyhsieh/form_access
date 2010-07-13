@@ -197,3 +197,22 @@ function forum_access_update_6103() {
   return $ret;
 }
 
+/**
+ * Remove grants for roles with the 'administer nodes' permission.
+ */
+function forum_access_update_6104() {
+  $ret = array();
+  $admin_rids = array_keys(user_roles(FALSE, 'administer nodes'));
+  $ret[] = update_sql("
+    UPDATE {forum_access}
+    SET grant_view = 0, grant_update = 0, grant_delete = 0
+    WHERE rid IN (". implode($admin_rids, ', ') .")
+  ");
+  $ret[] = update_sql("
+    DELETE FROM {node_access}
+    WHERE realm = 'forum_access'
+      AND gid IN (". implode($admin_rids, ', ') .")
+  ");
+  return $ret;
+}
+

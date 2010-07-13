@@ -403,19 +403,29 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   $form['#submit'][] = '_forum_access_form_submit';
 }
 
-function _forum_access_forum_form_disable_checkboxes($element) {
-  global $user;
-  static $permissions_by_rid = array();
-  if (empty($permissions_by_rid)) {
-    $permissions_by_rid[DRUPAL_AUTHENTICATED_RID] = '';
-    $result = db_query('SELECT r.rid, p.perm FROM {role} r LEFT JOIN {permission} p ON r.rid = p.rid ORDER BY r.rid');
+/**
+ * Helper function to return a rid-indexed array of arrays, whose keys
+ * are the permissions of the corresponding role.
+ */
+function _forum_access_get_role_permissions() {
+  static $permissions;
+  if (empty($permissions)) {
+    $permissions[DRUPAL_AUTHENTICATED_RID] = array();
+    $result = db_query('SELECT r.rid, p.perm FROM {role} r INNER JOIN {permission} p ON r.rid = p.rid ORDER BY r.rid');
     while ($role = db_fetch_object($result)) {
-      $permissions_by_rid[$role->rid] = $role->perm .', '. ($role->rid != DRUPAL_ANONYMOUS_RID ? $permissions_by_rid[DRUPAL_AUTHENTICATED_RID] : '');
+      $permissions[$role->rid] = ($role->rid == DRUPAL_ANONYMOUS_RID ? array() : $permissions[DRUPAL_AUTHENTICATED_RID]);
+      $permissions[$role->rid] += array_flip(explode(', ', $role->perm));
     }
   }
+  return $permissions;
+}
+
+function _forum_access_forum_form_disable_checkboxes($element) {
+  global $user;
   $tr = 't';
   $moderator_rid = forum_access_query_moderator_rid();
 
+  $permissions = _forum_access_get_role_permissions();
   $element_children = element_children($element);
   foreach ($element_children as $rid) {
     if ($rid == $moderator_rid) {
@@ -427,15 +437,15 @@ function _forum_access_forum_form_disable_checkboxes($element) {
     elseif ($element['#parents'][1] == 'create') {
       // Do nothing (Post is always mutable).
     }
-    elseif ($element['#parents'][1] == 'view' && strstr($permissions_by_rid[$rid], 'administer forums,') !== FALSE) {
+    elseif ($element['#parents'][1] == 'view' && isset($permissions[$rid]['administer forums'])) {
       $element[$rid]['#title'] = '<em>'. $element[$rid]['#title'] .'</em>';
       $element[$rid]['#prefix'] = '<span title="'. t("This role has the '@administer_forums' permission, and granting '@View' enables the role holders to change the settings on this page, including @Access_control!", array('@administer_forums' => $tr('administer forums'), '@View' => t('View'), '@Access_control' => t('Access control'))) .'">';
-      if (strstr($permissions_by_rid[$rid], 'administer nodes,') !== FALSE) {
+      if (isset($permissions[$rid]['administer nodes'])) {
         $element[$rid]['#prefix'] = str_replace('">', ' '. t("Because the role also has the '@administer_nodes' permission, it has full access to all nodes either way.", array('@administer_nodes' => $tr('administer nodes'))) .'">', $element[$rid]['#prefix']);
       }
       $element[$rid]['#suffix'] = "</span>";
     }
-    elseif (strstr($permissions_by_rid[$rid], 'administer nodes,') !== FALSE) {
+    elseif (isset($permissions[$rid]['administer nodes'])) {
       $element[$rid]['#disabled'] = TRUE;
       $element[$rid]['#default_value'] = TRUE;
       $element[$rid]['#prefix'] = '<span title="'. ($rid != $moderator_rid
@@ -545,8 +555,8 @@ function _forum_access_form_submit($form, &$form_state) {
     if (isset($form_initial_values[$grant_type])) {
       $defaults = $form_initial_values[$grant_type]['#default_value'];
       $defaults = array_flip($defaults);
-      foreach ($access[$grant_type] as $tid => $checked) {
-        $is_changed = $is_changed || (empty($form_initial_values[$grant_type][$tid]['#disabled']) && !empty($checked) != isset($defaults[$tid]));
+      foreach ($access[$grant_type] as $rid => $checked) {
+        $is_changed = $is_changed || (empty($form_initial_values[$grant_type][$rid]['#disabled']) && !empty($checked) != isset($defaults[$rid]));
       }
     }
   }
@@ -555,28 +565,28 @@ function _forum_access_form_submit($form, &$form_state) {
     return;
   }
 
-  db_query("DELETE FROM {forum_access} WHERE tid = %d", $form_state['values']['tid']);
+  $tid = $form_state['values']['tid'];
+  db_query("DELETE FROM {forum_access} WHERE tid = %d", $tid);
 
   $fa_priority = isset($access['interference']['advanced']['priority']) ? $access['interference']['advanced']['priority'] : 0;
   if (array_key_exists('acl', $access)) {
     $moderators = unserialize($access['acl']['user_list']);
     acl_save_form($access['acl'], $fa_priority);
   }
+  $permissions = _forum_access_get_role_permissions();
   foreach ($access['view'] as $rid => $checked) {
     if ($rid == $moderator_rid) {
       continue;
     }
-    $grants[] = array(
-      'realm' => 'forum_access',
-      'gid' => $rid,
-      'grant_view' => (bool) $checked,
-      'grant_update' => !empty($access['update'][$rid]),
-      'grant_delete' => !empty($access['delete'][$rid]),
-      'priority' => $fa_priority,
-    );
-    db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)", $form_state['values']['tid'], $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]), $fa_priority);
+    if (isset($permissions[$rid]['administer nodes'])) {
+      db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)",
+        $tid, $rid, 0, 0, 0, !empty($access['create'][$rid]), $fa_priority);
+    }
+    else {
+      db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)",
+        $tid, $rid, (bool) $checked, !empty($access['update'][$rid]), !empty($access['delete'][$rid]), !empty($access['create'][$rid]), $fa_priority);
+    }
   }
-  $tid = $form_state['values']['tid'];
   $tr = 't';
   $link = l($tr('edit'), 'admin/content/forum/edit/forum/'. $tid);
   watchdog('access', 'Changed grants for %forum forum.', array('%forum' => $form_state['values']['name']), WATCHDOG_NOTICE, $link);
@@ -593,7 +603,7 @@ function _forum_access_form_submit($form, &$form_state) {
       $pending_error_messages = drupal_get_messages('error', FALSE);
       $our_error_message_index = (isset($pending_error_messages['error']) ? count($pending_error_messages['error']) : 0);
       _forum_access_update_batch_finished(FALSE, array(), array());       // add our error message (in case we die underway)
-      _forum_access_update_batch_operation($form_state['values']['tid'], 999999, 1, $context);
+      _forum_access_update_batch_operation($tid, 999999, 1, $context);
       $pending_error_messages = drupal_get_messages('error', TRUE);       // still alive, get and clear all 'error' messages
       unset($pending_error_messages['error'][$our_error_message_index]);  // remove our error message
       foreach ($pending_error_messages['error'] as $message) {            // replay any others
@@ -605,12 +615,12 @@ function _forum_access_form_submit($form, &$form_state) {
     else {
       // mass update in batch mode, modeled after node.module
       $limit = $access['update_limit'];
-      $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $form_state['values']['tid']));
+      $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $tid));
       $batch = array(
         'title' => t('Updating content access permissions'),
         'file' => drupal_get_path('module', 'forum_access') .'/forum_access.admin.inc',
         'operations' => array(
-          array('_forum_access_update_batch_operation', array($form_state['values']['tid'], $limit, $count)),
+          array('_forum_access_update_batch_operation', array($tid, $limit, $count)),
         ),
         'finished' => '_forum_access_update_batch_finished'
       );
