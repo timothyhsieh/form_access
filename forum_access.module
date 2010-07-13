@@ -458,7 +458,7 @@ function forum_access_access($tid, $type, $account = NULL, $administer_nodes_see
 
   if (!isset($cache[$account->uid][$tid][$type])) {
     $roles = array_keys($account->roles);
-    $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (". db_placeholders($roles) .") AND grant_". $type ." = 1 AND tid = %d", $roles, $tid));
+    $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (". db_placeholders($roles) .") AND grant_". $type ." = 1 AND tid = %d", array_merge($roles, array($tid))));
 
     if ($result) {
       $cache[$account->uid][$tid][$type] = 1;
