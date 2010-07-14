@@ -647,7 +647,7 @@ function _forum_access_update_batch_operation($tid, $limit, $count, &$context) {
   }
 
   // Process the next 20 nodes.
-  $result = db_query_range("SELECT DISTINCT n.nid FROM {node} n INNER JOIN {term_node} tn ON tn.vid = n.vid WHERE n.nid > %d AND tn.tid = %d ORDER BY n.nid ASC", $context['sandbox']['current_node'], $tid, $context['sandbox']['current_node'], 0, $limit);
+  $result = db_query_range("SELECT DISTINCT n.nid FROM {node} n INNER JOIN {term_node} tn ON tn.vid = n.vid WHERE n.nid > %d AND tn.tid = %d ORDER BY n.nid ASC", $context['sandbox']['current_node'], $tid, 0, $limit);
   while ($row = db_fetch_array($result)) {
     $loaded_node = node_load($row['nid'], NULL, TRUE);
     // To preserve database integrity, only aquire grants if the node
