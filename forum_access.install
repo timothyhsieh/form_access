@@ -95,9 +95,22 @@ function forum_access_schema() {
   return $schema;
 }
 
+/**
+ * Implementation of hook_enable().
+ */
+function forum_access_enable() {
+  variable_del('forum_access_rids'); // clear cache
+}
+
+/**
+ * Implementation of hook_disable().
+ */
+function forum_access_disable() {
+  forum_access_enabled(FALSE);
+}
 
 /*
- * Implementation of hook_uninstall
+ * Implementation of hook_uninstall().
  */
 function forum_access_uninstall() {
   drupal_uninstall_schema('forum_access');
@@ -111,6 +124,7 @@ function forum_access_uninstall() {
   variable_del('forum_access_provide_moderators_template_variable');
   variable_del('forum_access_rids');
 }
+
 
 /**
  * Purge orphaned grants that were left behind when deleting roles.

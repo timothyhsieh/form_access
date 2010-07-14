@@ -15,7 +15,7 @@
  */
 function _forum_access_node_form(&$form, &$form_state) {
   global $user;
-  $vid = variable_get('forum_nav_vocabulary', '');
+  $vid = _forum_access_get_vid();
 
   if (!isset($form['taxonomy'][$vid]['#options'])) {
     return;

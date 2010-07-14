@@ -78,7 +78,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   }
 
   // Load a template:
-  $vid = variable_get('forum_nav_vocabulary', '');
+  $vid = _forum_access_get_vid();
   $form['forum_access']['template'] = array(
       '#type' => 'fieldset',
       '#title' => $tr('Template'),
@@ -116,7 +116,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
     '#title' => ($is_container ? t('View this container') : t('View this forum')),
     '#suffix' => '</div>',
   );
-  $forum_vocabulary = taxonomy_vocabulary_load(variable_get('forum_nav_vocabulary', ''));
+  $forum_vocabulary = taxonomy_vocabulary_load(_forum_access_get_vid());
   $form['forum_access']['headers']['create'] = array(
     '#type' => 'item',
     '#prefix' => '<div class="forum-access-div" id="container">',
@@ -808,7 +808,7 @@ function _forum_access_content_access_admin_form() {
       .'<br />'. t('To avoid conflicts with !Forum_Access settings, you may want to lower the priority of !Content_Access (under %Advanced below) below the priority of !Forum_Access for the content types that you want to be controlled by !Forum_Access.', $variables), 'warning');
   }
   else {
-    $vid = variable_get('forum_nav_vocabulary', '');
+    $vid = _forum_access_get_vid();
     $vocabulary = taxonomy_vocabulary_load($vid);
     if (isset($vocabulary->nodes[arg(3)])) {
       drupal_set_message(t('Note: Nodes of this content type can be put inside forums, where access to them will also be controlled by !Forum_Access.<br />In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access_link settings, and vice versa, but any node access module can only allow <i>more</i> access, not less.', $variables), 'warning');

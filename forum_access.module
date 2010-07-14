@@ -265,7 +265,7 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
 function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   static $old_tid = NULL;
   // This is modeled after forum_nodeapi():
-  $vid = variable_get('forum_nav_vocabulary', '');
+  $vid = _forum_access_get_vid();
   $vocabulary = taxonomy_vocabulary_load($vid);
   if (empty($vocabulary) || !in_array($node->type, $vocabulary->nodes)) {
     if ($op == 'insert' && isset($node->comment_target_nid)) {
@@ -429,27 +429,11 @@ function forum_access_enabled($set = NULL) {
 }
 
 /**
- * Implementation of hook_enable().
- */
-function forum_access_enable() {
-  node_access_needs_rebuild();
-  variable_del('forum_access_rids'); // clear cache
-}
-
-/**
- * Implementation of hook_disable().
- */
-function forum_access_disable() {
-  forum_access_enabled(FALSE);
-  node_access_needs_rebuild();
-}
-
-/**
  * See if a given user has access to a forum.
  *
  * $tid -- the tid of the forum
  * $type -- view, update, delete or create
- * $account -- the account to test for. If NULL use current user.
+ * $account -- the account to test for; if NULL use current user
  * $administer_nodes_sees_everything -- pass FALSE to ignore the 'administer nodes' permission
  *
  * Return:
@@ -525,7 +509,7 @@ function forum_access_menu_alter(&$items) {
       drupal_set_message(t('Unexpected access specification for the %forum menu path; @Forum_Access cannot control its access.', array('%forum' => 'forum', '@Forum_Access' => 'Forum Access')), 'error');
       return;
     }
-    $items['forum']['access callback'] = '_forum_access_access_a_forum';
+    $items['forum']['access callback'] = '_forum_access_access_any_forum';
     unset($items['forum']['access arguments']);
   }
 }
@@ -536,16 +520,20 @@ function forum_access_menu_alter(&$items) {
  * Returns TRUE if the user has at least one role that can access
  * at least one forum.
  */
-function _forum_access_access_a_forum() {
+function _forum_access_access_any_forum($account = NULL) {
   global $user;
-  static $return;
+  static $return = array();
 
-  if (!isset($return)) {
-    if ($user->uid == 1) {
-      return $return = TRUE;
+  if (!isset($account)) {
+    $account = $user;
+  }
+
+  if (!isset($return[$account->uid])) {
+    if ($account->uid == 1) {
+      return $return[$account->uid] = TRUE;
     }
     if (!user_access('access content')) {
-      return $return = FALSE;
+      return $return[$account->uid] = FALSE;
     }
     $rids = variable_get('forum_access_rids', NULL);
     if (!isset($rids)) {
@@ -557,13 +545,13 @@ function _forum_access_access_a_forum() {
       variable_set('forum_access_rids', $rids);
     }
     foreach ($rids as $rid) {
-      if (isset($user->roles[$rid])) {
-        return $return = TRUE;
+      if (isset($account->roles[$rid])) {
+        return $return[$account->uid] = TRUE;
       }
     }
-    $return = FALSE;
+    $return[$account->uid] = FALSE;
   }
-  return $return;
+  return $return[$account->uid];
 }
 
 /**
@@ -573,10 +561,18 @@ function _forum_access_access_a_forum() {
  */
 function forum_access_taxonomy($op, $type, $array = NULL) {
   //dpm($array, "hook_taxonomy($op, $type)");
-  if ($type = 'term' && $op == 'delete' && $array['vid'] == variable_get('forum_nav_vocabulary', '')) {
+  if ($type = 'term' && $op == 'delete' && $array['vid'] == _forum_access_get_vid()) {
     db_query("DELETE FROM {forum_access} WHERE tid = %d", $array['tid']);
     variable_del('forum_access_rids'); // clear cache
   }
+}
+
+/**
+ * Return forum.module's forum vocabulary ID.
+ */
+function _forum_access_get_vid()
+{
+  return variable_get('forum_nav_vocabulary', '');
 }
 
 /**
