@@ -351,7 +351,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   }
 
   if (!$is_container && isset($tid) && !node_access_needs_rebuild()) {
-    $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $tid));
+    $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n INNER JOIN {term_node} tn ON tn.vid = n.vid WHERE tn.tid = %d", $tid));
     $limit = 20;   // from _node_access_rebuild_batch_operation()
     $threshold = variable_get('forum_access_batch_threshold', $limit);  // change the variable if you want
     $form['forum_access']['update_limit'] = array(
@@ -615,7 +615,7 @@ function _forum_access_form_submit($form, &$form_state) {
     else {
       // mass update in batch mode, modeled after node.module
       $limit = $access['update_limit'];
-      $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE tn.tid = %d", $tid));
+      $count = db_result(db_query("SELECT COUNT(DISTINCT n.nid) FROM {node} n INNER JOIN {term_node} tn ON tn.vid = n.vid WHERE tn.tid = %d", $tid));
       $batch = array(
         'title' => t('Updating content access permissions'),
         'file' => drupal_get_path('module', 'forum_access') .'/forum_access.admin.inc',
@@ -634,7 +634,7 @@ function _forum_access_form_submit($form, &$form_state) {
 /**
  * Batch operation for forum_access_form_submit().
  *
- * This is a mutlistep operation : we go through all nodes by packs of 20.
+ * This is a multistep operation : we go through all nodes by packs of 20.
  * The batch processing engine interrupts processing and sends progress
  * feedback after 1 second execution time.
  */
@@ -647,7 +647,7 @@ function _forum_access_update_batch_operation($tid, $limit, $count, &$context) {
   }
 
   // Process the next 20 nodes.
-  $result = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {term_node} tn ON tn.nid = n.nid WHERE n.nid > %d AND tn.tid = %d ORDER BY n.nid ASC", $context['sandbox']['current_node'], $tid, $context['sandbox']['current_node'], 0, $limit);
+  $result = db_query_range("SELECT DISTINCT n.nid FROM {node} n INNER JOIN {term_node} tn ON tn.vid = n.vid WHERE n.nid > %d AND tn.tid = %d ORDER BY n.nid ASC", $context['sandbox']['current_node'], $tid, $context['sandbox']['current_node'], 0, $limit);
   while ($row = db_fetch_array($result)) {
     $loaded_node = node_load($row['nid'], NULL, TRUE);
     // To preserve database integrity, only aquire grants if the node

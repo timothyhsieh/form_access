@@ -5,6 +5,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Enhancements:
+    - Fix batch updating of node_access records.
     - Synchronization with sister module Image Gallery Access (no functional change).
     - #745002: Add an 'Update even if unchanged' option to the administrative interface.
     - Fix Coder warnings (no functional change).
