@@ -582,7 +582,7 @@ function _forum_access_form_submit($form, &$form_state) {
     }
     if (isset($permissions[$rid]['administer nodes'])) {
       db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)",
-        $tid, $rid, 0, 0, 0, !empty($access['create'][$rid]), $fa_priority);
+        $tid, $rid, (bool) $checked, 0, 0, !empty($access['create'][$rid]), $fa_priority);
     }
     else {
       db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)",

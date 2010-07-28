@@ -11,6 +11,7 @@ forum_access 6.x-1.x-dev:
     - Fix Coder warnings (no functional change).
     - Add support for nodecomment comment nodes.
   Bugs fixed:
+    - Actually save the forum's View access for administrators.
     - Fix the access denied functionality on the admin/content/forum/edit/*/TID page.
     - #745002: Implement proper behavior for roles with the 'administer nodes' permission.
     - #666908: Fix initialization of {forum_access} table and remove bogus rows.
