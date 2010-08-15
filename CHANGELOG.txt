@@ -4,6 +4,9 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+
+
+forum_access 6.x-1.4 (2010-08-15):
   Enhancements:
     - Add hook_acl_explain().
     - Synchronization with sister module Image Gallery Access (no functional change).
@@ -29,7 +32,6 @@ forum_access 6.x-1.3 (2010-02-17):
     - #689572: Fix user_access() call without $account parameter.
     - #662306: Fix possible uninitialized variable.
     - #652226: Fix possible interference with the Image Gallery Access module.
-
 
 forum_access 6.x-1.2 (2009-12-04):
   Bugs fixed:
