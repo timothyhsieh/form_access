@@ -617,3 +617,14 @@ function forum_access_node_access_explain($row) {
     return array('(unknown gid)');
   }
 }
+
+/**
+ * Implementation of hook_acl_explain().
+ */
+function forum_access_acl_explain($acl_id, $name, $users = NULL) {
+  if (empty($users)) {
+    return "ACL (id=$acl_id) would grant access to nodes in forum/$name.";
+  }
+  return "ACL (id=$acl_id) grants access to nodes in forum/$name to the listed user(s).";
+}
+

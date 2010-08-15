@@ -5,13 +5,14 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Enhancements:
-    - Fix batch updating of node_access records.
+    - Add hook_acl_explain().
     - Synchronization with sister module Image Gallery Access (no functional change).
     - #745002: Add an 'Update even if unchanged' option to the administrative interface.
     - Fix Coder warnings (no functional change).
     - Add support for nodecomment comment nodes.
   Bugs fixed:
     - Fix the access denied functionality on the admin/content/forum/edit/*/TID page.
+    - Fix batch updating of node_access records.
     - #745002: Implement proper behavior for roles with the 'administer nodes' permission.
     - #666908: Fix initialization of {forum_access} table and remove bogus rows.
     - #723398: Avoid removing legitimate links from comments.
