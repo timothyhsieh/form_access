@@ -4,6 +4,8 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+  Bugs fixed:
+    - Fix inability to save Create and View access for roles with the 'administer nodes' permission.
 
 
 forum_access 6.x-1.4 (2010-08-15):

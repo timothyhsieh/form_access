@@ -581,8 +581,18 @@ function _forum_access_form_submit($form, &$form_state) {
       continue;
     }
     if (isset($permissions[$rid]['administer nodes'])) {
-      db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)",
-        $tid, $rid, 0, 0, 0, !empty($access['create'][$rid]), $fa_priority);
+      // We prefer not to save records for node administrators, because these have access anyway.
+      if (isset($permissions[$rid]['administer forums']) && $access['view'][$rid]) {
+        // For forum administrators, View needs to be saved, ...
+      }
+      else {
+        // ... otherwise forget View.
+        $access['view'][$rid] = FALSE;
+      }
+      if ($access['view'][$rid] || $access['create'][$rid]) {
+        db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)",
+          $tid, $rid, !empty($access['view'][$rid]), 0, 0, !empty($access['create'][$rid]), $fa_priority);
+      }
     }
     else {
       db_query("INSERT INTO {forum_access} (tid, rid, grant_view, grant_update, grant_delete, grant_create, priority) VALUES (%d, %d, %d, %d, %d, %d, %d)",
