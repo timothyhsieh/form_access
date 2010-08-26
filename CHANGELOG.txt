@@ -5,6 +5,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Bugs fixed:
+    - Always display the 'Update even if unchanged' checkbox.
     - Fix inability to save Create and View access for roles with the 'administer nodes' permission.
 
 
