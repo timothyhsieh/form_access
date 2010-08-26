@@ -392,10 +392,12 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
       '#attributes' => array('class' => 'forum-access-flowed'),
     );
   }
-  $form['forum_access']['force_update'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Update even if unchanged'),
-  );
+  if (isset($tid)) {
+    $form['forum_access']['force_update'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Update even if unchanged'),
+    );
+  }
 
   // Move some stuff down so our block goes in a nice place.
   $form['submit']['#weight'] = 10;
