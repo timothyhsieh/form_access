@@ -5,6 +5,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Bugs fixed:
+    - #810422: Fix public forums not being visible to Anonymous on the overview page, due to missing default records in the {node_access} table.
     - Always display the 'Update even if unchanged' checkbox, except for new forums/containers.
     - Fix inability to save Create and View access for roles with the 'administer nodes' permission.
 

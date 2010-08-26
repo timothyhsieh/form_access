@@ -733,9 +733,8 @@ function _forum_access_get_settings($tid = NULL) {
     $return['create'] = array(DRUPAL_AUTHENTICATED_RID);
   }
   else {
-    $result = db_query("SELECT * FROM {forum_access} where tid=%d", $tid);
+    $result = db_query("SELECT * FROM {forum_access} where tid = %d", $tid);
     while ($access = db_fetch_object($result)) {
-      $row_received = TRUE;
       if ($access->grant_view) {
         $return['view'][] = $access->rid;
       }
@@ -751,10 +750,6 @@ function _forum_access_get_settings($tid = NULL) {
       if ($access->rid == DRUPAL_AUTHENTICATED_RID) {  // this is our reference
         $return['priority'] = $access->priority;
       }
-    }
-    if (empty($row_received)) {
-      // Return default settings if no records found in database.
-      $return = _forum_access_get_settings();
     }
   }
   return $return;

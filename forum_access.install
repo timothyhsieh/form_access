@@ -100,6 +100,31 @@ function forum_access_schema() {
  */
 function forum_access_enable() {
   variable_del('forum_access_rids'); // clear cache
+  _forum_access_update_table();
+}
+
+/**
+ * Add missing default records to the {forum_acces} table.
+ *
+ * @return An array of links to the forums whose records have been added.
+ */
+function _forum_access_update_table()
+{
+  $result = db_query("SELECT td.tid, td.name FROM {term_data} td LEFT JOIN {forum_access} fa ON td.tid = fa.tid WHERE td.vid = %d AND fa.tid IS NULL", _forum_access_get_vid());
+  $forums = array();
+  while ($forum = db_fetch_array($result)) {
+    $forums[] = l($forum['name'], 'admin/content/forum/edit/forum/'. $forum['tid']);
+    $record = array(
+      'tid' => $forum['tid'],
+      'rid' => DRUPAL_ANONYMOUS_RID,
+      'grant_view' => 1,
+    );
+    drupal_write_record('forum_access', $record);
+    $record['rid'] = DRUPAL_AUTHENTICATED_RID;
+    $record['grant_create'] = 1;
+    drupal_write_record('forum_access', $record);
+  }
+  return $forums;
 }
 
 /**
@@ -228,5 +253,20 @@ function forum_access_update_6104() {
       AND gid IN (". implode($admin_rids, ', ') .")
   ");
   return $ret;
+}
+
+/**
+ * Add missing default records to the {forum_acces} table.
+ */
+function forum_access_update_6105() {
+  $forums = _forum_access_update_table();
+  $link = 'http://drupal.org/project/forum_access';
+  $link = l($link, $link, array('external' => TRUE));
+  $msg = t('Please see the release notes for release 6.x-1.5 on !link.', array('!link' => $link));
+  if (!empty($forums)) {
+    $msg .= '<br />'. t('The following forums have been updated as explained in the release notes:') .'<ul><li>'. implode($forums, '</li><li>') .'</li></ul>';
+  }
+  drupal_set_message($msg, 'warning');
+  return array();
 }
 
