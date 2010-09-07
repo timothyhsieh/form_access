@@ -121,7 +121,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   $forum_vocabulary = taxonomy_vocabulary_load(_forum_access_get_vid());
   $form['forum_access']['headers']['create'] = array(
     '#type' => 'item',
-    '#prefix' => '<div class="forum-access-div" id="container">',
+    '#prefix' => '<div class="forum-access-div" id="forum-access-div-container">',
     '#title' => t('See this container in the %Forums selection list', array('%Forums' => $forum_vocabulary->name)),
     '#suffix' => '</div>',
   );
