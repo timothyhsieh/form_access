@@ -5,6 +5,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Bugs fixed:
+    - #906430, by donquixote: Add a missing preg_match() call.
     - #904206: Fix misplaced labels on the container form under the Garland theme.
     - #810422: Fix public forums not being visible to Anonymous on the overview page, due to missing default records in the {node_access} table.
     - Always display the 'Update even if unchanged' checkbox, except for new forums/containers.
