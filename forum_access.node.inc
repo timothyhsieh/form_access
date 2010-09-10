@@ -213,7 +213,7 @@ function _forum_access_preprocess_comment(&$variables) {
   if (isset($links['comment_edit']) && !forum_access_access($tid, 'update', NULL, FALSE) && !comment_access('edit', $variables['comment'])) {
     unset($links['comment_edit']);
   }
-  if (isset($links['comment_delete']) && !forum_access_access($tid, 'delete', NULL, FALSE)) {
+  if (isset($links['comment_delete']) && !forum_access_access($tid, 'delete', NULL, FALSE) && !user_access('administer comments')) {
     unset($links['comment_delete']);
   }
   foreach (array_keys($links) as $link) {
