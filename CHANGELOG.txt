@@ -4,6 +4,8 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+  Enhancements:
+    - Update the link in forum_access_update_6105() to point directly to the release notes.
 
 
 

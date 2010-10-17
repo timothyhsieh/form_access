@@ -260,9 +260,7 @@ function forum_access_update_6104() {
  */
 function forum_access_update_6105() {
   $forums = _forum_access_update_table();
-  $link = 'http://drupal.org/project/forum_access';
-  $link = l($link, $link, array('external' => TRUE));
-  $msg = t('Please see the release notes for release 6.x-1.5 on !link.', array('!link' => $link));
+  $msg = t('Please see the <a href="@href">release notes for release 6.x-1.5 of the @Forum_Access module</a>.', array('@href' => 'http://drupal.org/node/936848', '@Forum_Access' => 'Forum Access'));
   if (!empty($forums)) {
     $msg .= '<br />'. t('The following forums have been updated as explained in the release notes:') .'<ul><li>'. implode($forums, '</li><li>') .'</li></ul>';
   }
