@@ -5,6 +5,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Enhancements:
+    - Implement the D6.17 hook_link_alter() for comments.
     - Update the link in forum_access_update_6105() to point directly to the release notes.
 
 

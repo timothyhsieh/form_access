@@ -379,13 +379,59 @@ if (!variable_get('forum_access_D5_legacy_mode', FALSE)) {
 /**
  * Implementation of hook_link_alter().
  *
- * Remove the 'Add new comment' link from nodes, if the user does not have the
- * 'create' permission.
+ * For nodes, remove the 'Add new comment' link, if the user does not have the
+ * 'create' permission; for comments, add any missing links (D6.17+).
  */
-function forum_access_link_alter(&$links, $node) {
+function forum_access_link_alter(&$links, $node, $comment = NULL) {
   global $user;
-  if ($user->uid != 1 && ($tid = _forum_access_get_tid($node)) && isset($links['comment_add']) && !forum_access_access($tid, 'create')) {
-    unset($links['comment_add']);
+  static $user1;
+
+  if ($user->uid == 1 || !($tid = _forum_access_get_tid($node))) {
+    return;
+  }
+  if (empty($comment)) {
+    // Check links for the node.
+    if ($tid && isset($links['comment_add']) && !forum_access_access($tid, 'create')) {
+      unset($links['comment_add']);
+    }
+  }
+  else {
+    // Check links for the comment.
+    //dpm($links, "forum_access_link_alter() - links BEFORE:");
+    //dpm($node, "forum_access_link_alter() - node:");
+    //dpm($comment, "forum_access_link_alter() - comment:");
+    $required_links = array(
+      'create' => 'comment_reply',
+      'update' => 'comment_edit',
+      'delete' => 'comment_delete',
+    );
+    foreach ($required_links as $access => $link) {
+      if (!forum_access_access($tid, $access)) {
+        unset($required_links[$access]);
+      }
+      elseif (!array_key_exists($link, $links)) {
+        $link_is_missing = TRUE;
+      }
+    }
+    if (!empty($link_is_missing)) {
+      if (!isset($user1)) {
+        $user1 = user_load(1);
+      }
+      $saved_user = $user;
+      session_save_session(FALSE);
+      $user = $user1;
+      $admin_links = module_invoke_all('link', 'comment', $comment, array_search('comment_parent', $links) !== FALSE);
+      drupal_alter('link', $admin_links, $node, $comment);
+      $user = $saved_user;
+      session_save_session(TRUE);
+      foreach ($admin_links as $link => $target) {
+        if (array_search($link, $required_links) === FALSE && array_search($link, $links) === FALSE) {
+          unset($admin_links[$link]);
+        }
+      }
+      $links = $admin_links;
+      //dpm($links, "forum_access_link_alter() - links AFTER:");
+    }
   }
 }
 
@@ -409,7 +455,7 @@ function forum_access_preprocess_box(&$variables) {
  * remove those that aren't accessible to the user.
  */
 function forum_access_preprocess_comment(&$variables) {
-  if (isset($variables['node']->tid)) {
+  if (version_compare(VERSION, '6.17', '<') && isset($variables['node']->tid)) {
     module_load_include('node.inc', 'forum_access');
     _forum_access_preprocess_comment($variables);
   }

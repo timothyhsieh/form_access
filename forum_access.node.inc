@@ -192,7 +192,7 @@ function _forum_access_get_all_roles() {
 
 /**
  * Recreate comment links (they've already been themed), and
- * remove those that aren't accessible to the user.
+ * remove those that aren't accessible to the user (pre-D6.17).
  */
 function _forum_access_preprocess_comment(&$variables) {
   global $user;
