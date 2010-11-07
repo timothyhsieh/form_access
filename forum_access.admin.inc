@@ -431,8 +431,12 @@ function _forum_access_forum_interference_form($is_container, $na_modules) {
           );
         }
         else {
+          $variables += array(
+            '%ca_priority' => $ca_priority,
+            '%fa_priority' => $fa_priority,
+          );
           $form['by_content_access'][] = array(
-            '#value' => '<div>' . t("The priority of @Content_Access ($ca_priority) is higher than the priority of !Forum_Access ($fa_priority), which means the latter is <strong>completely disabled</strong> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page, change the priority (under %Advanced) to 0, and clear all checkboxes.", $variables) . '</div>',
+            '#value' => '<div>' . t("The priority of @Content_Access (%ca_priority) is higher than the priority of !Forum_Access (%fa_priority), which means the latter is <strong>completely disabled</strong> for the %content_type type! Unless you really know what you're doing, we recommend that you go to the !link page, change the priority (under %Advanced) to 0, and clear all checkboxes.", $variables) . '</div>',
           );
         }
         $form['by_content_access'][] = array(
