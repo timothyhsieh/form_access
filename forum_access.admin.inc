@@ -30,6 +30,12 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   }
   $fa_priority = $settings['priority'];
 
+  foreach (module_implements('node_access_records') as $module) {
+    $na_modules[$module] = $module;
+  }
+  unset($na_modules['forum_access']);
+  unset($na_modules['acl']);
+
   $form['forum_access'] = array(
     '#type' => 'fieldset',
     '#title' => t('Access control'),
@@ -42,8 +48,8 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   $form['forum_access']['#after_build'][] = '_forum_access_forum_form_after_build_template';
   $form['forum_access']['grants'] = _forum_access_forum_grants_form($form_state, $is_container, $settings);
   $form['forum_access']['acl'] = _forum_access_forum_acl_form($form_state, $tid);
-  $form['forum_access']['interference'] = _forum_access_forum_interference_form($is_container);
-  $form['forum_access']['troubleshooting'] = _forum_access_forum_troubleshooting_form($is_container);
+  $form['forum_access']['interference'] = _forum_access_forum_interference_form($is_container, $na_modules);
+  $form['forum_access']['troubleshooting'] = _forum_access_forum_troubleshooting_form($is_container, count($na_modules));
 
   if (!$is_container && isset($tid) && !node_access_needs_rebuild()) {
     $count = db_query("SELECT COUNT(DISTINCT ti.nid) FROM {taxonomy_index} ti WHERE ti.tid = :tid", array(
@@ -371,14 +377,9 @@ function _forum_access_forum_form_after_build_acl2($element, &$form_state) {
   return $element;
 }
 
-function _forum_access_forum_interference_form($is_container) {
+function _forum_access_forum_interference_form($is_container, $na_modules) {
   $tr = 't';
   $l = 'l';
-  foreach (module_implements('node_access_records') as $module) {
-    $na_modules[$module] = $module;
-  }
-  unset($na_modules['forum_access']);
-  unset($na_modules['acl']);
   if (count($na_modules) && !$is_container) {
     $form = array(
       '#type'        => 'fieldset',
@@ -461,7 +462,7 @@ function _forum_access_forum_interference_form($is_container) {
   }
 }
 
-function _forum_access_forum_troubleshooting_form($is_container) {
+function _forum_access_forum_troubleshooting_form($is_container, $has_interference) {
   if (!$is_container) {
     $tr = 't';
     $l = 'l';
@@ -492,7 +493,7 @@ function _forum_access_forum_troubleshooting_form($is_container) {
       '#type'   => 'item',
       '#markup' => '<div>' . t("In case of problems, follow these steps until you've got it worked out:") . '<ol style="margin-top: 0"><li>' .
                              t("Update to the 'recommended' !Forum_Access and !ACL releases for your version of Drupal.", $variables) . '</li><li>' .
-       (count($na_modules) ? t("Read %Module_interference above and update your other node access modules.", $variables) . '</li><li>' : '') .
+        ($has_interference ? t("Read %Module_interference above and update your other node access modules.", $variables) . '</li><li>' : '') .
                              t("Check the release notes of the development snapshots for issues that might have been fixed in !Forum_Access-dev or !ACL-dev since the latest release.", $variables) . '</li><li>' .
                              t("Install the %devel_node_access module (!DNA, part of the !Devel module) and enable its !debug_mode: !DNA will show you all the grants that actually control your nodes in a footer block on each node's page.", $variables) . '</li><li>' .
                              t("Additional insight can be gained from !dna_summary and by enabling the second !DNA !block.", $variables) . '</li><li>' .

@@ -3,6 +3,11 @@ $Id$
 CHANGELOG for Forum Access for Drupal 7
 
 
+forum_access 7.x-1.x-dev:
+  Bugs fixed:
+    - #964762: Fix undefined variable notice for $na_modules.
+
+
 forum_access 7.x-1.x-ALPHA1 (2010-11-07):
   Port fixes from 6.x-1.5:
     - #745002: Fix missing 'delete comment' link for users with the 'administer comments' permission.
