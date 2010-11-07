@@ -1,26 +1,14 @@
-.forum-access-div {
-  width: 25%;
-  margin: 0;
-  padding: 0;
-  float: left;
-  overflow: hidden;
-}
-
-.forum-access-div#container {
-  width: 75%;
-}
-
-.forum-access-clearer {
-  clear: both;
-}
-
-.forum-access-div > .form-checkboxes {
-  margin-top: -1ex;
-}
-
 div.forum-access-flowed > div.form-item {
   display: inline;
   margin-right: 1em;
+}
+
+div.form-item-forum-access-update-choice {
+  margin-bottom: 0;
+}
+
+div.form-item-forum-access-force-update {
+  margin-top: 0;
 }
 
 .forum-access-temporary-moderator div.form-item {

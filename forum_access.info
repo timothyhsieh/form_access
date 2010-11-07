@@ -1,7 +1,15 @@
 name = Forum Access
-description = Allows forums to be set private and allows forums to be given moderators.
-dependencies[] = acl
+description = Allows forums to be set private and to be given moderators.
+dependencies[] = acl (1.0-beta1)
 dependencies[] = forum
 package = Access control
-core = 6.x
+core = 7.x
+
+
+files[] = forum_access.admin.inc
+files[] = forum_access.install
+files[] = forum_access.module
+files[] = forum_access.node.inc
+files[] = tests/forum_access.test
+configure = admin/structure/forum
 
