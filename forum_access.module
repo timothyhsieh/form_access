@@ -272,43 +272,6 @@ function forum_access_query_term_access_alter(QueryAlterableInterface $query) {
 }
 
 /**
- * Implements hook_db_rewrite_sql().
- *
- * Because in order to restrict the visible forums, we have to rewrite
- * the sql. This is because there isn't a node_access equivalent for
- * taxonomy. There should be.
- */
-function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
-  global $user;
-  //dpm($query, "hook_db_rewrite_sql($primary_table.$primary_field)");
-  $sql = NULL;
-  switch ($primary_field) {
-    case 'tid':
-      if (user_access('bypass node access', $user)
-//TODO: revise
-        || user_access('administer nodes') && strpos($_GET['q'], 'node/add/forum') === FALSE
-        || user_access('administer forums') && $_GET['q'] == 'admin/structure/forum') {
-        break;
-      }
-      if (strpos($_GET['q'], 'node/add/forum') !== FALSE) {
-        $required_access = 'create';
-      }
-      else {
-        $required_access = 'view';
-      }
-      $roles = implode(', ', array_keys($user->roles));
-      $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
-                      LEFT JOIN {acl} acl_fa ON acl_fa.number = $primary_table.tid AND acl_fa.module = 'forum_access'
-                      LEFT JOIN {acl_user} aclu_fa ON aclu_fa.acl_id = acl_fa.acl_id AND aclu_fa.uid = $user->uid";
-      $sql['where'] = "(fa.$required_access >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu_fa.uid = $user->uid";
-      $sql['distinct'] = 1;
-      break;
-  }
-  //dpm($sql, "rewritten:");
-  return $sql;
-}
-
-/**
  * Implements hook_node_presave().
  */
 function forum_access_node_presave($node, $return_old_tid = FALSE) {
@@ -332,7 +295,7 @@ function forum_access_node_update($node) {
       }
       acl_node_clear_acls($node->nid, 'forum_access');
 
-/*
+      /*
       if (module_exists('nodecomment')) {
         _forum_access_changed_tid($node->forum_tid);
         $result = db_query('SELECT cid FROM {node_comments} WHERE nid = :nid', array(
@@ -342,7 +305,7 @@ function forum_access_node_update($node) {
           acl_node_clear_acls($row->cid, 'forum_access');
         }
       }
-*/
+      */
     }
     // For changed and for previously unassigned terms we need to fake an insert.
     forum_access_node_insert($node);
@@ -733,14 +696,6 @@ function forum_access_taxonomy_term_delete($term) {
 }
 
 /**
- * Return forum.module's forum vocabulary ID.
- */
-function _forum_access_get_vid()
-{
-  return variable_get('forum_nav_vocabulary', '');
-}
-
-/**
  * Implements hook_user_role_delete().
  */
 function forum_access_user_role_delete($role) {
@@ -751,6 +706,13 @@ function forum_access_user_role_delete($role) {
     ->condition('gid', $role->rid)
     ->condition('realm', 'forum_access')
     ->execute();
+}
+
+/**
+ * Return forum.module's forum vocabulary ID.
+ */
+function _forum_access_get_vid() {
+  return variable_get('forum_nav_vocabulary', '');
 }
 
 /**
