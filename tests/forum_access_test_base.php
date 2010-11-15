@@ -199,6 +199,36 @@ class ForumAccessBaseTestCase extends ForumTestCase {
 
 
   /**
+   * Asserts that a field in the current page is enabled.
+   *
+   * @param $id
+   *   Id of field to assert.
+   * @param $message
+   *   Message to display.
+   * @return
+   *   TRUE on pass, FALSE on fail.
+   */
+  protected function assertFieldEnabled($id, $message = '') {
+    $elements = $this->xpath('//input[@id=:id]', array(':id' => $id));
+    return $this->assertTrue(isset($elements[0]) && empty($elements[0]['disabled']), $message ? $message : t('Field @id is enabled.', array('@id' => $id)), t('Browser'));
+  }
+
+  /**
+   * Asserts that a field in the current page is disabled.
+   *
+   * @param $id
+   *   Id of field to assert.
+   * @param $message
+   *   Message to display.
+   * @return
+   *   TRUE on pass, FALSE on fail.
+   */
+  protected function assertFieldDisabled($id, $message = '') {
+    $elements = $this->xpath('//input[@id=:id]', array(':id' => $id));
+    return $this->assertTrue(isset($elements[0]) && !empty($elements[0]['disabled']), $message ? $message : t('Field @id is disabled.', array('@id' => $id)), t('Browser'));
+  }
+
+  /**
    * Pass if a button with the specified label is found, and optional with the
    * specified index.
    *
