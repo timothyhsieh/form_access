@@ -48,7 +48,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
   $form['forum_access']['#after_build'][] = '_forum_access_forum_form_after_build_template';
   $form['forum_access']['grants'] = _forum_access_forum_grants_form($form_state, $is_container, $settings);
   $form['forum_access']['acl'] = _forum_access_forum_acl_form($form_state, $tid);
-  $form['forum_access']['interference'] = _forum_access_forum_interference_form($is_container, $na_modules);
+  $form['forum_access']['interference'] = _forum_access_forum_interference_form($is_container, $na_modules, $fa_priority);
   $form['forum_access']['troubleshooting'] = _forum_access_forum_troubleshooting_form($is_container, count($na_modules));
 
   if (!$is_container && isset($tid) && !node_access_needs_rebuild()) {
@@ -377,7 +377,7 @@ function _forum_access_forum_form_after_build_acl2($element, &$form_state) {
   return $element;
 }
 
-function _forum_access_forum_interference_form($is_container, $na_modules) {
+function _forum_access_forum_interference_form($is_container, $na_modules, $fa_priority) {
   $tr = 't';
   $l = 'l';
   if (count($na_modules) && !$is_container) {
@@ -409,7 +409,7 @@ function _forum_access_forum_interference_form($is_container, $na_modules) {
         }
       }
       $ca_priority = content_access_get_settings('priority', 'forum');
-      $is_conflict = $ca_priority >= $fa_priority && !empty($ca_interferes) || $ca_priority > $fa_priority;
+      $is_conflict = ($ca_priority >= $fa_priority && !empty($ca_interferes) || $ca_priority > $fa_priority);
       $variables += array(
         '!link'     => l(t('@Content_Access configuration for the %content_type type', $variables), 'admin/content/node-type/forum/access', array('html' => TRUE)),
         '%Advanced' => $tr('Advanced'),
@@ -630,7 +630,7 @@ function _forum_access_form_submit($form, &$form_state) {
       $is_changed = $is_changed || (empty($form_initial_values['grants']['checkboxes'][$grant_type][$rid]['#disabled']) && (!empty($checked) != isset($defaults[$rid])));
     }
   }
-  if (!$is_changed && $fa_values['acl']['user_list'] == $form_initial_values['acl']['user_list']['#default_value'] && $fa_values['interference']['advanced']['priority'] == $form_initial_values['interference']['advanced']['priority']['#default_value']) {
+  if (!$is_changed && $fa_values['acl']['user_list'] == $form_initial_values['acl']['user_list']['#default_value'] && (empty($fa_values['interference']) || $fa_values['interference']['advanced']['priority'] == $form_initial_values['interference']['advanced']['priority']['#default_value'])) {
     drupal_set_message(t('The content access permissions are unchanged.'));
     return;
   }

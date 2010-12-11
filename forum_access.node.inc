@@ -144,7 +144,7 @@ function _forum_access_node_view_alter(&$build, $tid) {
  * Implements hook_comment_view_alter().
  */
 function _forum_access_comment_view_alter(&$build, $tid) {
-  dpm($build, '_forum_access_comment_view_alter() BEFORE:');
+//  dpm($build, '_forum_access_comment_view_alter() BEFORE:');
 //  if (!user_access('administer comments')) {
 //    if (!forum_access_access('create', $tid)) {
 //      unset($build['links']['comment']['#links']['comment-reply']);
