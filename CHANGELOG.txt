@@ -4,8 +4,12 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
-  Bugs fixed:
+
+
+forum_access 7.x-1.x-ALPHA2 (2010-12-11):
+  Enhancement:
     - Use the Chain Menu Access API.
+  Bugs fixed:
     - Fix some minor bugs.
     - Add missing assertFieldEnabled()/assertFieldDisabled() function that haven't made it into core (see #882564).
     - Remove the need for the hook_menu_get_item_alter() patch.
