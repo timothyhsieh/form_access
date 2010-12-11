@@ -2,6 +2,7 @@ name = Forum Access
 description = Allows forums to be set private and to be given moderators.
 dependencies[] = acl (1.0-beta1)
 dependencies[] = forum
+dependencies[] = chain_menu_access
 package = Access control
 core = 7.x
 

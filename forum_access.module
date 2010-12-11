@@ -598,29 +598,12 @@ function forum_access_access($op, $tid, $account = NULL, $administer_nodes_sees_
  * Remove the 'Forum' menu item if no forums are visible.
  */
 function forum_access_menu_alter(&$items) {
-  foreach (array('forum', 'comment/%comment/edit', 'comment/%/delete') as $path) {
-    $items[$path] += array('access callback' => 'user_access', 'access_arguments' => array());
-    array_unshift($items[$path]['access arguments'], $items[$path]['access callback']);
-  }
-  $items['forum']['access callback'] = '_forum_access_forum_access_callback';
-  $items['comment/%comment/edit']['access callback'] = '_forum_access_comment_access_callback';
-  array_unshift($items['comment/%comment/edit']['access arguments'], 2, 1);
-  $items['comment/%/delete']['access callback'] = '_forum_access_comment_access_callback';
-  array_unshift($items['comment/%/delete']['access arguments'], 2, 1);
+  chain_menu_access_chain($items['forum'], 'forum_access_access_any_forum');
+  chain_menu_access_chain($items['comment/%comment/edit'], '_forum_access_comment_access_callback', array(1, 2), TRUE);
+  chain_menu_access_chain($items['comment/%/delete'], '_forum_access_comment_access_callback', array(1, 2), TRUE);
 }
 
-function _forum_access_forum_access_callback() {
-  $args = func_get_args();
-  $original_callback = array_shift($args);
-  return forum_access_access_any_forum() && call_user_func_array($original_callback, $args);
-}
-
-function _forum_access_comment_access_callback() {
-  $args = func_get_args();
-//dpm($args);
-  $op = array_shift($args);
-  $comment = array_shift($args);
-  $original_callback = array_shift($args);
+function _forum_access_comment_access_callback($comment, $op) {
   if (is_numeric($comment)) {
     $comment = comment_load($comment);
   }
@@ -634,7 +617,6 @@ function _forum_access_comment_access_callback() {
       return TRUE;
     }
   }
-  return call_user_func_array($original_callback, $args);
 }
 
 /**
