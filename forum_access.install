@@ -168,7 +168,6 @@ function forum_access_uninstall() {
   variable_del('forum_access_batch_threshold');
   variable_del('forum_access_D5_legacy_mode');
   variable_del('forum_access_default_template_tid');
-  variable_del('forum_access_moderator_rid');
   variable_del('forum_access_new_template_tid');
   variable_del('forum_access_provide_moderators_template_variable');
   variable_del('forum_access_rids');

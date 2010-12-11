@@ -4,6 +4,8 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+  Bugs fixed:
+    - The D6 moderator role is removed during upgrading, no need to remove it in hook_uninstall(), too.
 
 
 forum_access 7.x-1.x-ALPHA2 (2010-12-11):
