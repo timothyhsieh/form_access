@@ -138,6 +138,13 @@ function forum_access_disable() {
  * Implementation of hook_uninstall().
  */
 function forum_access_uninstall() {
+  // Remove moderator role.
+  if ($moderator_rid = variable_get('forum_access_moderator_rid', 0)) {
+    db_query('DELETE FROM {role} WHERE rid = %d', $moderator_rid);
+    db_query('DELETE FROM {permission} WHERE rid = %d', $moderator_rid);
+    db_query('DELETE FROM {users_roles} WHERE rid = %d', $moderator_rid);
+  }
+
   drupal_uninstall_schema('forum_access');
   variable_del('forum_access_allowed_node_edit_elements');
   variable_del('forum_access_allowed_node_edit_options');
