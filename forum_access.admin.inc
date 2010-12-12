@@ -815,9 +815,6 @@ function _forum_access_forum_admin_settings_form(&$form, &$form_state) {
     '#default_value' => variable_get('forum_access_D5_legacy_mode', FALSE),
     '#description'   => t('In Drupal 5, comment posting was not restricted by !Forum_Access; users with %View access (and the %post_comments permission) were always allowed to post forum comments. Starting with Drupal 6, posting comments is now restricted to users with %Post access. Turn this option on to revert to the old behavior. The default is OFF.', $variables),
   );
-  $buttons = $form['buttons'];
-  unset($form['buttons']);
-  $form['buttons'] = $buttons;
 }
 
 /**
