@@ -46,8 +46,9 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     }
     $this->timeLimit = 1000;
     parent::setUp();
-    module_enable(array('acl', 'forum_access'), FALSE);
+    module_enable(array('acl', 'chain_menu_access', 'forum_access'), FALSE);
     $this->assertTrue(module_exists('acl'), t('Module %module enabled!', array('%module' => 'acl')), 'Setup');
+    $this->assertTrue(module_exists('chain_menu_access'), t('Module %module enabled!', array('%module' => 'chain_menu_access')), 'Setup');
     $this->assertTrue(module_exists('forum_access'), t('Module %module enabled!', array('%module' => 'forum_access')), 'Setup');
     module_enable(array('devel', 'devel_node_access'), FALSE);
     module_enable($modules);
