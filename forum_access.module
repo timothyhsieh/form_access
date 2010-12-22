@@ -380,7 +380,7 @@ function forum_access_comment_view($comment, $view_mode, $langcode)
 function forum_access_comment_view_alter(&$build) {
   if ($tid = _forum_access_get_tid($build['#node'])) {
     _forum_access_module_load_include('node.inc');
-    _forum_access_comment_view_alter(&$build, $tid);
+    _forum_access_comment_view_alter($build, $tid);
   }
 }
 
@@ -466,7 +466,7 @@ if (!variable_get('forum_access_D5_legacy_mode', FALSE)) {
 function forum_access_node_view_alter(&$build) {
   if ($tid = _forum_access_get_tid($build['#node'])) {
     _forum_access_module_load_include('node.inc');
-    _forum_access_node_view_alter(&$build, $tid);
+    _forum_access_node_view_alter($build, $tid);
   }
 }
 
