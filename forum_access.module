@@ -234,9 +234,7 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
       }
       $roles = implode(', ', array_keys($user->roles));
       $sql['join'] = "LEFT JOIN {forum_access} fa ON $primary_table.tid = fa.tid
-                      LEFT JOIN {acl} acl_fa ON acl_fa.name = ". ($GLOBALS['db_type'] == 'pgsql' ? 'CAST(' : '')
-                                                            ."$primary_table.tid". ($GLOBALS['db_type'] == 'pgsql' ? ' AS VARCHAR)' : '')
-                                                                              ." AND acl_fa.module = 'forum_access'
+                      LEFT JOIN {acl} acl_fa ON acl_fa.number = $primary_table.tid AND acl_fa.module = 'forum_access'
                       LEFT JOIN {acl_user} aclu_fa ON aclu_fa.acl_id = acl_fa.acl_id AND aclu_fa.uid = $user->uid";
       $sql['where'] = "(fa.grant_$required_access >= 1 AND fa.rid IN ($roles)) OR fa.tid IS NULL OR aclu_fa.uid = $user->uid";
       $sql['distinct'] = 1;
@@ -272,7 +270,7 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       // Set moderator on nodecomment.
       $topic_node = node_load($node->comment_target_nid);
       if ($topic_tid = _forum_access_get_tid($topic_node)) {
-        $acl_id = acl_get_id_by_name('forum_access', $topic_tid);
+        $acl_id = acl_get_id_by_number('forum_access', $topic_tid);
         acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
       }
     }
@@ -303,7 +301,7 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 
     case 'insert':
       if (!empty($node->tid)) {
-        $acl_id = acl_get_id_by_name('forum_access', $node->tid);
+        $acl_id = acl_get_id_by_number('forum_access', $node->tid);
         acl_node_add_acl($node->nid, $acl_id, 1, 1, 1);
 
         if (isset($old_tid) && module_exists('nodecomment')) {
@@ -323,7 +321,7 @@ function forum_access_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
  * Get an array of moderator UIDs or NULL.
  */
 function forum_access_get_moderator_uids($tid) {
-  if ($acl_id = acl_get_id_by_name('forum_access', $tid)) {
+  if ($acl_id = acl_get_id_by_number('forum_access', $tid)) {
     if ($uids = acl_get_uids($acl_id)) {
       return $uids;
     }
@@ -508,7 +506,7 @@ function forum_access_access($tid, $type, $account = NULL, $administer_nodes_see
     }
     else {
       // check our moderators too
-      $acl_id = acl_get_id_by_name('forum_access', $tid);
+      $acl_id = acl_get_id_by_number('forum_access', $tid);
       $result = db_result(db_query("SELECT uid FROM {acl_user} WHERE acl_id = %d AND uid = %d", $acl_id, $account->uid));
       if ($result) {
         $cache[$account->uid][$tid][$type] = 2;
@@ -667,10 +665,10 @@ function forum_access_node_access_explain($row) {
 /**
  * Implementation of hook_acl_explain().
  */
-function forum_access_acl_explain($acl_id, $name, $users = NULL) {
+function forum_access_acl_explain($acl_id, $name, $number, $users = NULL) {
   if (empty($users)) {
-    return "ACL (id=$acl_id) would grant access to nodes in forum/$name.";
+    return "ACL (id=$acl_id) would grant access to nodes in forum/$number.";
   }
-  return "ACL (id=$acl_id) grants access to nodes in forum/$name to the listed user(s).";
+  return "ACL (id=$acl_id) grants access to nodes in forum/$number to the listed user(s).";
 }
 

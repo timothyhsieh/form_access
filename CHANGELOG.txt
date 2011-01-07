@@ -9,6 +9,7 @@ forum_access 6.x-1.x-dev:
     - #978572: Remove moderator role on uninstall.
     - #980894: Fix a notice.
   Enhancements:
+    - #936682, #968382: Move the TID into the {acl.number} column to speed up hook_db_rewrite_sql() joins.
     - Implement the D6.17 hook_link_alter() for comments.
     - Update the link in forum_access_update_6105() to point directly to the release notes.
 
