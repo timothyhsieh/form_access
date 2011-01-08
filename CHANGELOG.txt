@@ -4,6 +4,8 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+  Bugs fixed:
+    - #1019572: Add '>=' operator to ACL dependency.
 
 
 forum_access 7.x-1.x-ALPHA3 (2011-01-08):
