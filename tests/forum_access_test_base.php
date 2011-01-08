@@ -366,7 +366,6 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     $this->assertResponse(200, "^^^ '$forum->name' initial topics.");
 
     foreach ($this->accounts as $key => $account) {
-if ($account->uid != 21) continue;
       $is_super_user = user_access('bypass node access', $account) || ($account->uid == $this->moderator->uid && !$is_default);
 
       if (!empty($account->uid)) {
@@ -430,6 +429,8 @@ if ($account->uid != 21) continue;
               if (!$account->uid) {
                 $this->assertLinkByHref("/user/login?destination=node/$node->nid#comment-form");
               }
+              $this->assertNoLink(t('Add new comment'));
+              $this->assertNoText(t('Add new comment'));
               $this->assertNoLink(t('reply'));
               $this->drupalGet("comment/$comment->cid");
               $this->assertResponse(200, '^^^ ' . "Comment '$comment->subject' is visible to $account->name'.");
@@ -439,8 +440,9 @@ if ($account->uid != 21) continue;
               $this->assertResponse(403);
             }
             else {
-              $this->assertLink(t('Add new comment'));
+              $this->assertText(t('Add new comment'));
               $this->assertLink(t('reply'));
+              $this->assertLinkByHref("comment/reply/$node->nid/$comment->cid");
               $this->drupalGet("comment/reply/$node->nid/$comment->cid");
               $this->assertResponse(200);
             }
@@ -453,27 +455,14 @@ if ($account->uid != 21) continue;
             $comment_access_edit = comment_access('edit', $comment);
             $user = $user_save;
             drupal_save_session(TRUE);
+            $this->drupalGet("comment/$comment->cid");
+            $this->assertResponse(200);
             if ((empty($account->access['update'])) && !$comment_access_edit && !user_access('administer comments', $account) && !$is_super_user) {
               $this->assertNoLink(t('edit'));
               $this->drupalGet("comment/$comment->cid/edit");
               $this->assertResponse(403);
             }
             else {
-/*
-$this->dpm(empty($account->access['update']), "empty(#account->access['update']");
-$this->dpm(!comment_access('edit', $comment), "!comment_access('edit', #comment)");
-$this->dpm(!user_access('administer comments', $account), "!user_access('administer comments', #account)");
-$this->dpm(!$is_super_user, "!#is_super_user");
-$this->dpm($account->uid . ' - ' . $account->name, "#account");
-$this->dpm($comment, "#comment");
-$this->dpm(comment_access('edit', $comment), "comment_access('edit', #comment)");
-global $user;
-$this->dpm($user->uid, "#user->uid");
-$this->dpm($user->uid == $comment->uid, "#user->uid == #comment->uid");
-$this->dpm(user_access('edit own comments'), "user_access('edit own comments')");
-$this->dpm(user_access('administer comments'), "user_access('administer comments')");
-$this->dpm($user->uid, "#user->uid");
-*/
               $this->assertLink(t('edit'));
               $this->clickLink(t('edit'));
               $this->assertResponse(200);
