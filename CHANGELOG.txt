@@ -5,6 +5,7 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
+    - Port update 6106 to secure upgrade path from D6.
     - #1016088: Avoid calling reset() on non-variables.
     - #993056: Remove call-time pass-by-reference typos.
     - #999556: Adapt to changed signature of hook_menu_view().

@@ -178,6 +178,14 @@ function forum_access_update_last_removed() {
 }
 
 /**
+ * Change our {acl} table records from 'name' to 'number' (D6 legacy).
+ */
+function forum_access_update_6106() {
+  db_update('acl')->expression('number', 'name')->condition('module', 'forum_access')->isNotNull('name')->execute();
+  db_update('acl')->fields(array('name' => NULL))->condition('module', 'forum_access')->isNotNull('name')->execute();
+}
+
+/**
  * Remove the D6 Forum Moderator role which is not needed anymore.
  */
 function forum_access_update_7001() {
