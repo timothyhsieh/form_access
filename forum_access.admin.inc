@@ -191,7 +191,7 @@ function _forum_access_forum_template_form($template_tid) {
 function _forum_access_forum_form_after_build_template($form, &$form_state) {
   if (isset($form_state['clicked_button']['#name']) && $form_state['clicked_button']['#name'] == $form['template']['load_button']['#name']) {
     // Load a setting from a template:
-    $template_tid = reset(array_values($form['#post']['forum_access']['template']['taxonomy']));
+    $template_tid = reset($form['#post']['forum_access']['template']['taxonomy']);
     $form_state['values']['forum_access']['template']['template_tid'] = $template_tid;
     $form['template']['#collapsed'] = FALSE;
 
@@ -211,7 +211,7 @@ function _forum_access_forum_form_after_build_template($form, &$form_state) {
     }
   }
   elseif (is_array(reset($form_state['values']['forum_access']['template']['taxonomy']))) {
-    $template_tid = reset(reset($form_state['values']['forum_access']['template']['taxonomy']));
+    $template_tid = current(current($form_state['values']['forum_access']['template']['taxonomy']));
   }
   if (isset($template_tid)) {
     $form['template']['select_by_default']['#value'] = ($template_tid && $template_tid == variable_get('forum_access_default_template_tid', 0));
@@ -355,7 +355,7 @@ function _forum_access_forum_acl_form(&$form_state, $tid) {
 function _forum_access_forum_form_after_build_acl0($element, &$form_state) {
   if (isset($element['#post']['forum_access']['template']['taxonomy'])) {
     // Get ACL's user_list for the template and replace it before ACL's after_build function gets its shot at it.
-    $template_tid = reset(array_values($element['#post']['forum_access']['template']['taxonomy']));
+    $template_tid = reset($element['#post']['forum_access']['template']['taxonomy']);
     if ($acl_id = db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND number = :tid", array(
       ':tid' => (int) $template_tid,
     ))->fetchField()) {
@@ -603,7 +603,7 @@ function _forum_access_form_submit($form, &$form_state) {
   $access = $fa_values['grants']['checkboxes']; // shortcut
 
   // Save template choice.
-  $template_tid = reset(array_values($fa_values['template']['taxonomy']));
+  $template_tid = reset($fa_values['template']['taxonomy']);
   if ($fa_values['template']['select_by_default']) {
     variable_set('forum_access_default_template_tid', $template_tid);
   }
