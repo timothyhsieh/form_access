@@ -4,6 +4,9 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+
+
+forum_access 7.x-1.x-ALPHA3 (2011-01-08):
   Bugs fixed:
     - Major update to fix various bugs and adapt to late changes in the Form API of D7 core.
     - Remove remaining references to {acl.name}.
