@@ -191,18 +191,20 @@ function _forum_access_forum_template_form($template_tid) {
 function _forum_access_forum_form_after_build_template($form, &$form_state) {
   if (isset($form_state['clicked_button']['#name']) && $form_state['clicked_button']['#name'] == $form['template']['load_button']['#name']) {
     // Load a setting from a template:
-    $template_tid = reset($form['#post']['forum_access']['template']['taxonomy']);
+    $template_tid = reset($form_state['input']['forum_access']['template']['taxonomy']);
     $form_state['values']['forum_access']['template']['template_tid'] = $template_tid;
     $form['template']['#collapsed'] = FALSE;
+    $form['template']['#attributes']['class'] = array('collapsible');
 
     $settings = _forum_access_get_settings($template_tid);
     foreach (array('view', 'create', 'update', 'delete') as $grant_type) {
-      if (empty($form[$grant_type])) {
+      if (empty($form['grants']['checkboxes'][$grant_type])) {
         continue;
       }
-      foreach (element_children($form[$grant_type]) as $tid) {
+      foreach (element_children($form['grants']['checkboxes'][$grant_type]) as $tid) {
         $checked = array_search($tid, $settings[$grant_type]) !== FALSE;
-        $form[$grant_type][$tid]['#value'] = ($checked ? $tid : 0);
+        $form['grants']['checkboxes'][$grant_type][$tid]['#value'] = ($checked ? $tid : 0);
+        $form['grants']['checkboxes'][$grant_type][$tid]['#checked'] = ($checked ? TRUE : FALSE);
       }
     }
     $form['interference']['advanced']['priority']['#value'] = $settings['priority'];
@@ -343,7 +345,7 @@ function _forum_access_forum_acl_form(&$form_state, $tid) {
     );
     $form['note'] = array(
       '#type'   => 'markup',
-      '#markup' => '<div>' . t('Note: Changes to moderators are not saved until you click [!Save] below.', array('!Save' => $tr('Save'))) . '</div>',
+      '#markup' => '<div><span>' . t('Note: Changes to moderators are not saved until you click [!Save] below.', array('!Save' => $tr('Save'))) . '</span></div>',
     );
     $form['#after_build'][] = '_forum_access_forum_form_after_build_acl0';
     $form['#after_build'] = array_reverse($form['#after_build']);
@@ -353,13 +355,11 @@ function _forum_access_forum_acl_form(&$form_state, $tid) {
 }
 
 function _forum_access_forum_form_after_build_acl0($element, &$form_state) {
-  if (isset($element['#post']['forum_access']['template']['taxonomy'])) {
+  if (isset($form_state['input']['forum_access']['template']['taxonomy'])) {
     // Get ACL's user_list for the template and replace it before ACL's after_build function gets its shot at it.
-    $template_tid = reset($element['#post']['forum_access']['template']['taxonomy']);
-    if ($acl_id = db_query("SELECT acl_id from {acl} WHERE module = 'forum_access' AND number = :tid", array(
-      ':tid' => (int) $template_tid,
-    ))->fetchField()) {
-      $f = acl_edit_form($acl_id, 'DUMMY');
+    $template_tid = reset($form_state['input']['forum_access']['template']['taxonomy']);
+    if ($acl_id = acl_get_id_by_number('forum_access', $template_tid)) {
+      $f = _acl_edit_form($acl_id, 'DUMMY');
       $element['user_list']['#value'] = $f['user_list']['#default_value'];
     }
   }
@@ -372,7 +372,7 @@ function _forum_access_forum_form_after_build_acl2($element, &$form_state) {
     $element['#attributes']['class'][] = 'collapsed'; // We're already 'after build' and have to do this ourselves!
   }
   if ($element['user_list']['#default_value'] != $element['user_list']['#value']) {
-    $element['note']['#markup'] = preg_replace('/<div>/', '<div class="warning">', $element['note']['#markup']);
+    $element['note']['#markup'] = preg_replace('/<span>/', '<span class="warning">', $element['note']['#markup']);
   }
   return $element;
 }
@@ -687,7 +687,7 @@ function _forum_access_form_submit($form, &$form_state) {
 
   if ($form_state['values']['form_id'] != 'forum_form_container') {
     if ($is_new) {
-      $acl_id = acl_create_new_acl('forum_access', $tid);
+      $acl_id = acl_create_new_acl('forum_access', NULL, $tid);
     }
     else {
       if (!isset($fa_values['update_choice']) || $fa_values['update_choice'] == 2) {

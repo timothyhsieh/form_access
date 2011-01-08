@@ -134,7 +134,7 @@ function _forum_access_node_form(&$form, &$form_state) {
 function _forum_access_node_view_alter(&$build, $tid) {
   //dpm($build, '_forum_access_node_view_alter() BEFORE:');
   if (!forum_access_access('create', $tid)) {
-    unset($build['links']['#links']['comment-add']);
+    unset($build['links']['comment']['#links']['comment-add']);
     $build['comments']['comment_form'] = NULL;
   }
   //dpm($build, '_forum_access_node_view_alter() AFTER:');
@@ -144,19 +144,21 @@ function _forum_access_node_view_alter(&$build, $tid) {
  * Implements hook_comment_view_alter().
  */
 function _forum_access_comment_view_alter(&$build, $tid) {
-//  dpm($build, '_forum_access_comment_view_alter() BEFORE:');
-//  if (!user_access('administer comments')) {
-//    if (!forum_access_access('create', $tid)) {
-//      unset($build['links']['comment']['#links']['comment-reply']);
-//    }
-//    if (!forum_access_access('update', $tid)) {
-//      unset($build['links']['comment']['#links']['comment-edit']);
-//    }
-//    if (!forum_access_access('delete', $tid)) {
-//      unset($build['links']['comment']['#links']['comment-delete']);
-//    }
-//  }
-//  dpm($build, '_forum_access_comment_view_alter() AFTER:');
+  global $user;
+
+  //dpm($build, "_forum_access_comment_view_alter() tid=[$tid] BEFORE:");
+  if (!forum_access_access('create', $tid)) {
+    unset($build['links']['comment']['#links']['comment-reply']);
+  }
+  if (!user_access('administer comments') || isset($user->_forum_access_moderator)) {
+    if (!forum_access_access('update', $tid) && !user_access('edit any forum content') && !(user_access('edit own forum content') && $build['#node']->uid == $user->uid)) {
+      unset($build['links']['comment']['#links']['comment-edit']);
+    }
+    if (!forum_access_access('delete', $tid) && !user_access('delete any forum content') && !(user_access('delete own forum content') && $build['#node']->uid == $user->uid)) {
+      unset($build['links']['comment']['#links']['comment-delete']);
+    }
+  }
+  //dpm($build, '_forum_access_comment_view_alter() AFTER:');
 }
 
 /**

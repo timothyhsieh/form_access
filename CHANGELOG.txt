@@ -5,6 +5,8 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
+    - Major update to fix various bugs and adapt to late changes in the Form API of D7 core.
+    - Remove remaining references to {acl.name}.
     - Clean up / enable tests.
     - Port update 6106 to secure upgrade path from D6.
     - #1016088: Avoid calling reset() on non-variables.
