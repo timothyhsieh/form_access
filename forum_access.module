@@ -338,7 +338,7 @@ function forum_access_menu_get_item_alter(&$router_item, $path, $original_map) {
       break;
 
     case 'node':
-      if (isset($original_map[1]) && is_numeric($nid = $original_map[1]) && $node = node_load($nid) && $tid = _forum_access_get_tid($node)) {
+      if (isset($original_map[1]) && is_numeric($nid = $original_map[1]) && ($node = node_load($nid)) && ($tid = _forum_access_get_tid($node))) {
         forum_access_current_tid($tid);
       }
       break;
