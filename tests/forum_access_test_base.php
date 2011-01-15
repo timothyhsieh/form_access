@@ -149,7 +149,7 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     $this->edit_any_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit any forum content', 'view own unpublished content'), '15 edit any content');
     $this->edit_own_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit own forum content', 'edit own comments'), '16 edit own content');
     $this->delete_any_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'delete any forum content', 'view own unpublished content'), '17 delete any content');
-    $this->delete_own_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'delete own forum content'), '18 delete own content');
+    $this->delete_own_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'delete own forum content', 'edit own comments'), '18 delete own content');  // EOC should not make any difference!
     $this->create_content_rid = (int) $this->drupalCreateRole(array('create forum content'), '19 create content');
     $this->anon_rid = DRUPAL_ANONYMOUS_RID;
     $this->auth_rid = DRUPAL_AUTHENTICATED_RID;
@@ -454,12 +454,13 @@ class ForumAccessBaseTestCase extends ForumTestCase {
             drupal_save_session(FALSE);
             $user_save = $user;
             $user = $account;
-            $comment_access_edit = comment_access('edit', $comment);
+            // We ignore the 'edit own comments' permission!
+            $comment_access_edit = FALSE;  // comment_access('edit', $comment);
             $user = $user_save;
             drupal_save_session(TRUE);
             $this->drupalGet("comment/$comment->cid");
             $this->assertResponse(200);
-            if ((empty($account->access['update'])) && !$comment_access_edit && !user_access('administer comments', $account) && !$is_super_user) {
+            if (empty($account->access['update']) && !$is_super_user && !$comment_access_edit && !user_access('administer comments', $account) && !user_access('edit any forum content', $account) && !($account->uid == $comment->uid && user_access('edit own forum content', $account))) {
               $this->assertNoLink(t('edit'));
               $this->drupalGet("comment/$comment->cid/edit");
               $this->assertResponse(403);
@@ -479,7 +480,8 @@ class ForumAccessBaseTestCase extends ForumTestCase {
             }
 
             // Check comment delete links.
-            if ((empty($account->access['delete'])) && !user_access('administer comments', $account) && !$is_super_user) {
+            $this->drupalGet("comment/$comment->cid");
+            if ((empty($account->access['delete'])) && !$is_super_user && !user_access('administer comments', $account) && !user_access('delete any forum content', $account) && !($account->uid == $comment->uid && user_access('delete own forum content', $account))) {
               $this->assertNoLink(t('delete'));
               $this->drupalGet("comment/$comment->cid/delete");
               $this->assertResponse(403);
