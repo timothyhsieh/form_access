@@ -5,6 +5,9 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
+    - Implement node and comment edit forms for moderators.
+    - Fix comment links.
+    - Disable 'edit own comments' permission and document this.
     - Fix the tests to ignore 'edit own comments' but to account for 'edit/delete any/own forum content'.
     - Reorder the tests to make the more difficult ones come first.
     - In the test suite, rename the roles and users to more accurately reflect the names of the permissions they represent.

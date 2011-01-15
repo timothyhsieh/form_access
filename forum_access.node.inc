@@ -12,7 +12,77 @@
  */
 
 /**
- * Rewrite the taxonomy item on the node form.
+ * Really implements hook_node_view_alter().
+ *
+ * Removes the "Add new comment" link and form from a node page if the user
+ * is not allowed to add comments to that node.
+ */
+function _forum_access_node_view_alter(&$build, $tid) {
+  global $user;
+
+  //dpm($build, '_forum_access_node_view_alter() BEFORE:');
+  $node = $build['#node'];
+  if (forum_access_node_access($node, 'create', $user) == NODE_ACCESS_DENY) {
+    unset($build['links']['comment']['#links']['comment-add']);
+    unset($build['comments']['comment_form']);
+  }
+  //dpm($build, '_forum_access_node_view_alter() AFTER:');
+}
+
+/**
+ * Really implements hook_comment_view_alter().
+ *
+ * Adds and removes action links from/to one comment.
+ */
+function _forum_access_comment_view_alter(&$build, $tid) {
+  global $user;
+
+  $node = $build['#node'];
+  $comment = $build['#comment'];
+  //dpm($build, "_forum_access_comment_view_alter() tid=[$tid] cid=[$comment->cid] BEFORE:");
+  $links =& $build['links']['comment']['#links'];
+
+  if ($user->uid != 1 && !user_access('bypass node access') && !forum_access_access('create', $tid)) {
+    unset($links['comment-reply']);
+  }
+
+  if (!user_access('administer comments') || !empty($user->_forum_access_moderator)) {
+    $default_link_keys = array(
+      'create' => array('comment-reply'),
+      'update' => array('comment-edit', 'comment-approve'),
+      'delete' => array('comment-delete'),
+    );
+    forum_access_enable_moderator();
+    $admin_links = comment_links($comment, $node);
+    forum_access_enable_moderator(FALSE);
+    //dpm($admin_links, "_forum_access_comment_view_alter() ADMINISTRATOR_LINKS for comment/$comment->cid:");
+    foreach (array_keys($default_link_keys) as $op) {
+      $access = (bool) forum_access_access($op, $tid);
+      if ($op != 'create') {
+        $perm = ($op == 'update' ? 'edit' : $op);
+        $access |= ($user->uid == $comment->uid && user_access("$perm own forum content"));
+      }
+      $available_keys = variable_get("forum_access_allowed_comment_links_for_$op", $default_link_keys[$op]);
+      $old_links = $links;
+      $links = array();
+      foreach ($default_link_keys[$op] as $key) {
+        if ($access && array_search($key, $available_keys) !== FALSE && isset($admin_links[$key])) {
+          //dpm($key, '_forum_access_comment_view_alter() ADDED:');
+          $links[$key] = $admin_links[$key];
+        }
+        if (!$access && !empty($old_links[$key])) {
+          //dpm($key, '_forum_access_comment_view_alter() REMOVED:');
+          unset($old_links[$key]);
+        }
+      }
+      $links = array_merge($links, $old_links);
+    }
+    //dpm($build, "_forum_access_comment_view_alter() tid=[$tid] cid=[$comment->cid] AFTER:");
+  }
+}
+
+/**
+ * Rewrites the taxonomy item on the node form.
  */
 function _forum_access_node_form(&$form, &$form_state) {
   global $user;
@@ -85,23 +155,11 @@ function _forum_access_node_form(&$form, &$form_state) {
   $form_options = $options;
 
   // Apply modifications for Moderators (by role or uid).
-  if (!empty($user->_forum_access_moderator)) {
-//TODO: revise comment and inner working
-    // We gave this user the 'administer nodes' permission, which he doesn't
-    // normally have. Remove controls that should be reserved to true node
-    // administrators.
-    _forum_access_disable_moderator(); // not needed anymore
-    $allowed_elements = variable_get('forum_access_allowed_node_edit_elements', array('nid', 'vid', 'uid', 'created', 'type', 'changed', 'title', 'shadow', 'body_field', 'revision_information', 'form_build_id', 'form_token', 'form_id', 'comment_settings', 'taxonomy', 'attachments'));
+  if (!user_access('administer nodes') && forum_access_is_moderator($user, $forum_tid)) {
+    $allowed_elements = variable_get('forum_access_allowed_node_edit_elements', array('nid', 'vid', 'uid', 'created', 'type', 'language', 'changed', 'title', 'shadow', 'forum_tid', 'additional_settings', 'revision_information', 'author', 'options', 'actions', 'body', 'taxonomy_forums', 'form_build_id', 'form_token', 'form_id', 'comment_settings', 'attachments'));
     $allowed_options = variable_get('forum_access_allowed_node_edit_options', array('status', 'sticky', 'subscriptions_notify'));
     foreach (element_children($form) as $key) {
       switch ($key) {
-        case 'options':
-          foreach (element_children($form[$key]) as $key2) {
-            if (array_search($key2, $allowed_options) === FALSE) {
-              $form[$key][$key2]['#access'] = FALSE;
-            }
-          }
-          break;
         case 'buttons':
           $tid = $form['taxonomy'][$vid]['#default_value'][0];
           if (!forum_access_access('update', $tid)) {
@@ -113,166 +171,49 @@ function _forum_access_node_form(&$form, &$form_state) {
           }
           break;
         default:
-          if (array_search($key, $allowed_elements) === FALSE) {
-            $form[$key]['#access'] = FALSE;
+          $form[$key]['#access'] = (array_search($key, $allowed_elements) !== FALSE);
+      }
+
+      // Some elements need special treatment.
+      switch ($key) {
+        case 'author':
+          $form['author']['#disabled'] = TRUE;
+          break;
+        case 'options':
+          foreach (element_children($form['options']) as $key2) {
+            if (array_search($key2, $allowed_options) === FALSE) {
+              $form['options'][$key2]['#access'] = FALSE;
+            }
           }
+          break;
+        case 'shadow':
+          $form['shadow']['#description'] .= '<br />' . t('Note: Access to this topic and its shadows is controlled by the forum that contains the topic.');
+          break;
+        case 'taxonomy_forums':
+          $desc =& $form['taxonomy_forums'][$form['taxonomy_forums']['#language']]['#description'];
+          if (!empty($desc)) {
+            $desc .= '<br />';
+          }
+          $desc .= t('Note: Moving a topic to a different forum may change its accessibility.');
       }
     }
   }
 }
 
 /**
- * Check whether we're allowed to delete a node.
- */
-//function _forum_access_form_node_delete_confirm_form($form, $form_state) {
-//
-//}
-
-/**
- * Implements hook_node_view_alter().
- */
-function _forum_access_node_view_alter(&$build, $tid) {
-  //dpm($build, '_forum_access_node_view_alter() BEFORE:');
-  if (!forum_access_access('create', $tid)) {
-    unset($build['links']['comment']['#links']['comment-add']);
-    $build['comments']['comment_form'] = NULL;
-  }
-  //dpm($build, '_forum_access_node_view_alter() AFTER:');
-}
-
-/**
- * Implements hook_comment_view_alter().
- */
-function _forum_access_comment_view_alter(&$build, $tid) {
-  global $user;
-
-  //dpm($build, "_forum_access_comment_view_alter() tid=[$tid] BEFORE:");
-  if (!forum_access_access('create', $tid)) {
-    unset($build['links']['comment']['#links']['comment-reply']);
-  }
-  if (!user_access('administer comments') || isset($user->_forum_access_moderator)) {
-    if (!forum_access_access('update', $tid) && !user_access('edit any forum content') && !(user_access('edit own forum content') && $build['#node']->uid == $user->uid)) {
-      unset($build['links']['comment']['#links']['comment-edit']);
-    }
-    if (!forum_access_access('delete', $tid) && !user_access('delete any forum content') && !(user_access('delete own forum content') && $build['#node']->uid == $user->uid)) {
-      unset($build['links']['comment']['#links']['comment-delete']);
-    }
-  }
-  //dpm($build, '_forum_access_comment_view_alter() AFTER:');
-}
-
-/**
- * Deny access if the user tries to enter a comment URL directly,
- * and sanitize the Administration options for users with Edit grants.
+ * Sanitizes the comment Administration options for users with Edit grants.
  */
 function _forum_access_comment_form(&$form, &$form_state) {
   global $user;
 
-  /*
-  if (!user_access('bypass node access') && isset($form['nid']['#value'])) {
-    $node = node_load($form['nid']['#value']);
-    if ($tid = _forum_access_get_tid($node)) {
-      if (!forum_access_access('create', $tid)) {
-        switch (arg(0)) {
-          case 'comment':
-            drupal_access_denied();
-            drupal_exit();
-        }
-      }
-      else {/**/
-//dpm($form, "FORM");
-//dpm($form_state, "FORM_STATE");
-        $comment = $form_state['comment'];
-//dpm($comment, "COMMENT");
-//dpm(format_date($comment->created, 'custom', 'Y-m-d H:i O'), "created:");
-//dpm(format_date($comment->changed, 'custom', 'Y-m-d H:i O'), "changed:");
-        if ($cid = $form['cid']['#value'] && isset($form['author']) && !empty($user->_forum_access_moderator)) {
-          foreach (element_children($form['author']) as $key) {
-            switch ($key) {
-              case 'homepage':
-              case 'status':
-                break;
-              case 'date':
-                $form['author']['date']['#default_value'] = format_date($comment->created, 'custom', 'Y-m-d H:i O');
-              default:
-                //$form['author'][$key]['#enabled'] = FALSE;
-                $form['author'][$key]['#disabled'] = TRUE;
-                break;
-            }
-          }
-        }
-        /*
-      }
-    }
-  }/**/
-}
-
-/*
- * Give the user the 'administer nodes' and 'administer comments' permissions for this request.
- */
-//TODO: revise
-function _forum_access_enable_moderator() {
-  global $user;
-  $perms = &drupal_static('user_access');
-  if (!isset($perms[$user->uid])) {
-    $perms[$user->uid]['administer comments'] = $perms[$user->uid]['administer nodes'] = 'forum_access';
-  }
-}
-
-/*
- * Remove the moderator permissions.
- */
-function _forum_access_disable_moderator() {
-  global $user;
-  $perms = &drupal_static('user_access');
-  foreach (array('administer comments', 'administer nodes') as $perm) {
-    if (isset($perms[$user->uid][$perm]) && $perms[$user->uid][$perm] == 'forum_access') {
-      unset($perms[$user->uid][$perm]);
-    }
-  }
-}
-
-/**
- * Recreate comment links (they've already been themed), and
- * remove those that aren't accessible to the user.
- * /
-function _forum_access_preprocess_comment(&$variables) {
-  global $user;
-  if (!empty($user->_forum_access_moderator)) {
-    _forum_access_enable_moderator(); // this allows us to retrieve the comment links (without setting precedent!)
-  }
-
-  $tid = $variables['node']->tid;
-  $links = module_invoke_all('link', 'comment', $variables['comment'], 0);
-
-  if (!empty($user->_forum_access_moderator) && arg(0) == 'node' && arg(2) == NULL) {
-    _forum_access_disable_moderator();
-  }
-
-  if (isset($links['comment_reply']) && (!preg_match('#<li class="[^"]*comment_reply[^"]*".*</li>#U', $variables['links']) || !forum_access_access('create', $tid, NULL, FALSE))) {
-    unset($links['comment_reply']);
-  }
-  if (isset($links['comment_edit']) && !forum_access_access('update', $tid, NULL, FALSE) && !comment_access('edit', $variables['comment'])) {
-    unset($links['comment_edit']);
-  }
-  if (isset($links['comment_delete']) && !forum_access_access('delete', $tid, NULL, FALSE) && !user_access('administer comments')) {
-    unset($links['comment_delete']);
-  }
-  foreach (array_keys($links) as $link) {
-    if (!in_array($link, array('comment_reply', 'comment_edit', 'comment_delete'))) {
-      $link_preg_quote = preg_quote($link, '#');
-      if (!preg_match('#<li class="[^"]*' . $link_preg_quote . '[^"]*"(.|\n)*</li>#U', $variables['links'])) {
-        unset($links[$link]); // eliminate possible additional unknown links that came in for 'administer_comments'
+  $comment = $form_state['comment'];
+  if ($cid = $form['cid']['#value'] && isset($form['author']) && !empty($user->_forum_access_moderator)) {
+    $editable_administration_elements = variable_get('forum_access_allowed_comment_edit_administration_elements', array('homepage', 'status', 'subscriptions_notify'));
+    foreach (element_children($form['author']) as $key) {
+      if (array_search($key, $editable_administration_elements) === FALSE) {
+        $form['author'][$key]['#disabled'] = TRUE;
       }
     }
   }
-  if (empty($links)) {
-    $links['comment_forbidden'] = array(
-      'title' => theme('comment_post_forbidden', array('node' => $variables['node'])),
-      'html'  => TRUE,
-    );
-  }
-  $variables['links'] = theme('links', array('links' => $links));
 }
-/**/
 

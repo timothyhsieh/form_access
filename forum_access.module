@@ -11,6 +11,130 @@
  */
 
 /**
+ * Implements hook_menu_alter().
+ *
+ * Remove the 'Forum' menu item if no forums are visible.
+ */
+function forum_access_menu_alter(&$items) {
+  chain_menu_access_chain($items['forum'],                 'forum_access_view_any_forum');
+  chain_menu_access_chain($items['node/%node'],            '_forum_access_node_access_callback', array(1, 'view'));
+  chain_menu_access_chain($items['comment/%comment/edit'], '_forum_access_comment_edit_callback', array(1));
+  chain_menu_access_chain($items['comment/%comment/edit'], '_forum_access_comment_access_callback', array(1, 2), TRUE);
+  chain_menu_access_chain($items['comment/%/delete'],      '_forum_access_comment_access_callback', array(1, 2), TRUE);
+  chain_menu_access_chain($items['comment/%/approve'],     '_forum_access_comment_access_callback', array(1, 2), TRUE);
+  chain_menu_access_chain($items['comment/reply/%node'],   '_forum_access_comment_access_callback', array(2, 1));
+}
+
+function _forum_access_node_access_callback($node, $op) {
+  global $user;
+
+  if ($op == 'view' && ($tid = _forum_access_get_tid($node))) {
+    if (forum_access_access('update', $tid) || forum_access_access('delete', $tid)) {
+      // Add the 'administer comments' permission to the user so that he can
+      // see unpublished comments.
+      forum_access_enable_moderator();
+    }
+    // The 'view' access check will be done by core.
+  }
+  return TRUE;
+}
+
+function _forum_access_comment_edit_callback($comment) {
+  global $user;
+
+  // This callback is governed by AND, return TRUE by default.
+  $node = node_load($comment->nid);
+  if ($tid = _forum_access_get_tid($node)) {
+    if (!forum_access_is_moderator($user, $tid) && !forum_access_access('update', $tid, $user) && !user_access('administer comments') && !($user->uid == $comment->uid && user_access('edit own forum content'))) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+function _forum_access_comment_access_callback($comment, $op) {
+  global $user;
+
+  if ($op == 'reply') {
+    // 'reply' is governed by AND, return TRUE by default.
+    $node = $comment;
+    if ($tid = _forum_access_get_tid($node)) {
+      return forum_access_access('create', $tid);
+    }
+    return TRUE;
+  }
+
+  if (is_numeric($comment)) {
+    $comment = comment_load($comment);
+  }
+  $node = node_load($comment->nid);
+
+  // The remaining $ops are governed by OR, return FALSE by default.
+  if ($tid = _forum_access_get_tid($node)) {
+    if ($op == 'approve') {
+      return $user->uid == 1 || forum_access_is_moderator($user, $tid);
+    }
+    if (!user_access('administer comments')) {
+      if ($op == 'edit' && forum_access_access('update', $tid)) {
+        forum_access_enable_moderator();
+        return TRUE;
+      }
+      if ($op == 'delete' && (forum_access_access('delete', $tid) || user_access('delete any forum content') || ($user->uid == $comment->uid && user_access('delete own forum content')))) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Access callback for the 'forum' menu item.
+ *
+ * Returns 1 if the user has at least one role that can access
+ * at least one forum, 2 if the user is moderator in at least one forum,
+ * FALSE otherwise.
+ */
+function forum_access_view_any_forum($account = NULL) {
+  global $user;
+  $returns = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($account)) {
+    $account = $user;
+  }
+
+  if (!isset($returns[$account->uid])) {
+    if (user_access('bypass node access', $account)) {
+      return $returns[$account->uid] = 1;
+    }
+    if (!user_access('access content')) {
+      return $returns[$account->uid] = FALSE;
+    }
+    $rids = variable_get('forum_access_rids', NULL);
+    if (!isset($rids)) {
+      $rids = db_query("SELECT fa.rid FROM {forum_access} fa WHERE fa.grant_view > 0 GROUP BY fa.rid")->fetchCol();
+      variable_set('forum_access_rids', $rids);
+    }
+    foreach ($rids as $rid) {
+      if (isset($account->roles[$rid])) {
+        return $returns[$account->uid] = 1;
+      }
+    }
+    // Check moderator, too.
+    $query = db_select('acl', 'acl');
+    $query->join('acl_user', 'aclu', "acl.acl_id = aclu.acl_id");
+    $count = $query
+      ->fields('acl', array('number'))
+      ->condition('acl.module', 'forum_access')
+      ->condition('aclu.uid', $account->uid)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+    $returns[$account->uid] = ($count > 0 ? 2 : FALSE);
+  }
+  return $returns[$account->uid];
+}
+
+/**
  * Implements hook_node_grants().
  *
  * This function supplies the forum access grants. forum_access simply uses
@@ -256,51 +380,20 @@ function forum_access_node_insert($node) {
   */
 }
 
-/**
- * Implements hook_comment_view().
- */
-function forum_access_comment_view($comment, $view_mode, $langcode)
-{
-  //dpm($comment, 'forum_access_comment_view() BEFORE:');
-  $node = node_load($comment->nid);
-  if ($tid = _forum_access_get_tid($node)) {
-    if (!user_access('administer comments') && isset($comment->content['links']['comment']['#links'])) {
-      forum_access_enable_moderator();
-      $links = comment_links($comment, $node);
-//  dpm($links, 'forum_access_comment_view() NEW_LINKS:');
-      foreach (array('create' => 'reply', 'update' => 'edit', 'delete' => 'delete') as $op => $link) {
-        if (!forum_access_access($op, $tid)) {
-//  dpm("comment-$link", 'forum_access_comment_view() UNSET:');
-          unset($links["comment-$link"]);
-        }
-      }
-      $comment->content['links']['comment']['#links'] += $links;
-    }
-  }
-  //dpm($comment, 'forum_access_comment_view() AFTER:');
-}
-
-/**
- * Implements hook_comment_view_alter().
- *
- * Remove 'reply', 'edit', and 'delete' links if they shouldn't be there.
- */
-function forum_access_comment_view_alter(&$build) {
-  if ($tid = _forum_access_get_tid($build['#node'])) {
-    _forum_access_module_load_include('node.inc');
-    _forum_access_comment_view_alter($build, $tid);
-  }
-}
-
-function forum_access_enable_moderator()
+function forum_access_enable_moderator($enable = TRUE)
 {
   global $user;
 
-  if (!user_access('administer comments')) {
+  if (!$enable || $enable && !user_access('administer comments')) {
     $perm = &drupal_static('user_access');
-    $perm[$user->uid]['administer comments'] = TRUE;
-    $user->_forum_access_moderator = TRUE;
-    //dpm($user->uid, "forum_access_enable_moderator() for uid:");
+    if ($enable) {
+      $perm[$user->uid]['administer comments'] = $enable;
+      $user->_forum_access_moderator = $enable;
+    }
+    else {
+      unset($perm[$user->uid]['administer comments']);
+      unset($user->_forum_access_moderator);
+    }
   }
 }
 
@@ -392,6 +485,16 @@ function forum_access_node_view_alter(&$build) {
 }
 
 /**
+ * Implements hook_comment_view_alter().
+ */
+function forum_access_comment_view_alter(&$build) {
+  if ($tid = _forum_access_get_tid($build['#node'])) {
+    _forum_access_module_load_include('node.inc');
+    _forum_access_comment_view_alter($build, $tid);
+  }
+}
+
+/**
  * Implements $modulename_preprocess_$hook() for comment.
  *
  * Recreate comment links (they've already been themed), and
@@ -419,40 +522,38 @@ function forum_access_enabled($set = NULL) {
 
 /**
  * Implements hook_node_access().
- *
-//TODO: This needs to be rethought and rewritten from scratch, because it has full power now! Be prepared for node_permissions_$typename being 0! http://drupal.org/update/modules/6/7#hook_node_access
  */
 function forum_access_node_access($node, $op, $account) {
   $cache = &drupal_static(__FUNCTION__, array());
 
   $type = is_string($node) ? $node : $node->type;
-  if ($type == 'forum') {
-    if ($op == 'create') {
+  if ($op == 'create') {
+    if ($type == 'forum') {
       $tid = forum_access_current_tid();
       if (!forum_access_access('create', (isset($tid) ? $tid : 0), $account)) {
         return $cache[$account->uid][$op][$type] = NODE_ACCESS_DENY;
       }
       return $cache[$account->uid][$op][$type] = NODE_ACCESS_IGNORE;
     }
-    else {
-      $nid = $node->nid;
-      if (!isset($cache[$account->uid][$op][$nid])) {
-        if ($tid = _forum_access_get_tid($node)) {
-          if (!forum_access_access('view', $tid, $account)) {
-            return $cache[$account->uid][$op][$nid] = NODE_ACCESS_DENY;
-          }
-          if ($op == 'update' && (user_access('edit any forum content', $account) || (user_access('edit own forum content', $account)))
-            || $op == 'delete' && (user_access('delete any forum content', $account) || (user_access('delete own forum content', $account)))) {
-            return $cache[$account->uid][$op][$nid] = NODE_ACCESS_IGNORE;
-          }
-          return $cache[$account->uid][$op][$nid] = (forum_access_access($op, $tid, $account) ? NODE_ACCESS_IGNORE : NODE_ACCESS_DENY);
+  }
+  else {
+    $nid = $node->nid;
+    if (!isset($cache[$account->uid][$op][$nid])) {
+      if ($tid = _forum_access_get_tid($node)) {
+        if (!forum_access_access('view', $tid, $account)) {
+          return $cache[$account->uid][$op][$nid] = NODE_ACCESS_DENY;
         }
-        else {
-          return $cache[$account->uid][$op][$nid] = NODE_ACCESS_IGNORE;
+        if ($op == 'update' && (user_access('edit any forum content', $account) || ($node->uid == $account->uid && user_access('edit own forum content', $account)))
+          || $op == 'delete' && (user_access('delete any forum content', $account) || ($node->uid == $account->uid && user_access('delete own forum content', $account)))) {
+          return $cache[$account->uid][$op][$nid] = NODE_ACCESS_ALLOW;
         }
+        return $cache[$account->uid][$op][$nid] = (forum_access_access($op, $tid, $account) ? NODE_ACCESS_IGNORE : NODE_ACCESS_DENY);
       }
-      return $cache[$account->uid][$op][$nid];
+      else {
+        return $cache[$account->uid][$op][$nid] = NODE_ACCESS_IGNORE;
+      }
     }
+    return $cache[$account->uid][$op][$nid];
   }
   return NODE_ACCESS_IGNORE;
 }
@@ -483,6 +584,14 @@ function forum_access_access($op, $tid, $account = NULL, $administer_nodes_sees_
     return 1;
   }
 
+  if ($op == 'delete' && user_access('delete any forum content', $account)) {
+    return 1;
+  }
+
+  if ($op == 'update' && user_access('edit any forum content', $account)) {
+    return 1;
+  }
+
   if (!isset($cache[$account->uid][$tid][$op])) {
     $query = db_select('forum_access', 'fa')
       ->fields('fa', array('tid'))
@@ -501,103 +610,11 @@ function forum_access_access($op, $tid, $account = NULL, $administer_nodes_sees_
     }
     else {
       // check our moderators too
-      $result = acl_get_ids_by_user('forum_access', $account->uid, NULL, ($tid ? $tid : NULL));
+      $result = forum_access_is_moderator($account, $tid);
       $cache[$account->uid][$tid][$op] = ($result ? 2 : FALSE);
     }
   }
   return $cache[$account->uid][$tid][$op];
-}
-
-/**
- * Implements hook_menu_alter().
- *
- * Remove the 'Forum' menu item if no forums are visible.
- */
-function forum_access_menu_alter(&$items) {
-  chain_menu_access_chain($items['forum'], 'forum_access_view_any_forum');
-  chain_menu_access_chain($items['comment/%comment/edit'], '_forum_access_comment_access_callback', array(1, 2), TRUE);
-  chain_menu_access_chain($items['comment/%/delete'], '_forum_access_comment_access_callback', array(1, 2), TRUE);
-  chain_menu_access_chain($items['comment/%'], '_forum_access_comment_access_callback', array(1, 'view'));
-  chain_menu_access_chain($items['comment/reply/%node'], '_forum_access_comment_access_callback', array(2, 1));
-}
-
-function _forum_access_comment_access_callback($comment, $op) {
-  if ($op == 'reply') {
-    $node = $comment;
-    if (($tid = _forum_access_get_tid($node))) {
-      return forum_access_access('create', $tid);
-    }
-    return TRUE;
-  }
-
-  if (is_numeric($comment)) {
-    $comment = comment_load($comment);
-  }
-  $node = node_load($comment->nid);
-
-  if ($op == 'view') {
-    if (($tid = _forum_access_get_tid($node)) && forum_access_access('view', $tid) && !user_access('administer comments')) {
-      return forum_access_access('view', $tid);
-    }
-    return TRUE;
-  }
-
-  if (($tid = _forum_access_get_tid($node)) && !user_access('administer comments')) {
-    if ($op == 'edit' && forum_access_access('update', $tid)) {
-      forum_access_enable_moderator();
-      return TRUE;
-    }
-    if ($op == 'delete' && forum_access_access('delete', $tid)) {
-      return TRUE;
-    }
-  }
-}
-
-/**
- * Access callback for the 'forum' menu item.
- *
- * Returns 1 if the user has at least one role that can access
- * at least one forum, 2 if the user is moderator in at least one forum,
- * FALSE otherwise.
- */
-function forum_access_view_any_forum($account = NULL) {
-  global $user;
-  $returns = &drupal_static(__FUNCTION__, array());
-
-  if (!isset($account)) {
-    $account = $user;
-  }
-
-  if (!isset($returns[$account->uid])) {
-    if (user_access('bypass node access', $account)) {
-      return $returns[$account->uid] = 1;
-    }
-    if (!user_access('access content')) {
-      return $returns[$account->uid] = FALSE;
-    }
-    $rids = variable_get('forum_access_rids', NULL);
-    if (!isset($rids)) {
-      $rids = db_query("SELECT fa.rid FROM {forum_access} fa WHERE fa.grant_view > 0 GROUP BY fa.rid")->fetchCol();
-      variable_set('forum_access_rids', $rids);
-    }
-    foreach ($rids as $rid) {
-      if (isset($account->roles[$rid])) {
-        return $returns[$account->uid] = 1;
-      }
-    }
-    // Check moderator, too.
-    $query = db_select('acl', 'acl');
-    $query->join('acl_user', 'aclu', "acl.acl_id = aclu.acl_id");
-    $count = $query
-      ->fields('acl', array('number'))
-      ->condition('acl.module', 'forum_access')
-      ->condition('aclu.uid', $account->uid)
-      ->countQuery()
-      ->execute()
-      ->fetchField();
-    $returns[$account->uid] = ($count > 0 ? 2 : FALSE);
-  }
-  return $returns[$account->uid];
 }
 
 /**
@@ -626,6 +643,20 @@ function forum_access_user_role_delete($role) {
     ->condition('gid', $role->rid)
     ->condition('realm', 'forum_access')
     ->execute();
+}
+
+/**
+ * Check whether the given user is a moderator.
+ *
+ * @param $account
+ *   The user or user ID to check.
+ * @param $tid
+ *   ID of the forum to check or NULL to check whether the user is moderator
+ *   in any forum at all.
+ */
+function forum_access_is_moderator($account, $tid = NULL) {
+  $uid = (is_object($account) ? $account->uid : $account);
+  return (bool) acl_get_ids_by_user('forum_access', $uid, NULL, ($tid ? $tid : NULL));
 }
 
 /**

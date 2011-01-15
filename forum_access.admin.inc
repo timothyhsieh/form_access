@@ -126,6 +126,7 @@ function _forum_access_forum_permissions_form($is_container) {
     'administer nodes' => 'node',
     'access content overview' => 'node',
     'view own unpublished content' => 'node',
+    'edit own comments' => 'comment',
   ) as $perm => $module) {
     $variables += _forum_access_permission_link($module, $perm, '<em title="' . $perm . '">', '</em>');
   }
@@ -146,7 +147,8 @@ function _forum_access_forum_permissions_form($is_container) {
                              t('the !delete_own_forum_content or !delete_any_forum_content (and similar) permissions (<strong>OR <em>Delete</em></strong>) if desired;', $variables) . '</li><li>' .
                              t('the !administer_comments (global!) permission <strong>OR <em>Edit</em>/<em>Delete</em></strong> to be able to edit/delete comments;', $variables) . '</li><li>' .
                              t('the !administer_forums permission <strong>AND <em>View</em></strong> to be able to administer forums (and change access!).', $variables) . '</li></ul>' .
-                             t('Furthermore note that content which is not published is treated in a different way by Drupal: it can be viewed only by its author (with the !view_own_unpublished_content permission) or by users with the !administer_nodes permission. Unpublished comments and replies are accessible to users with <strong><em>Edit</em> OR <em>Delete</em></strong>, <strong>OR</strong> with the !administer_comments permission, but they are never counted on the forum page.', $variables) . '</div>',
+                             t('Furthermore note that content which is not published is treated in a different way by Drupal: it can be viewed only by its author (with the !view_own_unpublished_content permission) or by users with the !administer_nodes permission. Unpublished comments and replies are accessible to users with <strong><em>Edit</em> OR <em>Delete</em></strong>, <strong>OR</strong> with the !administer_comments permission, but they are never counted on the forum page.', $variables) . '<br />' .
+                             t('The global !edit_own_comments permission is ignored; use the per-forum <strong><em>Edit</em></strong> instead.', $variables) . '</div>',
 //TODO: Check out the last line ('an' does not grant Edit access anymore!); "access content overview" AND 'ac' allows seeing unpublished comments
     );
     return $form;

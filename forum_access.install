@@ -163,6 +163,10 @@ function forum_access_disable() {
  * Implements hook_uninstall().
  */
 function forum_access_uninstall() {
+  variable_del('forum_access_allowed_comment_edit_administration_elements');
+  variable_del('forum_access_allowed_comment_links_for_create');
+  variable_del('forum_access_allowed_comment_links_for_udpate');
+  variable_del('forum_access_allowed_comment_links_for_delete');
   variable_del('forum_access_allowed_node_edit_elements');
   variable_del('forum_access_allowed_node_edit_options');
   variable_del('forum_access_batch_threshold');
