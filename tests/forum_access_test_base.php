@@ -14,22 +14,24 @@ class ForumAccessBaseTestCase extends ForumTestCase {
   protected $admin_rid;
   protected $webmaster_rid;
   protected $forum_admin_rid;
-  protected $edndel_any_topics_rid;
-  protected $edndel_own_topics_rid;
-  protected $edit_any_topics_rid;
-  protected $edit_own_topics_rid;
-  protected $delete_any_topics_rid;
-  protected $delete_own_topics_rid;
+  protected $edndel_any_content_rid;
+  protected $edndel_own_content_rid;
+  protected $edit_any_content_rid;
+  protected $edit_own_content_rid;
+  protected $delete_any_content_rid;
+  protected $delete_own_content_rid;
   protected $create_content_rid;
   protected $anon_rid;
   protected $auth_rid;
   protected $user1;
   protected $webmaster_user;
   protected $forum_admin_user;
-  protected $edndel_any_topics_user;
-  protected $edndel_own_topics_user;
-  protected $delete_any_topics_user;
-  protected $delete_own_topics_user;
+  protected $edndel_any_content_user;
+  protected $edndel_own_content_user;
+  protected $edit_any_content_user;
+  protected $edit_own_content_user;
+  protected $delete_any_content_user;
+  protected $delete_own_content_user;
   protected $create_content_user;
   protected $moderator;
   protected $time;
@@ -142,12 +144,12 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     $this->admin_rid = 3;
     $this->webmaster_rid = (int) $this->drupalCreateRole(array('administer blocks', 'administer forums', 'administer nodes', 'administer comments', 'administer menu', 'administer taxonomy', 'create forum content', 'access content overview', 'access administration pages', 'view revisions', 'revert revisions', 'delete revisions'), '11 webmaster');
     $this->forum_admin_rid = (int) $this->drupalCreateRole(array('administer forums', 'create forum content', 'edit any forum content', 'delete any forum content', /*'access content overview', 'access administration pages',*/), '12 forum admin');
-    $this->edndel_any_topics_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit any forum content', 'delete any forum content', 'view own unpublished content'), '13 edndel any topics');
-    $this->edndel_own_topics_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit own forum content', 'delete own forum content', 'edit own comments'), '14 edndel own topics');
-    $this->edit_any_topics_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit any forum content', 'view own unpublished content'), '15 edit any topics');
-    $this->edit_own_topics_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit own forum content', 'edit own comments'), '16 edit own topics');
-    $this->delete_any_topics_rid = (int) $this->drupalCreateRole(array('create forum content', 'delete any forum content', 'view own unpublished content'), '17 delete any topics');
-    $this->delete_own_topics_rid = (int) $this->drupalCreateRole(array('create forum content', 'delete own forum content'), '18 delete own topics');
+    $this->edndel_any_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit any forum content', 'delete any forum content', 'view own unpublished content'), '13 edndel any content');
+    $this->edndel_own_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit own forum content', 'delete own forum content', 'edit own comments'), '14 edndel own content');
+    $this->edit_any_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit any forum content', 'view own unpublished content'), '15 edit any content');
+    $this->edit_own_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit own forum content', 'edit own comments'), '16 edit own content');
+    $this->delete_any_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'delete any forum content', 'view own unpublished content'), '17 delete any content');
+    $this->delete_own_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'delete own forum content'), '18 delete own content');
     $this->create_content_rid = (int) $this->drupalCreateRole(array('create forum content'), '19 create content');
     $this->anon_rid = DRUPAL_ANONYMOUS_RID;
     $this->auth_rid = DRUPAL_AUTHENTICATED_RID;
@@ -156,12 +158,12 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     $this->admin_user = $this->drupalCreateNamedUser('10_Administrator', array($this->admin_rid));
     $this->webmaster_user = $this->drupalCreateNamedUser('11_Webmaster', array($this->webmaster_rid));
     $this->forum_admin_user = $this->drupalCreateNamedUser('12_Forum_admin', array($this->forum_admin_rid));
-    $this->edndel_any_topics_user = $this->drupalCreateNamedUser('13_EdNDel_any_topics', array($this->edndel_any_topics_rid));
-    $this->edndel_own_topics_user = $this->drupalCreateNamedUser('14_EdNDel_own_topics', array($this->edndel_own_topics_rid));
-    $this->edit_any_topics_user = $this->drupalCreateNamedUser('15_Edit_any_topics', array($this->edit_any_topics_rid));
-    $this->edit_own_topics_user = $this->drupalCreateNamedUser('16_Edit_own_topics', array($this->edit_own_topics_rid));
-    $this->delete_any_topics_user = $this->drupalCreateNamedUser('17_Delete_any_topics', array($this->delete_any_topics_rid));
-    $this->delete_own_topics_user = $this->drupalCreateNamedUser('18_Delete_own_topics', array($this->delete_own_topics_rid));
+    $this->edndel_any_content_user = $this->drupalCreateNamedUser('13_EdNDel_any_content', array($this->edndel_any_content_rid));
+    $this->edndel_own_content_user = $this->drupalCreateNamedUser('14_EdNDel_own_content', array($this->edndel_own_content_rid));
+    $this->edit_any_content_user = $this->drupalCreateNamedUser('15_Edit_any_content', array($this->edit_any_content_rid));
+    $this->edit_own_content_user = $this->drupalCreateNamedUser('16_Edit_own_content', array($this->edit_own_content_rid));
+    $this->delete_any_content_user = $this->drupalCreateNamedUser('17_Delete_any_content', array($this->delete_any_content_rid));
+    $this->delete_own_content_user = $this->drupalCreateNamedUser('18_Delete_own_content', array($this->delete_own_content_rid));
     $this->create_content_user = $this->drupalCreateNamedUser('19_Create_content', array($this->create_content_rid));
     $this->auth_user = $this->drupalCreateNamedUser('20_Auth_only', array());
     $this->moderator = $this->drupalCreateNamedUser('21_Moderator', array($this->create_content_rid));
@@ -170,16 +172,16 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     $anon->name = check_plain(format_username($anon));
     $this->accounts = array(
       $this->user1, $this->admin_user, $this->webmaster_user, $this->forum_admin_user,
-      $this->edndel_any_topics_user, $this->edndel_own_topics_user,
-      $this->edit_any_topics_user, $this->edit_own_topics_user,
-      $this->delete_any_topics_user, $this->delete_own_topics_user,
+      $this->edndel_any_content_user, $this->edndel_own_content_user,
+      $this->edit_any_content_user, $this->edit_own_content_user,
+      $this->delete_any_content_user, $this->delete_own_content_user,
       $this->create_content_user, $this->auth_user, $this->moderator,
     );
     $this->rids = array(
       $this->anon_rid, $this->auth_rid, $this->admin_rid,
-      $this->webmaster_rid, $this->forum_admin_rid, $this->edndel_any_topics_rid, $this->edndel_own_topics_rid,
-      $this->edit_any_topics_rid, $this->edit_own_topics_rid,
-      $this->delete_any_topics_rid, $this->delete_own_topics_rid, $this->create_content_rid,
+      $this->webmaster_rid, $this->forum_admin_rid, $this->edndel_any_content_rid, $this->edndel_own_content_rid,
+      $this->edit_any_content_rid, $this->edit_own_content_rid,
+      $this->delete_any_content_rid, $this->delete_own_content_rid, $this->create_content_rid,
     );
     // Show settings for reference.
     $this->drupalGet('admin/people/permissions/list');
@@ -599,7 +601,7 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     $edit["forum_access[grants][checkboxes][view][1]"] = FALSE;
     $edit["forum_access[grants][checkboxes][view][2]"] = FALSE;
     $edit["forum_access[grants][checkboxes][create][2]"] = FALSE;
-    foreach (array($this->webmaster_rid, $this->forum_admin_rid, $this->edit_any_topics_rid, $this->edit_own_topics_rid, $this->create_content_rid, $this->admin_rid, $this->anon_rid, $this->auth_rid) as $rid) {
+    foreach (array($this->webmaster_rid, $this->forum_admin_rid, $this->edit_any_content_rid, $this->edit_own_content_rid, $this->create_content_rid, $this->admin_rid, $this->anon_rid, $this->auth_rid) as $rid) {
       foreach ($accesses as $access) {
         $key = "$access-$rid";
         if (array_search($key, array('update-3', 'delete-3')) === FALSE) {

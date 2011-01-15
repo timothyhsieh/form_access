@@ -85,7 +85,7 @@ class ForumAccess11InitialConfigurationTestCase extends ForumAccessBaseTestCase 
     $this->assertResponse(200, '^^^ Forum 1 Administration');
 
     // Verify the checked state of the checkboxes.
-    foreach (array($this->webmaster_rid, $this->forum_admin_rid, $this->edit_any_topics_rid, $this->edit_own_topics_rid, $this->create_content_rid) as $rid) {
+    foreach (array($this->webmaster_rid, $this->forum_admin_rid, $this->edit_any_content_rid, $this->edit_own_content_rid, $this->create_content_rid) as $rid) {
       foreach ($this->accesses as $access) {
         $this->assertNoFieldChecked("edit-forum-access-grants-checkboxes-$access-$rid", "Role $rid does NOT have '$access'.");
       }
