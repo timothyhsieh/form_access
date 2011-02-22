@@ -166,6 +166,7 @@ function _forum_access_forum_template_form($template_tid) {
       '#collapsed' => empty($template_tid),
   );
   $form['taxonomy'][$vid] = _forum_parent_select(NULL, t('Template forum'), 'forum');
+  $form['taxonomy'][$vid]['#default_value'] = $template_tid;
   $form['taxonomy'][$vid]['#description'] = t("Select a forum and click !Load to retrieve that forum's settings as a starting point for this forum or container.", array('!Load' => '[' . t('Load') . ']'));
   $form['load_button'] = array(
     '#type'   => 'button',
