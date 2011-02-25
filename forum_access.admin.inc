@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @file forum_access.admin.inc
