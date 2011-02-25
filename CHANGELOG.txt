@@ -1,4 +1,3 @@
-$Id$
 
 CHANGELOG for Forum Access for Drupal 7
 
