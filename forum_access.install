@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 function forum_access_install() {
   switch ($GLOBALS['db_type']) {
