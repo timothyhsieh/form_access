@@ -74,7 +74,9 @@ function _forum_access_comment_view_alter(&$build, $tid) {
           unset($old_links[$key]);
         }
       }
-      $links = array_merge($links, $old_links);
+      if (is_array($old_links)) {
+        $links = array_merge($links, $old_links);
+      }
     }
     //dpm($build, "_forum_access_comment_view_alter() tid=[$tid] cid=[$comment->cid] AFTER:");
   }
