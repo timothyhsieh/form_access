@@ -613,8 +613,7 @@ function forum_access_taxonomy($op, $type, $array = NULL) {
 /**
  * Return forum.module's forum vocabulary ID.
  */
-function _forum_access_get_vid()
-{
+function _forum_access_get_vid() {
   return variable_get('forum_nav_vocabulary', '');
 }
 

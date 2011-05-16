@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 6
 
 forum_access 6.x-1.x-dev:
   Bugs fixed:
+    - Fix minor coding style issues (no functional changes).
     - #1001968: Don't assume that there is a role with the 'administer nodes' permission.
     - #978572: Remove moderator role on uninstall.
     - #980894: Fix a notice.

@@ -107,8 +107,7 @@ function forum_access_enable() {
  *
  * @return An array of links to the forums whose records have been added.
  */
-function _forum_access_update_table()
-{
+function _forum_access_update_table() {
   $result = db_query("SELECT td.tid, td.name FROM {term_data} td LEFT JOIN {forum_access} fa ON td.tid = fa.tid WHERE td.vid = %d AND fa.tid IS NULL", _forum_access_get_vid());
   $forums = array();
   while ($forum = db_fetch_array($result)) {
