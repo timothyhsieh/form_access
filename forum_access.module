@@ -363,7 +363,7 @@ function forum_access_preprocess_forum_list(&$variables) {
 function forum_access_preprocess_forums(&$variables) {
   if (!forum_access_access($variables['tid'], 'create') && !empty($variables['links'])) {
     foreach ($variables['links'] as $key => $link) {
-      if (substr($link['href'], 0, 9) == 'node/add/') {
+      if (isset($link['href']) && substr($link['href'], 0, 9) == 'node/add/') {
         unset($variables['links'][$key]);
       }
     }
