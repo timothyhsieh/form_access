@@ -381,8 +381,13 @@ if (!variable_get('forum_access_D5_legacy_mode', FALSE)) {
  */
 function forum_access_link_alter(&$links, $node, $comment = NULL) {
   global $user;
-  static $user1;
+  static $user1, $recursing = FALSE, $stored_links;
 
+  // If we are being called recursively, store the $links and return.
+  if ($recursing) {
+    $stored_links = $links;
+    return;
+  }
   if ($user->uid == 1 || !($tid = _forum_access_get_tid($node))) {
     return;
   }
@@ -397,36 +402,57 @@ function forum_access_link_alter(&$links, $node, $comment = NULL) {
     //dpm($links, "forum_access_link_alter() - links BEFORE:");
     //dpm($node, "forum_access_link_alter() - node:");
     //dpm($comment, "forum_access_link_alter() - comment:");
-    $required_links = array(
+    $required_keys = array(
       'create' => 'comment_reply',
       'update' => 'comment_edit',
       'delete' => 'comment_delete',
     );
-    foreach ($required_links as $access => $link) {
+    foreach ($required_keys as $access => $key) {
       if (!forum_access_access($tid, $access)) {
-        unset($required_links[$access]);
+        unset($required_keys[$access]);
       }
-      elseif (!array_key_exists($link, $links)) {
+      elseif (!array_key_exists($key, $links)) {
         $link_is_missing = TRUE;
       }
     }
     if (!empty($link_is_missing)) {
+      // One of the $required_links should be present, because the current
+      // user has the corresponding permission, but it isn't.
+      // We temporarily switch to UID 1 to 'harvest' all comment links.
       if (!isset($user1)) {
         $user1 = user_load(1);
       }
       $saved_user = $user;
       session_save_session(FALSE);
       $user = $user1;
-      $admin_links = module_invoke_all('link', 'comment', $comment, array_search('comment_parent', $links) !== FALSE);
-      drupal_alter('link', $admin_links, $node, $comment);
+
+      // With UID 1 we call hook_link(). This should give us the full set of
+      // links that the site admin sees.
+      $admin_links = module_invoke_all('link', 'comment', $comment, array_key_exists('comment_parent', $links));
+
       $user = $saved_user;
       session_save_session(TRUE);
-      foreach ($admin_links as $link => $target) {
-        if (array_search($link, $required_links) === FALSE && array_search($link, $links) === FALSE) {
-          unset($admin_links[$link]);
+
+      // Remove the links from $admin_links that are not in the reduced
+      // set of $required_links AND not available to the current user anyway.
+      // Afterwards, $admin_links should have the same content as $links, plus
+      // one or more additional links from the original set in $required_links.
+      foreach ($admin_links as $key => $target) {
+        if (!in_array($key, $required_keys) && !array_key_exists($key, $links)) {
+          unset($admin_links[$key]);
         }
       }
-      $links = $admin_links;
+
+      // As the real current user, call hook_link_alter on the admin links.
+      // First we set a static variable so that the next time this function is
+      // called it will store a copy of the links at their current state. Then
+      // we pull those links which have not been link_alter'ed by any modules
+      // that come after forum_access.
+      $recursing = TRUE;
+      drupal_alter('link', $admin_links, $node, $comment);
+      $recursing = FALSE;
+      // Now return the stored links.
+      $links = $stored_links;
       //dpm($links, "forum_access_link_alter() - links AFTER:");
     }
   }

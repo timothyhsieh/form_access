@@ -223,6 +223,9 @@ function _forum_access_preprocess_comment(&$variables) {
       }
     }
   }
+
+  drupal_alter('link', $links, $variables['node'], $variables['comment']);
+
   if (empty($links)) {
     $links['comment_forbidden'] = array(
       'title' => theme('comment_post_forbidden', $variables['node']),
