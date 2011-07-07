@@ -1,5 +1,8 @@
-This module changes your forum administration page to let you apply role-based
-permissions to each forum, and to give each forum individual moderators.
 
-Moderators automatically get all privileges on all posts in that forum,
-including edit and delete.
+README.txt for Forum Access -- master branch
+
+
+This branch is empty. The source code is in version-specific branches like
+
+  6.x-1.x
+  7.x-1.x
