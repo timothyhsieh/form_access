@@ -546,7 +546,19 @@ function forum_access_node_access($node, $op, $account) {
           || $op == 'delete' && (user_access('delete any forum content', $account) || ($node->uid == $account->uid && user_access('delete own forum content', $account)))) {
           return $cache[$account->uid][$op][$nid] = forum_access_node_access($node, 'view', $account);
         }
-        return $cache[$account->uid][$op][$nid] = (forum_access_access($op, $tid, $account) ? NODE_ACCESS_IGNORE : NODE_ACCESS_DENY);
+        $access = forum_access_access($op, $tid, $account);
+        if ($op == 'view' && $access == 1 && !$node->status) {
+          if (user_access('view own unpublished content', $account) && $account->uid && $account->uid == $node->uid) {
+            // Allow access to own unpublished node.
+          }
+          else if (forum_access_is_moderator($account, $tid)) {
+            // Allow access to moderator.
+          }
+          else {
+            $access = FALSE;
+          }
+        }
+        return $cache[$account->uid][$op][$nid] = ($access ? NODE_ACCESS_IGNORE : NODE_ACCESS_DENY);
       }
       else {
         return $cache[$account->uid][$op][$nid] = NODE_ACCESS_IGNORE;
