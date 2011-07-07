@@ -441,7 +441,7 @@ function forum_access_menu_get_item_alter(&$router_item, $path, $original_map) {
  * Saves and returns the forum TID, if we're on a forum-specific page.
  */
 function forum_access_current_tid($tid = NULL) {
-  static $saved_tid = NULL;
+  static $saved_tid = 0;
   if (isset($tid)) {
     $saved_tid = $tid;
   }
@@ -529,10 +529,13 @@ function forum_access_node_access($node, $op, $account) {
   if ($op == 'create') {
     if ($type == 'forum') {
       $tid = forum_access_current_tid();
-      if (!forum_access_access('create', (isset($tid) ? $tid : 0), $account)) {
-        return $cache[$account->uid][$op][$type] = NODE_ACCESS_DENY;
+      if (isset($cache[$account->uid][$op][$tid])) {
+        return $cache[$account->uid][$op][$tid];
       }
-      return $cache[$account->uid][$op][$type] = NODE_ACCESS_IGNORE;
+      if (!forum_access_access('create', $tid, $account)) {
+        return $cache[$account->uid][$op][$tid] = NODE_ACCESS_DENY;
+      }
+      return $cache[$account->uid][$op][$tid] = NODE_ACCESS_IGNORE;
     }
   }
   else {
