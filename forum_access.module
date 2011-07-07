@@ -544,7 +544,7 @@ function forum_access_node_access($node, $op, $account) {
         }
         if ($op == 'update' && (user_access('edit any forum content', $account) || ($node->uid == $account->uid && user_access('edit own forum content', $account)))
           || $op == 'delete' && (user_access('delete any forum content', $account) || ($node->uid == $account->uid && user_access('delete own forum content', $account)))) {
-          return $cache[$account->uid][$op][$nid] = NODE_ACCESS_ALLOW;
+          return $cache[$account->uid][$op][$nid] = forum_access_node_access($node, 'view', $account);
         }
         return $cache[$account->uid][$op][$nid] = (forum_access_access($op, $tid, $account) ? NODE_ACCESS_IGNORE : NODE_ACCESS_DENY);
       }

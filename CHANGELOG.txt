@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
+    - Make Edit and Delete depend on View.
     - Issue #1097692 by salvis: Fix array_merge() warning on comment previews.
     - Fix initialization of template forum selection.
 
