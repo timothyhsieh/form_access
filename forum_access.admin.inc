@@ -750,12 +750,12 @@ function _forum_access_update_batch_operation($tid, $limit, $count, &$context) {
   }
 
   // Process the next 20 nodes.
-  $result = db_select('taxonomy_index')
-    ->fields('taxonomy_index', array('nid'))
+  $result = db_select('taxonomy_index', 'n')
+    ->fields('n', array('nid'))
     ->distinct()
-    ->condition('nid', $context['sandbox']['current_node'], '>')
-    ->condition('tid', $tid)
-    ->orderBy('nid')
+    ->condition('n.nid', $context['sandbox']['current_node'], '>')
+    ->condition('n.tid', $tid)
+    ->orderBy('n.nid')
     ->range(0, $limit)
     ->execute();
   //$result = db_query_range("SELECT DISTINCT ti.nid FROM {taxonomy_index} ti WHERE ti.nid > :current_nid AND ti.tid = :tid ORDER BY ti.nid ASC", array(

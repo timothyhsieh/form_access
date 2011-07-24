@@ -292,7 +292,7 @@ function forum_access_query_term_access_alter(QueryAlterableInterface $query) {
       $acl_alias = $query->leftJoin('acl', 'acl', "%alias.number = $talias.tid AND %alias.module = 'forum_access'");
       $aclu_alias = $query->leftJoin('acl_user', 'aclu', "%alias.acl_id = $acl_alias.acl_id AND %alias.uid = $account->uid");
       $query->condition(db_or()
-        ->isNull($access_alias . '.rid')
+        ->isNull("$access_alias.rid")
         ->condition(db_and()
           ->condition("$access_alias.rid", $rids, 'IN')
           ->condition("$access_alias.grant_$op", 1, '>='))
@@ -609,11 +609,11 @@ function forum_access_access($op, $tid, $account = NULL, $administer_nodes_sees_
   if (!isset($cache[$account->uid][$tid][$op])) {
     $query = db_select('forum_access', 'fa')
       ->fields('fa', array('tid'))
-      ->condition('grant_' . $op, 1, '>=')
-      ->condition('rid', array_keys($account->roles), 'IN');
+      ->condition("fa.grant_$op", 1, '>=')
+      ->condition('fa.rid', array_keys($account->roles), 'IN');
     if ($tid != 0) {
       $query = $query
-        ->condition('tid', $tid, '=');
+        ->condition('fa.tid', $tid, '=');
     }
     $result = $query
       ->execute()
