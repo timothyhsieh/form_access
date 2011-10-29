@@ -716,9 +716,9 @@ function _forum_access_form_submit($form, &$form_state) {
       else {
         // mass update in batch mode, modeled after node.module
         $limit = $fa_values['update_limit'];
-        $count = db_result(db_query("SELECT COUNT(DISTINCT ti.nid) FROM {taxonomy_index} ti WHERE ti.tid = :tid", array(
+        $count = db_query("SELECT COUNT(DISTINCT ti.nid) FROM {taxonomy_index} ti WHERE ti.tid = :tid", array(
           ':tid' => (int) $tid,
-        )));
+        ))->fetchField();
         $batch = array(
           'title' => t('Updating content access permissions'),
           'file' => drupal_get_path('module', 'forum_access') . '/forum_access.admin.inc',
