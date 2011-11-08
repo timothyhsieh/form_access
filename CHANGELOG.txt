@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+
+
+forum_access 6.x-1.7 (2011-11-08):
   Enhancements:
     - #762270 by daffie, salvis: Add extensive Simpletests.
   Bugs fixed:
@@ -21,7 +24,6 @@ forum_access 6.x-1.6 (2011-11-08):
     - #936682, #968382: Move the TID into the {acl.number} column to speed up hook_db_rewrite_sql() joins.
     - Implement the D6.17 hook_link_alter() for comments.
     - Update the link in forum_access_update_6105() to point directly to the release notes.
-
 
 forum_access 6.x-1.5 (2010-10-09):
   Bugs fixed:
