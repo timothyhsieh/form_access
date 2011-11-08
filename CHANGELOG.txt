@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+
+
+forum_access 6.x-1.6 (2011-11-08):
   Bugs fixed:
     - #762270: Fix a notice on the forums page.
     - Fix minor coding style issues (no functional changes).
@@ -16,7 +19,6 @@ forum_access 6.x-1.x-dev:
     - Update the link in forum_access_update_6105() to point directly to the release notes.
 
 
-
 forum_access 6.x-1.5 (2010-10-09):
   Bugs fixed:
     - #745002: Fix missing 'delete comment' link for users with the 'administer comments' permission.
@@ -25,7 +27,6 @@ forum_access 6.x-1.5 (2010-10-09):
     - #810422: Fix public forums not being visible to Anonymous on the overview page, due to missing default records in the {node_access} table.
     - Always display the 'Update even if unchanged' checkbox, except for new forums/containers.
     - Fix inability to save Create and View access for roles with the 'administer nodes' permission.
-
 
 forum_access 6.x-1.4 (2010-08-15):
   Enhancements:
