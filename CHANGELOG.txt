@@ -3,6 +3,8 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+  Enhancements:
+    - #762270 by daffie, salvis: Add extensive Simpletests.
 
 
 forum_access 6.x-1.6 (2011-11-08):
