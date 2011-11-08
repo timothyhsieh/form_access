@@ -901,7 +901,7 @@ function _forum_access_create_moderator_rid($verbose = FALSE) {
       variable_set('forum_access_moderator_rid', $rid);
       $permission = new stdClass();
       $permission->rid = $rid;
-      $permission->perm = 'administer comments, administer nodes';
+      $permission->perm = 'administer comments, administer nodes, post comments, post comments without approval';
       drupal_write_record('permission', $permission);
       $msg = t('!Forum_Access has created a new role named %role and given it the %administer_nodes and %administer_comments permissions. This role is used internally by !Forum_Access. You can change the name of the role as you like, but you must keep it unmodified otherwise.', $variables);
       if ($verbose) {

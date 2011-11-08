@@ -5,6 +5,8 @@ CHANGELOG for Forum Access for Drupal 6
 forum_access 6.x-1.x-dev:
   Enhancements:
     - #762270 by daffie, salvis: Add extensive Simpletests.
+  Bugs fixed:
+    - #762270 by salvis: Fix a number of minor bugs (edge cases) uncovered by the tests.
 
 
 forum_access 6.x-1.6 (2011-11-08):

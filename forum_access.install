@@ -310,3 +310,27 @@ function forum_access_update_6106() {
   return $ret;
 }
 
+/**
+ * Add the 'post comments' permissions to the Forum Moderator role.
+ */
+function forum_access_update_6107() {
+  $ret = array();
+  if ($moderator_rid = variable_get('forum_access_moderator_rid', 0)) {
+    $result = db_query("SELECT p.rid, p.perm FROM {permission} p WHERE p.rid = %d", $moderator_rid);
+    if ($moderator = db_fetch_array($result)) {
+      $perm = $moderator['perm'];
+      $perms = explode(', ', $perm);
+      foreach (array('post comments', 'post comments without approval') as $p) {
+        if (array_search($p, $perms) === FALSE) {
+          $perms[] = $p;
+        }
+      }
+      $new_perm = implode(', ', $perms);
+      if ($new_perm != $perm) {
+        $ret[] = update_sql("UPDATE {permission} SET perm = '$new_perm' WHERE rid = $moderator_rid");
+      }
+    }
+  }
+  return $ret;
+}
+

@@ -206,7 +206,7 @@ function _forum_access_preprocess_comment(&$variables) {
     _forum_access_disable_moderator();
   }
 
-  if (isset($links['comment_reply']) && (!preg_match('#<li class="[^"]*comment_reply[^"]*".*</li>#U', $variables['links']) || !forum_access_access($tid, 'create', NULL, FALSE))) {
+  if (isset($links['comment_reply']) && (!preg_match('#<li class="[^"]*comment_reply[^"]*".*</li>#U', $variables['links']) || !user_access('post comments') || !forum_access_access($tid, 'create', NULL, FALSE))) {
     unset($links['comment_reply']);
   }
   if (isset($links['comment_edit']) && !forum_access_access($tid, 'update', NULL, FALSE) && !comment_access('edit', $variables['comment'])) {

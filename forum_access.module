@@ -110,14 +110,15 @@ function forum_access_init() {
           // this comment.
           // We won't provide full Administrator access, though: we'll remove
           // author and timestamp, for example.
+          $grant_normal_access = TRUE;
         }
       }
       break;
 
     case 'node':
       if (is_numeric(arg(1))) {
-        $access[] = 'update';
         if (arg(2) == 'edit' && !user_access('administer nodes')) { // node/%/edit
+          $access[] = 'update';
           $nid = arg(1);
           // If the node turns out to be in a forum where we have update/delete
           // access, then we already get limited edit capabilities from NA, but
@@ -127,7 +128,14 @@ function forum_access_init() {
           // We won't provide full Administrator access, though: we'll remove
           // author and timestamp, for example.
         }
+        if (arg(2) == 'delete' && !user_access('administer nodes')) { // node/%/delete
+          $access = array();
+          $nid = arg(1);
+          // This is the delete confirmation page. We don't need any
+          // additional permissions, but we'll assert 'view' access below.
+        }
         if (arg(2) == NULL && !user_access('administer comments')) { // node/%
+          $access[] = 'update';
           $nid = arg(1);
           // If the node turns out to be in a forum where we have update/delete
           // access, then we'll get the 'Edit' link automatically from NA, but
@@ -140,9 +148,17 @@ function forum_access_init() {
   if (isset($nid)) {
     $node = node_load($nid);
     if ($tid = _forum_access_get_tid($node)) {
+      if (!forum_access_access($tid, 'view')) {
+        drupal_access_denied();
+        module_invoke_all('exit');
+        exit;
+      }
       foreach ($access as $a) {
-        if (forum_access_access($tid, $a) > 1) { // moderator?
-          $user->_forum_access_moderator = TRUE;
+        $faa = forum_access_access($tid, $a);
+        $grant_moderator_access = $faa > 1;
+        $grant_normal_access = !empty($grant_normal_access) && $faa > 0;
+        if ($grant_normal_access || $grant_moderator_access) {
+          $user->_forum_access_moderator = $grant_moderator_access;
           if (arg(0) == 'comment' || arg(0) == 'node' && arg(2) == 'edit') {
             module_load_include('node.inc', 'forum_access');
             _forum_access_enable_moderator();
@@ -409,11 +425,15 @@ function forum_access_link_alter(&$links, $node, $comment = NULL) {
     );
     foreach ($required_keys as $access => $key) {
       if (!forum_access_access($tid, $access)) {
+        unset($links[$required_keys[$access]]);
         unset($required_keys[$access]);
       }
       elseif (!array_key_exists($key, $links)) {
         $link_is_missing = TRUE;
       }
+    }
+    if (isset($required_keys['create']) && !user_access('post comments')) {
+      unset($required_keys['create']);
     }
     if (!empty($link_is_missing)) {
       // One of the $required_links should be present, because the current
@@ -453,8 +473,8 @@ function forum_access_link_alter(&$links, $node, $comment = NULL) {
       $recursing = FALSE;
       // Now return the stored links.
       $links = $stored_links;
-      //dpm($links, "forum_access_link_alter() - links AFTER:");
     }
+    //dpm($links, "forum_access_link_alter() - links AFTER:");
   }
 }
 
@@ -523,6 +543,10 @@ function forum_access_access($tid, $type, $account = NULL, $administer_nodes_see
   }
 
   if (!isset($cache[$account->uid][$tid][$type])) {
+    if (!user_access('access content', $account)) {
+      return $cache[$account->uid][$tid][$type] = FALSE;
+    }
+
     $roles = array_keys($account->roles);
     $result = db_result(db_query("SELECT tid FROM {forum_access} WHERE rid IN (". db_placeholders($roles) .") AND grant_". $type ." = 1 AND tid = %d", array_merge($roles, array($tid))));
 
@@ -601,7 +625,7 @@ function _forum_access_access_any_forum($account = NULL) {
     if ($account->uid == 1) {
       return $return[$account->uid] = TRUE;
     }
-    if (!user_access('access content')) {
+    if (!user_access('access content', $account)) {
       return $return[$account->uid] = FALSE;
     }
     $rids = variable_get('forum_access_rids', NULL);
