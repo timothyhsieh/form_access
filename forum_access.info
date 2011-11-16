@@ -8,3 +8,4 @@ core = 7.x
 
 configure = admin/structure/forum
 
+files[] = tests/forum_access.test
