@@ -47,12 +47,23 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     }
     $this->timeLimit = 1000;
     parent::setUp();
-    module_enable(array('acl', 'chain_menu_access', 'forum_access'), FALSE);
+    if (!module_exists('forum_access')) {
+      module_enable(array('acl', 'chain_menu_access', 'forum_access'), FALSE);
+    }
     $this->assertTrue(module_exists('acl'), t('Module %module enabled!', array('%module' => 'acl')), 'Setup');
     $this->assertTrue(module_exists('chain_menu_access'), t('Module %module enabled!', array('%module' => 'chain_menu_access')), 'Setup');
     $this->assertTrue(module_exists('forum_access'), t('Module %module enabled!', array('%module' => 'forum_access')), 'Setup');
-    module_enable(array('devel', 'devel_node_access'), FALSE);
-    module_enable($modules);
+    $modules = array('devel', 'devel_node_access') + $modules;
+    $files = system_rebuild_module_data();
+    $available_modules = array();
+    foreach ($modules as $module) {
+      if (!empty($files[$module]) && !module_exists($module)) {
+        $available_modules[] = $module;
+      }
+    }
+    if (!empty($available_modules)) {
+      module_enable($available_modules);
+    }
     parent::resetAll();
     $this->accesses = array('view', 'create', 'update', 'delete');
   }

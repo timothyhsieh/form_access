@@ -24,7 +24,17 @@ class ForumAccess00PlainTestCase extends ForumTestCase {
    */
   function setUp($modules = array()) {
     parent::setUp();
-    module_enable(array('acl', 'forum_access', 'devel') + $modules);
+    $modules = array('acl', 'forum_access', 'devel') + $modules;
+    $files = system_rebuild_module_data();
+    $available_modules = array();
+    foreach ($modules as $module) {
+      if (!empty($files[$module]) && !module_exists($module)) {
+        $available_modules[] = $module;
+      }
+    }
+    if (!empty($available_modules)) {
+      module_enable($available_modules);
+    }
     parent::resetAll();
   }
 
