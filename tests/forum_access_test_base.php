@@ -199,6 +199,11 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     $this->pass('==========================<br />Empty testAddOrphanTopic() @' . (time() - $this->time));
   }
 
+  function testEnableForumField() {
+    // Skip test in the base class; too bad we can't skip the unnecessary setUp() call...
+    $this->pass('==========================<br />Empty testEnableForumField() @' . (time() - $this->time));
+  }
+
 
   /**
    * Asserts that a field in the current page is enabled.

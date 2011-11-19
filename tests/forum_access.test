@@ -29,6 +29,17 @@ class ForumAccess00PlainTestCase extends ForumTestCase {
   }
 
   /**
+   * This test checks whether the Forum checkbox is enabled in the forum list.
+   * With Forum Access enabled, the Forum checkbox necessarily gets disabled
+   * and the test would fail.
+   *
+   * @see modules/forum/ForumTestCase#testEnableForumField()
+   */
+  function testEnableForumField() {
+    $this->assertTrue(TRUE, 'Skip the testEnableForumField() test.');
+  }
+
+  /**
    * This test assumes that the node/add/forum page is accessible if there
    * are no forums defined. FA checks whether $user has Post access in any
    * forum, and if none is found, it returns a 403. This fulfills the
