@@ -440,7 +440,7 @@ class ForumAccessBaseTestCase extends ForumTestCase {
             $this->assertResponse(403, "^^^ $account->name cannot see comment '$comment->subject'.");
           }
           else {
-            $this->assertLinkByHref("/comment/$comment->cid#comment-$comment->cid");
+            $this->assertLinkByHref(url("comment/$comment->cid", array('fragment' => "comment-$comment->cid")));
             // Check post comment / reply link.
             if (((!user_access('post comments', $account) && !user_access('post comments without approval', $account)) || empty($account->access['create'])) && !$is_super_user) {
               if (!$account->uid) {

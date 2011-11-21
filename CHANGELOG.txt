@@ -4,7 +4,8 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
-   - Try to make the tests work on qa.d.o.
+   - Use url() to format links in tests to be compatible with qa.d.o.
+   - Avoid trying to enable non-existing modules in tests (especially on qa.d.o).
    - Override the invalid inherited testEnableForumField() test in the ForumTestCase base class.
    - #1343568: Fix reference to the test file.
    - #1325850: Fix a left-over D6 db_result() call.
