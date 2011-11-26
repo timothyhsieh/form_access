@@ -3,6 +3,8 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+  Enhancements:
+    - #762270: Add (commented out) code to disable clean URLs, in case we need it.
 
 
 forum_access 6.x-1.7 (2011-11-08):
