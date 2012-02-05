@@ -113,7 +113,7 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     }
     if (module_exists('devel')) {
       $this->drupalPost('admin/config/development/devel', array(
-        'devel_error_handler' => '2',
+        'devel_error_handlers[]' => array(1, 2, 4),
       ), t('Save configuration'));
       $this->assertResponse(200, 'Devel configuration saved.');
       $this->drupalPost('admin/people/permissions/list', array(
