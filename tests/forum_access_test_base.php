@@ -135,7 +135,6 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     user_role_delete((int) reset($this->admin_user->roles));
     user_role_delete((int) reset($this->edit_any_topics_user->roles));
     user_role_delete((int) reset($this->edit_own_topics_user->roles));
-    user_role_delete((int) reset($this->web_user->roles));
     user_delete($this->admin_user->uid);
     user_delete($this->edit_any_topics_user->uid);
     user_delete($this->edit_own_topics_user->uid);
