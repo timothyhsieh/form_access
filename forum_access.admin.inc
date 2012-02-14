@@ -533,7 +533,7 @@ function theme_forum_access_table($variables) {
       'class' => array('grant'),
     );
     foreach (element_children($form['checkboxes']) as $cid) {
-      $row[] = array('data' => drupal_render($form['checkboxes'][$cid][$key]), 'class' => array('checkbox'), 'title' => $form['checkboxes'][$cid][$key]['#title'] . ' : ' . t($key));
+      $row[] = array('data' => drupal_render($form['checkboxes'][$cid][$key]), 'class' => array('checkbox'), 'title' => $form['rows'][$key]['#markup']);
     }
     $rows[] = $row;
   }

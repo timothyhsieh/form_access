@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
+    - Show proper mouse-over hints on the forum settings pages.
     - Fix the ForumAccessBaseTestCase.
     - Adjust POST to the Devel Settings page to Devel change.
 
