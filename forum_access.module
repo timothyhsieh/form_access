@@ -74,7 +74,7 @@ function _forum_access_comment_access_callback($comment, $op) {
       return $user->uid == 1 || forum_access_is_moderator($user, $tid);
     }
     if (!user_access('administer comments')) {
-      if ($op == 'edit' && forum_access_access('update', $tid)) {
+      if ($op == 'edit' && (forum_access_access('update', $tid) || user_access('edit any forum content') || ($user->uid == $comment->uid && user_access('edit own forum content')))) {
         forum_access_enable_moderator();
         return TRUE;
       }

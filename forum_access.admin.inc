@@ -147,8 +147,7 @@ function _forum_access_forum_permissions_form($is_container) {
                              t('the !administer_comments (global!) permission <strong>OR <em>Edit</em>/<em>Delete</em></strong> to be able to edit/delete comments;', $variables) . '</li><li>' .
                              t('the !administer_forums permission <strong>AND <em>View</em></strong> to be able to administer forums (and change access!).', $variables) . '</li></ul>' .
                              t('Furthermore note that content which is not published is treated in a different way by Drupal: it can be viewed only by its author (with the !view_own_unpublished_content permission) or by users with the !administer_nodes permission. Unpublished comments and replies are accessible to users with <strong><em>Edit</em> OR <em>Delete</em></strong>, <strong>OR</strong> with the !administer_comments permission, but they are never counted on the forum page.', $variables) . '<br />' .
-                             t('The global !edit_own_comments permission is ignored; use the per-forum <strong><em>Edit</em></strong> instead.', $variables) . '</div>',
-//TODO: Check out the last line ('an' does not grant Edit access anymore!); "access content overview" AND 'ac' allows seeing unpublished comments
+                             t('The global !edit_own_comments permission is ignored, but the edit/delete forum content permissions are extended to comments; the per-forum <strong><em>Edit</em></strong> and <strong><em>Delete</em></strong> apply to both nodes and comments, too.', $variables) . '</div>',
     );
     return $form;
   }
