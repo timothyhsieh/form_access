@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+
+
+forum_access 7.x-1.0-rc1 (2012-02-19):
   Bugs fixed:
     - #1429220: Fix exending edit/delete own forum content permissions to comments and clarify information.
     - Show proper mouse-over hints on the forum settings pages.
@@ -19,7 +22,6 @@ forum_access 7.x-1.0-beta2 (2012-01-05):
     - #1325850: Fix a left-over D6 db_result() call.
     - #1244406: Remove ACL version requirement.
     - #1228214: Fully qualify field parameter in SelectQuery::condition(), SelectQuery::orderBy() calls.
-
 
 forum_access 7.x-1.0-beta1 (2011-07-07):
   Bugs fixed:
