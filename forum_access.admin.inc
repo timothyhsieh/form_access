@@ -54,7 +54,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
     $count = db_query("SELECT COUNT(DISTINCT ti.nid) FROM {taxonomy_index} ti WHERE ti.tid = :tid", array(
       ':tid' => $tid,
     ))->fetchField();
-    $limit = 20; // from _node_access_rebuild_batch_operation()
+    $limit = variable_get('forum_access_update_limit', 20); // for _node_access_rebuild_batch_operation()
     $threshold = variable_get('forum_access_batch_threshold', $limit); // change the variable if you want
     $form['forum_access']['update_limit'] = array(
       '#type' => 'value',
@@ -748,29 +748,25 @@ function _forum_access_update_batch_operation($tid, $limit, $count, &$context) {
     $context['sandbox']['max'] = $count;
   }
 
-  // Process the next 20 nodes.
-  $result = db_select('taxonomy_index', 'n')
+  // Process the next $limit nodes.
+  $nids = db_select('taxonomy_index', 'n')
     ->fields('n', array('nid'))
     ->distinct()
     ->condition('n.nid', $context['sandbox']['current_node'], '>')
     ->condition('n.tid', $tid)
     ->orderBy('n.nid')
     ->range(0, $limit)
-    ->execute();
-  //$result = db_query_range("SELECT DISTINCT ti.nid FROM {taxonomy_index} ti WHERE ti.nid > :current_nid AND ti.tid = :tid ORDER BY ti.nid ASC", array(
-  //  ':current_nid' => $context['sandbox']['current_node'],
-  //  ':tid'         => $tid,
-  //), 0, $limit);
-//TODO: can we use node_load_multiple() here?
-  foreach ($result as $row) {
-    $loaded_node = node_load($row->nid, NULL, TRUE);
+    ->execute()
+    ->fetchCol();
+  $nodes = node_load_multiple($nids);
+  foreach ($nodes as $node) {
     // To preserve database integrity, only aquire grants if the node
     // loads successfully.
-    if (!empty($loaded_node)) {
-      node_access_acquire_grants($loaded_node);
+    if (!empty($node)) {
+      node_access_acquire_grants($node);
     }
     $context['sandbox']['progress']++;
-    $context['sandbox']['current_node'] = $loaded_node->nid;
+    $context['sandbox']['current_node'] = $node->nid;
   }
 
   // Multistep processing: report progress.
