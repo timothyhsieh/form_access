@@ -212,10 +212,6 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
     _forum_access_module_load_include('node.inc');
     _forum_access_node_form($form, $form_state);
   }
-//  elseif ($form_id == 'node_delete_confirm') {
-//    _forum_access_module_load_include('node.inc');
-//    _forum_access_form_node_delete_confirm_form($form, $form_state);
-//  }
   elseif ($form['#id'] == 'comment-form' && !variable_get('forum_access_D5_legacy_mode', FALSE)) {
     _forum_access_module_load_include('node.inc');
     _forum_access_comment_form($form, $form_state);

@@ -95,7 +95,6 @@ function _forum_access_node_form(&$form, &$form_state) {
 
   // True node administrators are all powerful and do NOT get their forms rewritten here.
   if (user_access('bypass node access') && empty($user->_forum_access_moderator)) {
-//TODO: revise
     return;
   }
 

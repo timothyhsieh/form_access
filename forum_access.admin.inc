@@ -403,7 +403,6 @@ function _forum_access_forum_interference_form($is_container, $na_modules, $fa_p
     );
 
     if (module_exists('content_access')) {
-      $ca_settings = variable_get('content_access_settings', array());
       foreach (array('view', 'update', 'delete', 'per_node') as $type) {
         $value = content_access_get_settings($type, 'forum');
         if (!empty($value)) {
@@ -476,8 +475,7 @@ function _forum_access_forum_troubleshooting_form($is_container, $has_interferen
       '!Forum_Access'        => $l('Forum Access', 'http://drupal.org/project/forum_access'),
       '!ACL'                 => $l('ACL', 'http://drupal.org/project/acl'),
       '%Module_interference' => t('Module interference'),
-//TODO: Fix the two links (and check all the others!):
-      '!Forum_Access-dev'    => $l('Forum&nbsp;Access&nbsp;7.x-1.x-dev', 'http://drupal.org/node/96795', array('html' => TRUE)),
+      '!Forum_Access-dev'    => $l('Forum&nbsp;Access&nbsp;7.x-1.x-dev', 'http://drupal.org/node/964638', array('html' => TRUE)),
       '!ACL-dev'             => $l('ACL&nbsp;7.x-1.x-dev', 'http://drupal.org/node/694210', array('html' => TRUE)),
       '%devel_node_access'   => 'devel_node_access',
       '!Devel'               => $l('Devel', 'http://drupal.org/project/devel'),
@@ -545,46 +543,6 @@ function theme_forum_access_table($variables) {
   return $output;
 }
 
-/*
-function _forum_access_forum_form_disable_checkboxes($element) {
-  global $user;
-  $permissions_by_rid = &drupal_static(__FUNCTION__, array());
-  if (empty($permissions_by_rid)) {
-    $permissions_by_rid[DRUPAL_AUTHENTICATED_RID] = array();
-    $result = db_query('SELECT rp.rid, rp.permission FROM {role_permission} rp ORDER BY rp.rid');
-    foreach ($result as $perm) {
-      if (empty($permissions_by_rid[$perm->rid]) && $perm->rid != DRUPAL_ANONYMOUS_RID) {
-        $permissions_by_rid[$perm->rid] = $permissions_by_rid[DRUPAL_AUTHENTICATED_RID];
-      }
-      $permissions_by_rid[$perm->rid][] = $perm->permission;
-    }
-  }
-  $permissions_by_rid = user_role_permissions(user_roles());
-  $tr = 't';
-
-  $element_children = element_children($element);
-  foreach ($element_children as $rid) {
-    if ($element['#parents'][1] == 'create') {
-      // Do nothing (Post is always mutable).
-    }
-    elseif ($element['#parents'][1] == 'view' && array_search('administer forums', $permissions_by_rid[$rid]) !== FALSE) {
-      $element[$rid]['#title'] = '<em>' . $element[$rid]['#title'] . '</em>';
-      $element[$rid]['#prefix'] = '<span title="' . t("This role has the '@administer_forums' permission, and granting '@View' enables the role holders to change the settings on this page, including @Access_control!", array('@administer_forums' => $tr('administer forums'), '@View' => t('View'), '@Access_control' => t('Access control'))) . '">';
-//TODO: the following 12 lines must be changed:
-      if (array_search('administer nodes', $permissions_by_rid[$rid]) !== FALSE) {
-        $element[$rid]['#prefix'] = str_replace('">', ' ' . t("Because the role also has the '@administer_nodes' permission, it has full access to all nodes either way.", array('@administer_nodes' => $tr('administer nodes'))) . '">', $element[$rid]['#prefix']);
-      }
-      $element[$rid]['#suffix'] = "</span>";
-    }
-    elseif (array_search('administer nodes', $permissions_by_rid[$rid]) !== FALSE) {
-      $element[$rid]['#disabled'] = TRUE;
-      $element[$rid]['#default_value'] = TRUE;
-    }
-  }
-  return $element;
-}
-*/
-
 function _forum_access_form_validate($form, &$form_state) {
   global $user;
 
@@ -618,7 +576,6 @@ function _forum_access_form_submit($form, &$form_state) {
   elseif (variable_get('forum_access_new_template_tid', 0) == $template_tid) {
     variable_del('forum_access_new_template_tid');
   }
-//  _forum_access_module_load_include('node.inc');
 
   // Check for changes.
   $is_changed = $is_new = strpos($_GET['q'], 'admin/structure/forum/add/') === 0;
