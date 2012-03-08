@@ -3,11 +3,13 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+  Bugs fixed:
+   - #1321864 by David4514: Fix unnecessary suppression of non-standard fields on add/edit node form for moderators.
 
 
 forum_access 7.x-1.0-rc1 (2012-02-19):
   Bugs fixed:
-    - #1429220: Fix exending edit/delete own forum content permissions to comments and clarify information.
+    - #1429220: Fix extending edit/delete own forum content permissions to comments and clarify information.
     - Show proper mouse-over hints on the forum settings pages.
     - Fix the ForumAccessBaseTestCase.
     - Adjust POST to the Devel Settings page to Devel change.

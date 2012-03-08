@@ -157,7 +157,6 @@ function _forum_access_node_form(&$form, &$form_state) {
 
   // Apply modifications for Moderators (by role or uid).
   if (!user_access('administer nodes') && forum_access_is_moderator($user, $forum_tid)) {
-    $allowed_elements = variable_get('forum_access_allowed_node_edit_elements', array('nid', 'vid', 'uid', 'created', 'type', 'language', 'changed', 'title', 'shadow', 'forum_tid', 'additional_settings', 'revision_information', 'author', 'options', 'actions', 'body', 'taxonomy_forums', 'form_build_id', 'form_token', 'form_id', 'comment_settings', 'attachments'));
     $allowed_options = variable_get('forum_access_allowed_node_edit_options', array('status', 'sticky', 'subscriptions_notify'));
     foreach (element_children($form) as $key) {
       switch ($key) {
@@ -171,12 +170,6 @@ function _forum_access_node_form(&$form, &$form_state) {
             $form['buttons']['delete']['#access'] = FALSE;
           }
           break;
-        default:
-          $form[$key]['#access'] = (array_search($key, $allowed_elements) !== FALSE);
-      }
-
-      // Some elements need special treatment.
-      switch ($key) {
         case 'author':
           $form['author']['#disabled'] = TRUE;
           break;
