@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+
+
+forum_access 7.x-1.0-rc2 (2012-03-16):
   Bugs fixed:
    - #1478822: Use user_roles() to allow translation of built-in roles and because it's the right way.
    - Remove some left-over code from D6.
@@ -16,7 +19,6 @@ forum_access 7.x-1.0-rc1 (2012-02-19):
     - Show proper mouse-over hints on the forum settings pages.
     - Fix the ForumAccessBaseTestCase.
     - Adjust POST to the Devel Settings page to Devel change.
-
 
 forum_access 7.x-1.0-beta2 (2012-01-05):
   Bugs fixed:
