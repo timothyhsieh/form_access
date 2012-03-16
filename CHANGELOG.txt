@@ -6,6 +6,7 @@ forum_access 6.x-1.x-dev:
   Enhancements:
     - #762270: Add (commented out) code to disable clean URLs, in case we need it.
   Bugs fixed:
+    - #1478822: Use user_roles() to allow translation of built-in roles and because it's the right way.
     - #1356390 by smokris, salvis: Restore the core ability to edit your own comments as long as they haven't been replied to.
 
 
