@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
+   - #1478822: Use user_roles() to allow translation of built-in roles and because it's the right way.
    - Remove some left-over code from D6.
    - Use node_load_multiple() for updating the permissions.
    - #1321864 by David4514: Fix unnecessary suppression of non-standard fields on add/edit node form for moderators.

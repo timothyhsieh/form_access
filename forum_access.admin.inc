@@ -226,18 +226,7 @@ function _forum_access_forum_form_after_build_template($form, &$form_state) {
 
 function _forum_access_forum_grants_form(&$form_state, $is_container, $settings) {
   $tr = 't';
-  $roles = array();
-  $query = db_select('role', 'r')
-    ->fields('r', array('rid', 'name'))
-    ->orderBy('r.weight', 'ASC')
-    ->orderBy('r.name', 'ASC')
-    ->addTag('role_access');
-  $result = $query->execute();
-  foreach ($result as $obj) {
-    $roles[$obj->rid] = check_plain($obj->name);
-  }
-
-  //$node_administrator_roles = user_roles(FALSE, 'administer nodes');
+  $roles = user_roles();
   $administer_forums_roles = user_roles(FALSE, 'administer forums');
   $bypass_node_access_roles = user_roles(FALSE, 'bypass node access');
 
