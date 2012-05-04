@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+
+
+forum_access 6.x-1.8 (2012-05-05):
   Enhancements:
     - #762270: Add (commented out) code to disable clean URLs, in case we need it.
   Bugs fixed:
@@ -15,7 +18,6 @@ forum_access 6.x-1.7 (2011-11-08):
     - #762270 by daffie, salvis: Add extensive Simpletests.
   Bugs fixed:
     - #762270 by salvis: Fix a number of minor bugs (edge cases) uncovered by the tests.
-
 
 forum_access 6.x-1.6 (2011-11-08):
   Bugs fixed:
