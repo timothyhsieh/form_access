@@ -567,7 +567,7 @@ function _forum_access_form_submit($form, &$form_state) {
   }
 
   // Check for changes.
-  $is_changed = $is_new = strpos($_GET['q'], 'admin/structure/forum/add/') === 0;
+  $is_changed = $is_new = strpos(current_path(), 'admin/structure/forum/add/') === 0;
   $is_changed = $is_changed || !empty($fa_values['force_update']);
   $form_initial_values = $form; // avoid Coder warning
   $form_initial_values = $form_initial_values['forum_access'];
@@ -644,7 +644,7 @@ function _forum_access_form_submit($form, &$form_state) {
       elseif ($fa_values['update_choice'] == 0) {
         // update immediately (but use the batch functions anyway
         $save_redirect = $form_state['redirect'];
-        $form_state['redirect'] = $_GET['q'];
+        $form_state['redirect'] = current_path();
         $context = array();
         $pending_error_messages = drupal_get_messages('error', FALSE);
         $our_error_message_index = (isset($pending_error_messages['error']) ? count($pending_error_messages['error']) : 0);
