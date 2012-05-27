@@ -114,6 +114,7 @@ function forum_access_enable() {
  * Implements hook_requirements().
  */
 function forum_access_requirements($phase) {
+  $requirements = array();
   $acl_version = drupal_get_installed_schema_version('acl');
   if ($phase == 'install' && $acl_version < 7000) {
     $t = get_t();
@@ -121,13 +122,14 @@ function forum_access_requirements($phase) {
       '@ACL' => 'ACL',
       '@Forum_Access' => 'Forum Access',
     );
-    return array(
+    $requirements[] = array(
       'title' => $t('@ACL version', $variables),
       'value' => $acl_version,
       'description' => $t('@Forum_Access requires version 7000 of @ACL or later.'),
       'severity' => REQUIREMENT_ERROR,
     );
   }
+  return $requirements;
 }
 
 /**

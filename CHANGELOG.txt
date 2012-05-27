@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
+    - Fix forum_access_requirements() to always return an array().
     - Replace $_GET['q'] with current_path(), for D8.
 
 
