@@ -4,7 +4,7 @@
  * Tests for Forum Access module.
  */
 
-require_once(drupal_get_path('module', 'forum') .'/forum.test');
+require_once(drupal_get_path('module', 'forum') . '/forum.test');
 
 /**
  * Functional tests for the Forum module, with Forum Access (and ACL) installed.
@@ -43,7 +43,7 @@ class ForumAccess00PlainTestCase extends ForumTestCase {
    * With Forum Access enabled, the Forum checkbox necessarily gets disabled
    * and the test would fail.
    *
-   * @see modules/forum/ForumTestCase#testEnableForumField()
+   * @see modules/forum/ForumTestCase::testEnableForumField()
    */
   function testEnableForumField() {
     $this->assertTrue(TRUE, 'Skip the testEnableForumField() test.');
@@ -55,7 +55,7 @@ class ForumAccess00PlainTestCase extends ForumTestCase {
    * forum, and if none is found, it returns a 403. This fulfills the
    * intention of the test.
    *
-   * @see modules/forum/ForumTestCase#testAddOrphanTopic()
+   * @see modules/forum/ForumTestCase::testAddOrphanTopic()
    */
   function testAddOrphanTopic() {
     $this->assertTrue(TRUE, 'Skip the testAddOrphanTopic() test.');
@@ -64,7 +64,7 @@ class ForumAccess00PlainTestCase extends ForumTestCase {
 }
 
 
-require_once(drupal_get_path('module', 'forum_access') .'/tests/forum_access_test_base.php');
+require_once(drupal_get_path('module', 'forum_access') . '/tests/forum_access_test_base.php');
 
 
 /**
@@ -128,10 +128,10 @@ class ForumAccess11InitialConfigurationTestCase extends ForumAccessBaseTestCase 
       foreach ($this->accesses as $access) {
         $key = "$access-$rid";
         if (array_search($key, array('update-3', 'delete-3')) !== FALSE) {
-          $this->assertFieldDisabled("edit-forum-access-grants-checkboxes-$key"/*, "Role $rid's '$access' checkbox is disabled."*/);
+          $this->assertFieldDisabled("edit-forum-access-grants-checkboxes-$key"/* , "Role $rid's '$access' checkbox is disabled." */);
         }
         else {
-          $this->assertFieldEnabled("edit-forum-access-grants-checkboxes-$key"/*, "Role $rid's '$access' checkbox is enabled."*/);
+          $this->assertFieldEnabled("edit-forum-access-grants-checkboxes-$key"/* , "Role $rid's '$access' checkbox is enabled." */);
         }
       }
     }

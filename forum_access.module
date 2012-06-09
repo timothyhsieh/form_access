@@ -242,7 +242,7 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
  * Implements hook_comment_load().
  */
 function forum_access_comment_load($comments) {
-//TODO: Investigate usefulness of hook_comment_load()!
+  //TODO: Investigate usefulness of this hook.
   return;
 }
 
@@ -250,7 +250,7 @@ function forum_access_comment_load($comments) {
  * Implements hook_query_alter().
  */
 function forum_access_query_alter($p1, $p2, $p3) {
-//TODO Implement!!
+  //TODO: Investigate usefulness of this hook.
   return;
 }
 
@@ -375,8 +375,7 @@ function forum_access_node_insert($node) {
   */
 }
 
-function forum_access_enable_moderator($enable = TRUE)
-{
+function forum_access_enable_moderator($enable = TRUE) {
   global $user;
 
   if (!$enable || $enable && !user_access('administer comments')) {
@@ -550,7 +549,7 @@ function forum_access_node_access($node, $op, $account) {
           if (user_access('view own unpublished content', $account) && $account->uid && $account->uid == $node->uid) {
             // Allow access to own unpublished node.
           }
-          else if (forum_access_is_moderator($account, $tid)) {
+          elseif (forum_access_is_moderator($account, $tid)) {
             // Allow access to moderator.
           }
           else {

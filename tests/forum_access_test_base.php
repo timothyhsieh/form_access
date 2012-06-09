@@ -152,7 +152,7 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     // Create our roles.
     $this->admin_rid = 3;
     $this->webmaster_rid = (int) $this->drupalCreateRole(array('administer blocks', 'administer forums', 'administer nodes', 'administer comments', 'administer menu', 'administer taxonomy', 'create forum content', 'access content overview', 'access administration pages', 'view revisions', 'revert revisions', 'delete revisions'), '11 webmaster');
-    $this->forum_admin_rid = (int) $this->drupalCreateRole(array('administer forums', 'create forum content', 'edit any forum content', 'delete any forum content', /*'access content overview', 'access administration pages',*/), '12 forum admin');
+    $this->forum_admin_rid = (int) $this->drupalCreateRole(array('administer forums', 'create forum content', 'edit any forum content', 'delete any forum content', /* 'access content overview', 'access administration pages', */), '12 forum admin');
     $this->edndel_any_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit any forum content', 'delete any forum content', 'view own unpublished content'), '13 edndel any content');
     $this->edndel_own_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit own forum content', 'delete own forum content'), '14 edndel own content');
     $this->edit_any_content_rid = (int) $this->drupalCreateRole(array('create forum content', 'edit any forum content', 'view own unpublished content'), '15 edit any content');
@@ -657,7 +657,8 @@ class ForumAccessBaseTestCase extends ForumTestCase {
   function dpm($input, $name = NULL) {
     if (module_exists('devel') && user_access('access devel information')) {
       $export = kprint_r($input, TRUE, $name);
-      trigger_error($export);
+      $trigger_error = 'trigger_error';
+      $trigger_error($export);
     }
   }
 
