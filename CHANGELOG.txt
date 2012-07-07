@@ -3,6 +3,8 @@ CHANGELOG for Forum Access for Drupal 6
 
 
 forum_access 6.x-1.x-dev:
+  Enhancements:
+    - Revised the README.txt file.
 
 
 forum_access 6.x-1.8 (2012-05-05):
