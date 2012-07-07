@@ -93,7 +93,7 @@ Support/Customizations
 
 Support by volunteers is available on
 
-   http://drupal.org/project/issues/forum_access?status=All&version=6.x
+   http://drupal.org/project/issues/forum_access?status=All&version=7.x
 
 Please consider helping others as a way to give something back to the community
 that provides Drupal and the contributed modules to you free of charge.
