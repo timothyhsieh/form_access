@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Enhancements:
+    - Revised the README.txt file.
     - Work around all false Coder Review positives (no functional change).
   Bugs fixed:
     - Fix forum_access_requirements() to always return an array().
