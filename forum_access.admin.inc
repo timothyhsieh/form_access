@@ -822,8 +822,9 @@ function _forum_access_forum_overview(&$form, &$form_state) {
 /**
  * Add warnings on Content Access admin forms where CA wants
  * to control the same content types as we do.
- * /
+ */
 function _forum_access_content_access_admin_form() {
+  return;
   //TODO Fix when CA is released!
   $tr = 't';
   $l = 'l';
@@ -848,5 +849,4 @@ function _forum_access_content_access_admin_form() {
     }
   }
 }
-/**/
 
