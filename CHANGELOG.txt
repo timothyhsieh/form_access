@@ -7,6 +7,7 @@ forum_access 7.x-1.x-dev:
     - Revised the README.txt file.
     - Work around all false Coder Review positives (no functional change).
   Bugs fixed:
+    - Remove the unnecessary hook_requirements().
     - #1706040: Avoid crashing in the presence of content_access.module.
     - Fix forum_access_requirements() to always return an array().
     - Replace $_GET['q'] with current_path(), for D8.

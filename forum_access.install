@@ -111,28 +111,6 @@ function forum_access_enable() {
 }
 
 /**
- * Implements hook_requirements().
- */
-function forum_access_requirements($phase) {
-  $requirements = array();
-  $acl_version = drupal_get_installed_schema_version('acl');
-  if ($phase == 'install' && $acl_version < 7000) {
-    $t = get_t();
-    $variables = array(
-      '@ACL' => 'ACL',
-      '@Forum_Access' => 'Forum Access',
-    );
-    $requirements[] = array(
-      'title' => $t('@ACL version', $variables),
-      'value' => $acl_version,
-      'description' => $t('@Forum_Access requires version 7000 of @ACL or later.'),
-      'severity' => REQUIREMENT_ERROR,
-    );
-  }
-  return $requirements;
-}
-
-/**
  * Adds missing default records to the {forum_acces} table.
  */
 function _forum_access_update_table() {
