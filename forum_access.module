@@ -15,13 +15,13 @@
  * Remove the 'Forum' menu item if no forums are visible.
  */
 function forum_access_menu_alter(&$items) {
-  chain_menu_access_chain($items['forum'],                 'forum_access_view_any_forum');
-  chain_menu_access_chain($items['node/%node'],            '_forum_access_node_access_callback', array(1, 'view'));
-  chain_menu_access_chain($items['comment/%comment/edit'], '_forum_access_comment_edit_callback', array(1));
-  chain_menu_access_chain($items['comment/%comment/edit'], '_forum_access_comment_access_callback', array(1, 2), TRUE);
-  chain_menu_access_chain($items['comment/%/delete'],      '_forum_access_comment_access_callback', array(1, 2), TRUE);
-  chain_menu_access_chain($items['comment/%/approve'],     '_forum_access_comment_access_callback', array(1, 2), TRUE);
-  chain_menu_access_chain($items['comment/reply/%node'],   '_forum_access_comment_access_callback', array(2, 1));
+  chain_menu_access_chain($items, 'forum',                 'forum_access_view_any_forum');
+  chain_menu_access_chain($items, 'node/%node',            '_forum_access_node_access_callback', array(1, 'view'));
+  chain_menu_access_chain($items, 'comment/%comment/edit', '_forum_access_comment_edit_callback', array(1));
+  chain_menu_access_chain($items, 'comment/%comment/edit', '_forum_access_comment_access_callback', array(1, 2), TRUE);
+  chain_menu_access_chain($items, 'comment/%/delete',      '_forum_access_comment_access_callback', array(1, 2), TRUE);
+  chain_menu_access_chain($items, 'comment/%/approve',     '_forum_access_comment_access_callback', array(1, 2), TRUE);
+  chain_menu_access_chain($items, 'comment/reply/%node',   '_forum_access_comment_access_callback', array(2, 1));
 }
 
 function _forum_access_node_access_callback($node, $op) {
