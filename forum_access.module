@@ -225,6 +225,9 @@ function forum_access_db_rewrite_sql($query, $primary_table, $primary_field, $ar
   $sql = NULL;
   switch ($primary_field) {
     case 'tid':
+      if ($query == 'SELECT * FROM {term_data} t WHERE t.vid = %d ORDER BY t.weight, t.name' && user_access('administer views')) {
+        drupal_set_message(t('You have a buggy version of Views installed (!info).', array('!info' => l('info', 'http://drupal.org/node/1703378#comment-6407816'))), 'error');
+      }
       if ($user->uid == 1
         || user_access('administer nodes') && strpos($_GET['q'], 'node/add/forum') === FALSE
         || user_access('administer forums') && $_GET['q'] == 'admin/content/forum') {
