@@ -606,7 +606,7 @@ class ForumAccessBaseTestCase extends ForumTestCase {
   }
 
 
-  function createForum($id, $tag, $description, array $accesses) {
+  function createFAForum($id, $tag, $description, array $accesses) {
     $edit = array(
       'name' => "Forum $id $tag",
       'description' => $description,
@@ -646,7 +646,7 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     $this->setUp2();
     taxonomy_term_delete(1);
     $this->pass("#########################<br />#$id - $tag Configuration test @" . (time() - $this->time), '<a id="jump1" href="#jump2">/\<br />######<br />\/</a>');
-    $forum = $this->createForum($id, $tag, $description, $accesses);
+    $forum = $this->createFAForum($id, $tag, $description, $accesses);
     $this->checkForum($forum);
     $this->pass("#########################<br />#$id - END $tag Configuration test @" . (time() - $this->time), '<a id="jump2" href="#jump3">/\<br />######<br />\/</a>');
   }
