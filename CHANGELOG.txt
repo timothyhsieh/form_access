@@ -6,6 +6,8 @@ forum_access 6.x-1.x-dev:
   Enhancements:
     - #1703378: Add a check and alert message for buggy Views.
     - Revised the README.txt file.
+  Bugs fixed:
+    - Eliminate an E_STRICT warning (no functional change).
 
 
 forum_access 6.x-1.8 (2012-05-05):

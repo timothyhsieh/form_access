@@ -500,7 +500,8 @@ function _forum_access_forum_form_after_build($form, &$form_state) {
     }
   }
   elseif (is_array(reset($form_state['values']['forum_access']['template']['taxonomy']))) {
-    $template_tid = reset(reset($form_state['values']['forum_access']['template']['taxonomy']));
+    $template_tids = reset($form_state['values']['forum_access']['template']['taxonomy']);
+    $template_tid = reset($template_tids);
   }
   if (isset($template_tid)) {
     $form['template']['select_by_default']['#value'] = ($template_tid && $template_tid == variable_get('forum_access_default_template_tid', 0));
