@@ -7,6 +7,7 @@ forum_access 6.x-1.x-dev:
     - #1703378: Add a check and alert message for buggy Views.
     - Revised the README.txt file.
   Bugs fixed:
+    - Eliminate more warnings.
     - Eliminate an E_STRICT warning (no functional change).
 
 

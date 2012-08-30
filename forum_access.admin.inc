@@ -458,7 +458,7 @@ function _forum_access_forum_form_disable_checkboxes($element) {
 function _forum_access_forum_form_after_build_acl0($form, $form_state) {
   if (isset($form['#post']['forum_access']['template']['taxonomy'])) {
     // Get ACL's user_list for the template and replace it before ACL's after_build function gets its shot at it.
-    $template_tid = reset(array_values($form['#post']['forum_access']['template']['taxonomy']));
+    $template_tid = current(array_values($form['#post']['forum_access']['template']['taxonomy']));
     if ($acl_id = acl_get_id_by_number('forum_access', $template_tid)) {
       $f = acl_edit_form($acl_id, 'DUMMY');
       $form['user_list']['#value'] = $f['user_list']['#default_value'];
@@ -528,7 +528,7 @@ function _forum_access_form_submit($form, &$form_state) {
   $access = $form_state['values']['forum_access']; // shortcut
 
   // Save template choice:
-  $template_tid = reset(array_values($access['template']['taxonomy']));
+  $template_tid = reset($access['template']['taxonomy']);
   if ($access['template']['select_by_default']) {
     variable_set('forum_access_default_template_tid', $template_tid);
   }
@@ -558,7 +558,7 @@ function _forum_access_form_submit($form, &$form_state) {
       }
     }
   }
-  if (!$is_changed && $access['acl']['user_list'] == $form_initial_values['acl']['user_list']['#default_value'] && $access['interference']['advanced']['priority'] == $form_initial_values['interference']['advanced']['priority']['#default_value']) {
+  if (!$is_changed && $access['acl']['user_list'] == $form_initial_values['acl']['user_list']['#default_value'] && (empty($fa_values['interference']) || $access['interference']['advanced']['priority'] == $form_initial_values['interference']['advanced']['priority']['#default_value'])) {
     drupal_set_message(t('The content access permissions are unchanged.'));
     return;
   }
