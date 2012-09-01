@@ -8,7 +8,7 @@ forum_access 7.x-1.x-dev:
     - Revised the README.txt file.
     - Work around all false Coder Review positives (no functional change).
   Bugs fixed:
-    - Try to remove the version requirement in the .info file in order to get the testbot to install CMA.
+    - Remove the version requirement in the .info file to avoid breaking the testbot (#1768442).
     - Avoid an E_STRICT warning (no functional change).
     - Remove the unnecessary hook_requirements().
     - #1706040: Avoid crashing in the presence of content_access.module.
