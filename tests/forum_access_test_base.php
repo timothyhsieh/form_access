@@ -529,6 +529,28 @@ class ForumAccessBaseTestCase extends ForumTestCase {
             $this->clickLink(t('Edit'));
             $this->assertResponse(200, "^^^ $account->name can edit $test_type topic.");
 
+            // Check that moderator gets administrator properties.
+            if ($is_super_user || user_access('administer nodes', $account)) {
+              $this->assertText(t('Revision information'), "$account->name sees Revision information.");
+              $this->assertText(t('Comment settings'), "$account->name sees Comment settings.");
+              $this->assertText(t('Publishing options'), "$account->name sees Publishing options.");
+              if (user_access('administer nodes', $account)) {
+                $this->assertText(t('Menu settings'), "$account->name sees Menu settings.");
+                $this->assertText(t('Authoring information'), "$account->name sees Authoring information.");
+              }
+              else {
+                $this->assertNoText(t('Menu settings'), "$account->name does not see Menu settings.");
+                $this->assertNoText(t('Authoring information'), "$account->name does not see Authoring information.");
+              }
+            }
+            else {
+              $this->assertNoText(t('Revision information'), "$account->name does not see Revision information.");
+              $this->assertNoText(t('Comment settings'), "$account->name does not see Comment settings.");
+              $this->assertNoText(t('Publishing options'), "$account->name does not see Publishing options.");
+              $this->assertNoText(t('Menu settings'), "$account->name does not see Menu settings.");
+              $this->assertNoText(t('Authoring information'), "$account->name does not see Authoring information.");
+            }
+
             // Check whether we can Delete our topic.
             if (empty($account->access['delete']) && !user_access('delete any forum content', $account) &&
                 !(user_access('delete own forum content', $account) && $node->uid == $account->uid) &&

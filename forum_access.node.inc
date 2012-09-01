@@ -178,6 +178,13 @@ function _forum_access_node_form(&$form, &$form_state) {
               $form['options'][$key2]['#access'] = FALSE;
             }
           }
+         $form['options']['#access'] = 1;
+          break;
+        case 'revision_information':
+          $form['revision_information']['#access'] = 1;
+          break;
+        case 'comment_settings':
+          $form['comment_settings']['#access'] = 1;
           break;
         case 'shadow':
           $form['shadow']['#description'] .= '<br />' . t('Note: Access to this topic and its shadows is controlled by the forum that contains the topic.');
