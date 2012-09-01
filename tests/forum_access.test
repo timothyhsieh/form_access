@@ -43,7 +43,7 @@ class ForumAccess00PlainTestCase extends ForumTestCase {
    * With Forum Access enabled, the Forum checkbox necessarily gets disabled
    * and the test would fail.
    *
-   * @see modules/forum/ForumTestCase::testEnableForumField()
+   * @see ForumTestCase::testEnableForumField()
    */
   function testEnableForumField() {
     $this->assertTrue(TRUE, 'Skip the testEnableForumField() test.');
@@ -55,7 +55,7 @@ class ForumAccess00PlainTestCase extends ForumTestCase {
    * forum, and if none is found, it returns a 403. This fulfills the
    * intention of the test.
    *
-   * @see modules/forum/ForumTestCase::testAddOrphanTopic()
+   * @see ForumTestCase::testAddOrphanTopic()
    */
   function testAddOrphanTopic() {
     $this->assertTrue(TRUE, 'Skip the testAddOrphanTopic() test.');

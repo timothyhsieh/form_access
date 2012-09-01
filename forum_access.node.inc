@@ -178,7 +178,7 @@ function _forum_access_node_form(&$form, &$form_state) {
               $form['options'][$key2]['#access'] = FALSE;
             }
           }
-         $form['options']['#access'] = 1;
+          $form['options']['#access'] = 1;
           break;
         case 'revision_information':
           $form['revision_information']['#access'] = 1;

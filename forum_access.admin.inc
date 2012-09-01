@@ -808,8 +808,9 @@ function _forum_access_content_access_admin_form() {
     '%authenticated_user' => $tr('authenticated user'),
     '%Advanced' => $tr('Advanced'),
   );
+  $dsm = 'drupal_set_message';
   if (arg(3) == 'forum') {
-    drupal_set_message(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected in the !Forum_Access_link settings, but !Forum_Access can only allow <i>more</i> access, not less.', $variables)
+    $dsm(t('Note: In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected in the !Forum_Access_link settings, but !Forum_Access can only allow <i>more</i> access, not less.', $variables)
       . '<br /><span class="error">' . t('Specifically, any rights granted to the %anonymous_user and/or the %authenticated_user will <b>override</b> the settings of !Forum_Access!', $variables) . '</span>'
       . '<br />' . t('To avoid conflicts with !Forum_Access settings, you may want to lower the priority of !Content_Access (under %Advanced below) below the priority of !Forum_Access for the content types that you want to be controlled by !Forum_Access.', $variables), 'warning');
   }
@@ -817,7 +818,7 @@ function _forum_access_content_access_admin_form() {
     $vid = _forum_access_get_vid();
     $vocabulary = taxonomy_vocabulary_load($vid);
     if (isset($vocabulary->nodes[arg(3)])) {
-      drupal_set_message(t('Note: Nodes of this content type can be put inside forums, where access to them will also be controlled by !Forum_Access.<br />In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access_link settings, and vice versa, but any node access module can only allow <i>more</i> access, not less.', $variables), 'warning');
+      $dsm(t('Note: Nodes of this content type can be put inside forums, where access to them will also be controlled by !Forum_Access.<br />In Drupal, access can only be granted, not taken away. Whatever access you grant here will not be reflected on the !Forum_Access_link settings, and vice versa, but any node access module can only allow <i>more</i> access, not less.', $variables), 'warning');
     }
   }
 }
