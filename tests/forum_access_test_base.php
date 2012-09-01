@@ -45,7 +45,8 @@ class ForumAccessBaseTestCase extends ForumTestCase {
     if (!isset($this->time)) {
       $this->time = time();
     }
-    $this->timeLimit = 1000;
+    $this->timeLimit = 2345;
+    $this->pass("timeLimit set to $this->timeLimit.");
     parent::setUp();
     if (!module_exists('forum_access')) {
       module_enable(array('acl', 'chain_menu_access', 'forum_access'), FALSE);
