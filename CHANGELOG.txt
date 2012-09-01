@@ -8,6 +8,7 @@ forum_access 7.x-1.x-dev:
     - Revised the README.txt file.
     - Work around all false Coder Review positives (no functional change).
   Bugs fixed:
+    - Clean up the dependencies for testing (no functional change).
     - #1768330: Remove the broken D5 Legacy Mode which never worked for D7.
     - #1701504: Give moderators access to the administrative node properties and add tests.
     - Remove the version requirement in the .info file to avoid breaking the testbot (#1768442).
