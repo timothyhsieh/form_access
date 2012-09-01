@@ -45,8 +45,7 @@ Upgrading from Drupal 6
 
 Update to the latest D6 release, then upgrade as outlined in the Drupal 7 docs.
 
-Note: The D5 Legacy Mode is deprecated. It will probably be removed for D8.
-It is controlled on Administer|Forums|Settings (admin/content/forum/settings).
+Note: The D5 Legacy Mode has been removed (see http://drupal.org/node/1768330).
 
 
 

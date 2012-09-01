@@ -212,7 +212,7 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
     _forum_access_module_load_include('node.inc');
     _forum_access_node_form($form, $form_state);
   }
-  elseif ($form['#id'] == 'comment-form' && !variable_get('forum_access_D5_legacy_mode', FALSE)) {
+  elseif ($form['#id'] == 'comment-form') {
     _forum_access_module_load_include('node.inc');
     _forum_access_comment_form($form, $form_state);
   }
@@ -227,10 +227,6 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
   elseif ($form_id == 'forum_form_forum') {
     _forum_access_module_load_include('admin.inc');
     _forum_access_forum_form($form, $form_state, FALSE);
-  }
-  elseif ($form_id == 'forum_admin_settings') {
-    _forum_access_module_load_include('admin.inc');
-    _forum_access_forum_admin_settings_form($form, $form_state);
   }
   elseif ($form_id == 'content_access_admin_settings' && empty($_POST)) {
     _forum_access_module_load_include('admin.inc');
@@ -463,9 +459,6 @@ function forum_access_preprocess_forum_list(&$variables) {
   }
 }
 
-if (!variable_get('forum_access_D5_legacy_mode', FALSE)) {
-  // LEGACY-MODE disables these methods
-
 /**
  * Implements hook_node_view_alter().
  *
@@ -500,8 +493,6 @@ function forum_access_preprocess_comment(&$variables) {
     _forum_access_preprocess_comment($variables);
   }
 }
-
-} // End of !LEGACY-MODE
 
 /**
  * This is also required by ACL module.

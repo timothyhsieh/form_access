@@ -141,7 +141,7 @@ function _forum_access_forum_permissions_form($is_container) {
       '#markup'  => '<div>' . t('Note that users need') . '<ul style="margin-top: 0"><li>' .
                               t('the !access_content and !access_comments permissions <strong>AND <em>View</em></strong> to be able to see this forum and its content at all,', $variables) . '</li><li>' .
                               t('the !create_forum_content (and similar) permissions <strong>AND <em>Post</em></strong> to be able to create forum content, and', $variables) . '</li><li>' .
-                              t('the !post_comments (and optionally !skip_comment_approval) permission <!TAG>AND <em>Post</em></!TAG> to be able to post comments/replies;', $variables + array('!TAG' => (variable_get('forum_access_D5_legacy_mode', FALSE) ? 'del title="' . t('Drupal 5 legacy mode') . '"' : 'strong'))) . '</li><li>' .
+                              t('the !post_comments (and optionally !skip_comment_approval) permission AND <em>Post</em> to be able to post comments/replies;', $variables) . '</li><li>' .
                               t('the !edit_own_forum_content or !edit_any_forum_content (and similar) permissions (<strong>OR <em>Edit</em></strong>) can be added if desired, <strong>plus</strong>', $variables) . '</li><li>' .
                               t('the !delete_own_forum_content or !delete_any_forum_content (and similar) permissions (<strong>OR <em>Delete</em></strong>) if desired;', $variables) . '</li><li>' .
                               t('the !administer_comments (global!) permission <strong>OR <em>Edit</em>/<em>Delete</em></strong> to be able to edit/delete comments;', $variables) . '</li><li>' .
@@ -736,34 +736,6 @@ function _forum_access_update_batch_finished($success, $results, $operations) {
   else {
     drupal_set_message(t('The content access permissions have not been properly updated.'), 'error');
   }
-}
-
-/**
- * Add our settings to the forum administration settings page.
- */
-function _forum_access_forum_admin_settings_form(&$form, &$form_state) {
-  $variables = array(
-    '!Forum_Access'  => 'Forum Access',
-    '%View'          => 'View',
-    '%Post'          => 'Post',
-    '%post_comments' => 'post comments',
-  );
-  $form['forum_access'] = array(
-    '#type'          => 'fieldset',
-    '#title'         => 'Forum Access',
-    '#attributes'    => array('id' => 'edit-forum-admin-settings-forum-access'),
-  );
-  $form['forum_access']['note'] = array(
-    '#type'          => 'item',
-    '#markup'        => t('Note: All other !Forum_Access controls are on the administration pages of the individual forums.', $variables),
-  );
-  $description = t('In Drupal 5, comment posting was not restricted by !Forum_Access; users with %View access (and the %post_comments permission) were always allowed to post forum comments. Starting with Drupal 6, posting comments is now restricted to users with %Post access. Turn this option on to revert to the old behavior. The default is OFF.', $variables);
-  $form['forum_access']['forum_access_D5_legacy_mode'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('Drupal 5 legacy mode', $variables),
-    '#default_value' => variable_get('forum_access_D5_legacy_mode', FALSE),
-    '#description'   => filter_xss($description),
-  );
 }
 
 /**
