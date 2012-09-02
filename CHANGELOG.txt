@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+
+
+forum_access 7.x-1.1 (2012-09-02):
   Enhancements:
     - Fix all Coder complaints (no functional changes).
     - #1757616: Switch to 2.x branch of Chain Menu Access API module.
