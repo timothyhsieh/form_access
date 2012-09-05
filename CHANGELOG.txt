@@ -3,6 +3,8 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+  Bug fixed:
+    - Avoid crashing the site if FA 1.1 encounters CMA 1.x (if the upgrade instructions aren't being followed).
 
 
 forum_access 7.x-1.1 (2012-09-02):
