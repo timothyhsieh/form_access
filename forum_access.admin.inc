@@ -62,7 +62,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
     );
     $form['forum_access']['update_choice'] = array(
       '#type' => 'radios',
-      '#title' => 'Update the permissions',
+      '#title' => t('Update the permissions'),
       '#description' => t('<em>If</em> you make any node access changes, then each node in this forum needs to be updated. Hover over the radiobuttons for details.'),
       '#options' => NULL,
       0 => array(
