@@ -15,6 +15,7 @@
  * Remind the user to upgrade to Chain Menu Access API 2.x.
  */
 function forum_access_requirements($phase) {
+  require_once DRUPAL_ROOT . '/includes/install.inc';
   $result = array();
   switch ( $phase ) {
     case 'update':
