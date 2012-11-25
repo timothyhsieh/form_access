@@ -276,7 +276,7 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
   }
   elseif ($form_id == 'content_access_admin_settings' && empty($_POST)) {
     _forum_access_module_load_include('admin.inc');
-    _forum_access_content_access_admin_form();
+    _forum_access_content_access_admin_form($form_state['build_info']['args'][0]);
   }
 }
 
