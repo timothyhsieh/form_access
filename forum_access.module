@@ -455,22 +455,19 @@ function forum_access_custom_theme() {
  * Saves the tid on the forum-specific pages.
  */
 function forum_access_menu_get_item_alter(&$router_item, $path, $original_map) {
-  switch ($original_map[0]) {
-
-    case 'forum':
-      if (empty($original_map[1])) {
-        forum_access_current_tid(0);
-      }
-      elseif (is_numeric($original_map[1])) {
-        forum_access_current_tid($original_map[1]);
-      }
-      break;
-
-    case 'node':
-      if (isset($original_map[1]) && is_numeric($nid = $original_map[1]) && ($node = node_load($nid)) && ($tid = _forum_access_get_tid($node))) {
-        forum_access_current_tid($tid);
-      }
-      break;
+  if (forum_access_current_tid() == 0) {
+    switch ($original_map[0]) {
+      case 'forum':
+        if (isset($original_map[1]) && is_numeric($original_map[1])) {
+          forum_access_current_tid($original_map[1]);
+        }
+        break;
+      case 'node':
+        if (isset($original_map[1]) && is_numeric($nid = $original_map[1]) && ($node = node_load($nid)) && ($tid = _forum_access_get_tid($node))) {
+          forum_access_current_tid($tid);
+        }
+        break;
+    }
   }
 }
 
