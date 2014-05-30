@@ -111,6 +111,9 @@ function _forum_access_comment_access_callback($comment, $op) {
 
   if (is_numeric($comment)) {
     $comment = comment_load($comment);
+    if (empty($comment)) {
+      return FALSE;
+    }
   }
   $node = node_load($comment->nid);
 
