@@ -499,7 +499,7 @@ function forum_access_preprocess_forum_list(&$variables) {
     foreach ($variables['forums'] as $tid => $forum) {
       $forum->forum_access_moderators = NULL;
       if ($uids = forum_access_get_moderator_uids($tid)) {
-        $forum->forum_access_moderators = user_load_multiple(uids);
+        $forum->forum_access_moderators = user_load_multiple($uids);
       }
     }
   }
