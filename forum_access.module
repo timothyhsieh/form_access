@@ -528,19 +528,6 @@ function forum_access_comment_view_alter(&$build) {
 }
 
 /**
- * Implements $modulename_preprocess_$hook() for comment.
- *
- * Recreate comment links (they've already been themed), and
- * remove those that aren't accessible to the user.
- */
-function forum_access_preprocess_comment(&$variables) {
-  if (isset($variables['node']->tid)) {
-    _forum_access_module_load_include('node.inc');
-    _forum_access_preprocess_comment($variables);
-  }
-}
-
-/**
  * This is also required by ACL module.
  */
 function forum_access_enabled($set = NULL) {
