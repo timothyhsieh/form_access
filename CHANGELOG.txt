@@ -1,8 +1,9 @@
 
-CHANGELOG for Forum Access for Drupal 7
+CHANGELOG for Forum Access for Drupal 8
 
 
-forum_access 7.x-1.x-dev:
+forum_access 8.x-1.x-dev:
+  Branch to port to D8.
 
 
 forum_access 7.x-1.3 (2016-08-16):
@@ -15,7 +16,6 @@ forum_access 7.x-1.3 (2016-08-16):
     - #1849288: Clean up the helpful information for Content Access.
     - Avoid a notice on admin/index.
     - #1793504 by RedRat: Fix non-translatable string.
-
 
 forum_access 7.x-1.2 (2012-09-15):
   Bug fixed:
