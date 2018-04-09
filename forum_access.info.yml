@@ -8,4 +8,4 @@ configure: forum.overview
 
 dependencies:
   - acl:acl
-  - forum:forum
+  - drupal:forum
