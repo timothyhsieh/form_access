@@ -10,6 +10,8 @@ use Drupal\user\Entity\Role;
 
 /**
  * Implements hook_schema().
+ *
+ * @inheritdoc
  */
 function forum_access_schema() {
   $schema['forum_access'] = [
@@ -77,6 +79,10 @@ function forum_access_schema() {
 
 /**
  * Implements hook_install().
+ *
+ * @inheritdoc
+ *
+ * @throws \Exception
  */
 function forum_access_install() {
   // Set the weight of the forum_access.module to 2 so it
@@ -111,6 +117,7 @@ function forum_access_install() {
   // which understands only integer as gid.
   $config = \Drupal::configFactory()->getEditable('forum_access.settings');
   $roles_gids = [];
+  /** @var Drupal\Core\Entity\EntityInterface[] $roles */
   $roles = Role::loadMultiple();
   $i = 1;
   foreach ($roles as $role) {

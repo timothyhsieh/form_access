@@ -8,6 +8,7 @@
 use Drupal\comment\CommentInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -19,22 +20,27 @@ use Drupal\node\NodeInterface;
 
 /**
  * Implements hook_help().
+ *
+ * @inheritdoc
  */
 function forum_access_help($route_name, RouteMatchInterface $route_match) {
+  $output = '';
+
   switch ($route_name) {
+
     // Main module help for the forum_access module.
     case 'help.page.forum_access':
-      $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('Allows forums to be set private and to be given moderators.') . '</p>';
-      return $output;
 
-    default:
   }
+  return $output;
 }
 
 /**
  * Implements hook_theme().
+ *
+ * @inheritdoc
  */
 function forum_access_theme($existing, $type, $theme, $path) {
   $result['forum_access_table'] = [
@@ -48,11 +54,15 @@ function forum_access_theme($existing, $type, $theme, $path) {
  *
  * This function supplies the forum access grants. forum_access simply uses
  * roles as ACLs, so rids translate directly to gids.
+ *
+ * @inheritdoc
  */
 function forum_access_node_grants(AccountInterface $account, $op) {
   $roles_gids = \Drupal::configFactory()
     ->getEditable('forum_access.settings')
     ->get('forum_access_roles_gids');
+  $grants = [];
+  /** @var string $role */
   foreach ($account->getRoles() as $role) {
     $grants['forum_access'][] = $roles_gids[$role];
   }
@@ -61,6 +71,8 @@ function forum_access_node_grants(AccountInterface $account, $op) {
 
 /**
  * Implements hook_node_access().
+ *
+ * @inheritdoc
  */
 function forum_access_node_access(NodeInterface $node, $op, AccountInterface $account) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.common');
@@ -110,6 +122,8 @@ function forum_access_node_access(NodeInterface $node, $op, AccountInterface $ac
  *
  * Returns a list of grant records for the passed in node object.
  * Checks to see if maybe we're being disabled.
+ *
+ * @inheritdoc
  */
 function forum_access_node_access_records(NodeInterface $node) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.common');
@@ -148,12 +162,13 @@ function forum_access_node_access_records(NodeInterface $node) {
       }
     }
   }
+  return [];
 }
 
 /**
- * Implements hook_ENTITY_TYPE_create_access().
+ * Implements hook_ENTITY_TYPE_create_access() for node entities.
  *
- * ENTITY_TYPE: node
+ * @inheritdoc
  */
 function forum_access_node_create_access(AccountInterface $account, array $context, $entity_bundle) {
   if ($entity_bundle != 'forum') {
@@ -189,9 +204,9 @@ function forum_access_node_create_access(AccountInterface $account, array $conte
 }
 
 /**
- * Implements hook_ENTITY_TYPE_insert().
+ * Implements hook_ENTITY_TYPE_insert() for node entities.
  *
- * ENTITY_TYPE: node
+ * @inheritdoc
  */
 function forum_access_node_insert(EntityInterface $entity) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.acl');
@@ -213,9 +228,9 @@ function forum_access_node_insert(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update().
+ * Implements hook_ENTITY_TYPE_update() for node entities.
  *
- * ENTITY_TYPE: node
+ * @inheritdoc
  */
 function forum_access_node_update(EntityInterface $entity) {
   if ($entity->bundle() != 'forum') {
@@ -234,9 +249,9 @@ function forum_access_node_update(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_view_alter().
+ * Implements hook_ENTITY_TYPE_view_alter() for node entities.
  *
- * ENTITY_TYPE: node
+ * @inheritdoc
  */
 function forum_access_node_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.common');
@@ -251,6 +266,8 @@ function forum_access_node_view_alter(array &$build, EntityInterface $entity, En
 
 /**
  * Implements hook_node_links_alter().
+ *
+ * @inheritdoc
  */
 function forum_access_node_links_alter(array &$links, NodeInterface $entity, array &$context) {
   if ($entity->bundle() != 'forum') {
@@ -263,9 +280,9 @@ function forum_access_node_links_alter(array &$links, NodeInterface $entity, arr
 }
 
 /**
- * Implements hook_ENTITY_TYPE_access().
+ * Implements hook_ENTITY_TYPE_access() for comment entities.
  *
- * ENTITY_TYPE: comment
+ * @inheritdoc
  */
 function forum_access_comment_access(EntityInterface $entity, $operation, AccountInterface $account) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.common');
@@ -314,9 +331,9 @@ function forum_access_comment_access(EntityInterface $entity, $operation, Accoun
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for tag 'comment_filter'.
  *
- * TAG: comment_filter
+ * @inheritdoc
  */
 function forum_access_query_comment_filter_alter(AlterableInterface $query) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.common');
@@ -348,6 +365,8 @@ function forum_access_query_comment_filter_alter(AlterableInterface $query) {
 
 /**
  * Implements hook_comment_links_alter().
+ *
+ * @inheritdoc
  */
 function forum_access_comment_links_alter(array &$links, CommentInterface $entity, array &$context) {
   // Get parent entity of comment.
@@ -369,9 +388,9 @@ function forum_access_comment_links_alter(array &$links, CommentInterface $entit
 }
 
 /**
- * Implements hook_ENTITY_TYPE_delete().
+ * Implements hook_ENTITY_TYPE_delete() for taxonomy_term entities.
  *
- * ENTITY_TYPE: taxonomy_term
+ * @inheritdoc
  */
 function forum_access_taxonomy_term_delete(EntityInterface $entity) {
   $vid = $entity->get('vid')->first()->getValue()['target_id'];
@@ -384,11 +403,11 @@ function forum_access_taxonomy_term_delete(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter() for tag 'taxonomy_term_access'.
  *
- * TAG: taxonomy_term_access
+ * @inheritdoc
  */
-function forum_access_query_taxonomy_term_access_alter(AlterableInterface $query) {
+function forum_access_query_taxonomy_term_access_alter(SelectInterface $query) {
   // Read meta-data from query, if provided.
   if (!$account = $query->getMetaData('account')) {
     $account = \Drupal::currentUser();
@@ -432,9 +451,9 @@ function forum_access_query_taxonomy_term_access_alter(AlterableInterface $query
 }
 
 /**
- * Implements hook_ENTITY_TYPE_insert().
+ * Implements hook_ENTITY_TYPE_insert() for user_role entitites.
  *
- * ENTITY_TYPE: user_role
+ * @inheritdoc
  */
 function forum_access_user_role_insert(EntityInterface $entity) {
   $config = \Drupal::configFactory()->getEditable('forum_access.settings');
@@ -445,9 +464,9 @@ function forum_access_user_role_insert(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_delete().
+ * Implements hook_ENTITY_TYPE_delete() for user_role entities.
  *
- * ENTITY_TYPE: user_role
+ * @inheritdoc
  */
 function forum_access_user_role_delete(EntityInterface $entity) {
   // Delete records from access tables.
@@ -467,9 +486,9 @@ function forum_access_user_role_delete(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter() for node_form.
  *
- * FORM_ID: node_form
+ * @inheritdoc
  */
 function forum_access_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if (!isset($form['taxonomy_forums'])) {
@@ -521,9 +540,9 @@ function forum_access_form_node_form_alter(&$form, FormStateInterface $form_stat
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter() for taxonomy_term_forums_forum_form.
  *
- * FORM_ID: taxonomy_term_forums_forum_form
+ * @inheritdoc
  */
 function forum_access_form_taxonomy_term_forums_forum_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.admin');
@@ -589,9 +608,9 @@ function _forum_access_admin_forum_form_submit($form, FormStateInterface $form_s
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter() for taxonomy_term_forums_container_form.
  *
- * FORM_ID: taxonomy_term_forums_container_form
+ * @inheritdoc
  */
 function forum_access_form_taxonomy_term_forums_container_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.admin');
@@ -637,6 +656,11 @@ function forum_access_enabled($set = NULL) {
 
 /**
  * Retrieve the settings for a taxonomy term.
+ *
+ * @param int $tid
+ *   (optional) Taxonomy term id.
+ *
+ * @return array
  */
 function forum_access_get_settings($tid = NULL) {
   $settings = [
@@ -717,8 +741,15 @@ function forum_access_set_settings($tid, array $settings) {
 
 /**
  * Get list of available tids for specific account.
+ *
+ * @param AccountInterface $account
+ *   The user object for the user whose access is being checked.
+ * @param NodeInterface $node
+ *   The node to check.
+ *
+ * @return array
  */
-function forum_access_form_node_form_get_available_tids($account, $node) {
+function forum_access_form_node_form_get_available_tids(AccountInterface $account, NodeInterface $node) {
   // We figure out what tids we want to show in form according
   // to the forum access settings.
   $forum_access_settings = forum_access_get_settings_by_roles($account->getRoles(), 'create');
@@ -741,12 +772,18 @@ function forum_access_form_node_form_get_available_tids($account, $node) {
 
 /**
  * Preprocess for output of form with roles and permissions.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form with
+ *     - check_boxes: A render element representing the forum_access table.
  */
-function template_preprocess_forum_access_table(&$variables) {
+function template_preprocess_forum_access_table(array &$variables) {
   $checkboxes = &$variables['form']['checkboxes'];
-  foreach (Element::children($checkboxes) as $index => $child) {
-    foreach (Element::children($checkboxes[$child]) as $index2 => $child2) {
+  foreach (Element::children($checkboxes) as $child) {
+    foreach (Element::children($checkboxes[$child]) as $child2) {
       $variables['form']['rows'][$child2][] = $checkboxes[$child][$child2];
     }
   }
 }
+

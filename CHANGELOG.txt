@@ -5,6 +5,7 @@ CHANGELOG for Forum Access for Drupal 8
 forum_access 8.x-1.x-dev:
   Branch to port to D8.
   Porting:
+    - #2959985 by salvis: Fix some minor coding issues.
     - #2916649 by dillix: Fix forum_access.info.yml.
     - #2916649 by salvis: Add composer.json file.
     - #2916649 by nevergone, psf_: Initial Drupal 8 port.
