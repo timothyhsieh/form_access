@@ -3,6 +3,8 @@ CHANGELOG for Forum Access for Drupal 8
 
 
 forum_access 8.x-1.x-dev:
+
+forum_access 8.x-1.x-alpha0 (2018-04-11):
   Branch to port to D8.
   Porting:
     - #2959985 by salvis: Fix some minor coding issues.
