@@ -284,6 +284,35 @@ function forum_access_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
+ * Implements hook_form_node_form_alter().
+ *
+ * Allows the forum field to be optional on non-forum nodes.
+ */
+function forum_access_form_node_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['taxonomy_forums'])) {
+    $field = field_info_instance('node', 'taxonomy_forums', $form['type']['#value']);
+    // Make the vocabulary required for 'real' forum-nodes.
+    if (!$field['required']) {
+      $langcode = $form['taxonomy_forums']['#language'];
+      $form['taxonomy_forums'][$langcode]['#required'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implement hook_node_load().
+ *
+ * Sets $node->forum_tid to avoid confusing forum_node_view().
+ */
+function forum_access_node_load($nodes, $types) {
+  foreach ($nodes as $node) {
+    if (isset($node->taxonomy_forums) && empty($node->taxonomy_forums) && !isset($node->forum_tid)) {
+      $node->forum_tid = NULL;
+    }
+  }
+}
+
+/**
  * Implements hook_comment_load().
  */
 function forum_access_comment_load($comments) {
@@ -351,6 +380,9 @@ function forum_access_node_presave($node, $return_old_tid = FALSE) {
     $old_tid = db_query('SELECT tid FROM {forum} WHERE nid = :nid', array(
       ':nid' => $node->nid,
     ))->fetchField();
+  }
+  if (!empty($old_tid) && empty($node->taxonomy_forums['und'])) {
+    $node->forum_tid = null;
   }
 }
 
@@ -508,12 +540,20 @@ function forum_access_preprocess_forum_list(&$variables) {
 /**
  * Implements hook_node_view_alter().
  *
- * Remove 'Add new comment' link if it shouldn't be there.
+ * Remove 'Add new comment' link and breadcrumb if they shouldn't be there.
  */
 function forum_access_node_view_alter(&$build) {
   if ($tid = _forum_access_get_tid($build['#node'])) {
     _forum_access_module_load_include('node.inc');
     _forum_access_node_view_alter($build, $tid);
+  }
+
+  $breadcrumb = drupal_get_breadcrumb();
+  if (!$tid && count($breadcrumb) == 2 && strpos($breadcrumb[0], '<a href="/">') === 0 && strpos($breadcrumb[1], '<a href="/forum">') === 0) {
+    // We must hack away the bogus breadcrumb set by forum module
+    // (empty taxonomy_forums).
+    $stored_breadcrumb = &drupal_static('drupal_set_breadcrumb');
+    $stored_breadcrumb = NULL;
   }
 }
 
