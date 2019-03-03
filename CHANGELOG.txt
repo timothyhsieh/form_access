@@ -3,12 +3,14 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+  Bug fixed:
+    - Avoid notices in a test.
   Enhancement:
     - #2958547 by salvis: Support non-forum nodes with optional forum_taxonomy field.
 
 
 forum_access 7.x-1.3 (2016-08-16):
-  Bug fixed:
+  Bugs fixed:
     - #2783863: Remove call to non-existent _forum_access_preprocess_comment() function.
     - #2463055 by DrCord: Fix 'Use of undefined constant uids' notice.
     - #2276445 by Bastlynn: Avoid a notice when a comment pending for notification has been deleted.
