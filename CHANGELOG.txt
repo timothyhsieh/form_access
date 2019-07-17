@@ -3,6 +3,8 @@ CHANGELOG for Forum Access for Drupal 8
 
 
 forum_access 8.x-1.x-dev:
+  Bug fixed:
+    - Issue #3028731 by salvis, Tomazetti, g.philippot: Fix Error during migration from D7 to D8 -- fix missing common.inc include and generally postpone includes until needed in forum_access.module.
 
 forum_access 8.x-1.x-alpha0 (2018-04-11):
   Branch to port to D8.

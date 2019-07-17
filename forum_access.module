@@ -75,11 +75,12 @@ function forum_access_node_grants(AccountInterface $account, $op) {
  * @inheritdoc
  */
 function forum_access_node_access(NodeInterface $node, $op, AccountInterface $account) {
-  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   if ($node->bundle() != 'forum') {
     return AccessResult::neutral();
   }
+
   // Disallow if user has no access to view.
+  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   if (!forum_access_entity_access_by_tid('view', $node)) {
     return AccessResult::forbidden();
   }
@@ -209,10 +210,12 @@ function forum_access_node_create_access(AccountInterface $account, array $conte
  * @inheritdoc
  */
 function forum_access_node_insert(EntityInterface $entity) {
-  module_load_include('inc', 'forum_access', 'includes/forum_access.acl');
   if ($entity->bundle() != 'forum') {
     return;
   }
+
+  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
+  module_load_include('inc', 'forum_access', 'includes/forum_access.acl');
   if ($tid = forum_access_get_tid($entity)) {
     $acl_id = forum_access_get_acl($tid, 'moderate');
     acl_node_add_acl($entity->id(), $acl_id, 1, 1, 1);
@@ -236,6 +239,8 @@ function forum_access_node_update(EntityInterface $entity) {
   if ($entity->bundle() != 'forum') {
     return;
   }
+
+  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   $old_tid = forum_access_get_tid($entity->original);
   $current_tid = forum_access_get_tid($entity);
   if (isset($old_tid)) {
@@ -254,11 +259,12 @@ function forum_access_node_update(EntityInterface $entity) {
  * @inheritdoc
  */
 function forum_access_node_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
-  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   if ($entity->bundle() != 'forum') {
     return;
   }
+
   // Don't show comment form is user has no access to it.
+  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   if (!forum_access_entity_access_by_tid('create', $entity)) {
     $build['comment_forum'][0]['comment_form'] = [];
   }
@@ -285,7 +291,6 @@ function forum_access_node_links_alter(array &$links, NodeInterface $entity, arr
  * @inheritdoc
  */
 function forum_access_comment_access(EntityInterface $entity, $operation, AccountInterface $account) {
-  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   // Get parent entity of comment.
   $parent = $entity->get('entity_id')
     ->first()
@@ -298,6 +303,8 @@ function forum_access_comment_access(EntityInterface $entity, $operation, Accoun
   if ($account->hasPermission('administer comments')) {
     return AccessResult::neutral();
   }
+
+  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   if ($tid = forum_access_get_tid($parent)) {
     // Disallow if user has no access to view.
     if (!forum_access_access('view', $tid)) {
@@ -336,11 +343,12 @@ function forum_access_comment_access(EntityInterface $entity, $operation, Accoun
  * @inheritdoc
  */
 function forum_access_query_comment_filter_alter(AlterableInterface $query) {
-  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   $entity = $query->getMetaData('entity');
   if (!($entity->getEntityTypeId() == 'node' && $entity->bundle() == 'forum')) {
     return;
   }
+
+  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   // @todo Replace it with the function.
   $tid = forum_access_get_tid($entity);
   $access = [
@@ -501,6 +509,7 @@ function forum_access_form_node_form_alter(&$form, FormStateInterface $form_stat
   if ($account->hasPermission('bypass node access')) {
     return;
   }
+
   // Get list of available lists.
   $tids = forum_access_form_node_form_get_available_tids($account, $node);
   $forum_tid = forum_access_get_tid($node);
@@ -661,6 +670,7 @@ function forum_access_enabled($set = NULL) {
  *   (optional) Taxonomy term id.
  *
  * @return array
+ *   Settings for a taxonomy term.
  */
 function forum_access_get_settings($tid = NULL) {
   $settings = [
@@ -742,14 +752,16 @@ function forum_access_set_settings($tid, array $settings) {
 /**
  * Get list of available tids for specific account.
  *
- * @param AccountInterface $account
+ * @param \Drupal\Core\Session\AccountInterface $account
  *   The user object for the user whose access is being checked.
- * @param NodeInterface $node
+ * @param \Drupal\node\NodeInterface $node
  *   The node to check.
  *
  * @return array
+ *   List of available tids for specific account.
  */
 function forum_access_form_node_form_get_available_tids(AccountInterface $account, NodeInterface $node) {
+  module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   // We figure out what tids we want to show in form according
   // to the forum access settings.
   $forum_access_settings = forum_access_get_settings_by_roles($account->getRoles(), 'create');
@@ -786,4 +798,3 @@ function template_preprocess_forum_access_table(array &$variables) {
     }
   }
 }
-
