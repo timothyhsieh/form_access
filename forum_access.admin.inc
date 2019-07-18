@@ -64,7 +64,7 @@ function _forum_access_forum_form(&$form, &$form_state, $is_container) {
       '#type' => 'radios',
       '#title' => t('Update the permissions'),
       '#description' => t('<em>If</em> you make any node access changes, then each node in this forum needs to be updated. Hover over the radiobuttons for details.'),
-      '#options' => NULL,
+      '#options' => array(0, 1, 2),
       0 => array(
         '#type' => 'radio',
         '#title' => t('for all %count nodes immediately', array('%count' => $count)),
