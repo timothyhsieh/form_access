@@ -26,7 +26,7 @@ function forum_access_requirements($phase) {
       $info = drupal_parse_info_file($path);
       $version = (isset($info['version']) ? $info['version'] : $t('Unknown'));
       $found = preg_match('/7\.x-([0-9]*)\./', $version, $matches);
-      if ($found && $matches[1] == 1 || !$found) {
+      if (($found && $matches[1] == 1) || !$found) {
         $cma = 'Chain Menu Access API';
         $variables = array('@Chain_Menu_Access_API' => $cma, '@module' => url('admin/modules'));
         $result[] = array(
@@ -455,7 +455,7 @@ function forum_access_node_insert($node) {
 function forum_access_enable_moderator($enable = TRUE) {
   global $user;
 
-  if (!$enable || $enable && !user_access('administer comments')) {
+  if (!$enable || !user_access('administer comments')) {
     $perm = &drupal_static('user_access');
     if ($enable) {
       $perm[$user->uid]['administer comments'] = $enable;
@@ -604,8 +604,8 @@ function forum_access_node_access($node, $op, $account) {
         if (!forum_access_access('view', $tid, $account)) {
           return $cache[$account->uid][$op][$nid] = NODE_ACCESS_DENY;
         }
-        if ($op == 'update' && (user_access('edit any forum content', $account) || ($node->uid == $account->uid && user_access('edit own forum content', $account)))
-          || $op == 'delete' && (user_access('delete any forum content', $account) || ($node->uid == $account->uid && user_access('delete own forum content', $account)))) {
+        if (($op == 'update' && (user_access('edit any forum content', $account) || ($node->uid == $account->uid && user_access('edit own forum content', $account))))
+          || ($op == 'delete' && (user_access('delete any forum content', $account) || ($node->uid == $account->uid && user_access('delete own forum content', $account))))) {
           return $cache[$account->uid][$op][$nid] = forum_access_node_access($node, 'view', $account);
         }
         $access = forum_access_access($op, $tid, $account);
