@@ -115,6 +115,9 @@ function _forum_access_comment_access_callback($comment, $op) {
       return FALSE;
     }
   }
+  elseif (is_string($comment)) {
+    return FALSE;
+  }
   $node = node_load($comment->nid);
 
   // The remaining $ops are governed by OR, return FALSE by default.
