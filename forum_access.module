@@ -380,9 +380,15 @@ function forum_access_query_term_access_alter(QueryAlterableInterface $query) {
 function forum_access_node_presave($node, $return_old_tid = FALSE) {
   $old_tid = &drupal_static('forum_access_node_presave');
   if (_forum_node_check_node_type($node)) {
-    $old_tid = db_query('SELECT tid FROM {forum} WHERE nid = :nid', array(
-      ':nid' => $node->nid,
-    ))->fetchField();
+    if (empty($node->nid)) {
+      // Added for migrations, which log errors due to no nid during presave, see #3003279.
+      $old_tid = NULL;
+    }
+    else {
+      $old_tid = db_query('SELECT tid FROM {forum} WHERE nid = :nid', array(
+        ':nid' => $node->nid,
+      ))->fetchField();
+    }
   }
   if (!empty($old_tid) && empty($node->taxonomy_forums['und'])) {
     $node->forum_tid = null;
