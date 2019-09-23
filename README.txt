@@ -1,56 +1,37 @@
+CONTENTS OF THIS FILE
+---------------------
 
-README.txt for Forum Access 7.x-1.x
-
-
-
->>>> Please feel free to suggest improvements and additions to this file! <<<<
-
-
-
-
-Overview
---------
-
-Forum Access changes your forum administration pages to let you apply
-role-based permissions to each forum, and to give each forum individual
-moderators.
-
-Moderators automatically get all privileges on all posts in that forum,
-including edit and delete.
+ * Introduction
+ * Requirements
+ * Permissions
+ * Installation
+ * Configuration
+ * Troubleshooting
+ * Maintainers
 
 
-
-
-Requirements
+INTRODUCTION
 ------------
 
-Forum Access requires the current versions of the following modules:
-  - ACL                      http://drupal.org/project/acl
-  - Chain Menu Access API    http://drupal.org/project/chain_menu_access
+This module changes your forum administration page to allow you to set forums
+private. You can control what user roles can view, edit, delete, and post to
+each forum. You can also give each forum a list of users who have administrative
+access on that forum (AKA moderators).
+
+ * For a full description of the module, visit the project page:
+   https://www.drupal.org/project/forum_access
+
+ * To submit bug reports and feature suggestions, or to track changes:
+   https://www.drupal.org/project/issues/forum_access
 
 
+REQUIREMENTS
+------------
+
+This module requires no modules outside of Drupal core.
 
 
-Acknowledgements
-----------------
-
-Originally written for Drupal 5 and maintained by merlinofchaos.
-Ported to Drupal 6 and 7 and maintained by salvis.
-
-
-
-
-Upgrading from Drupal 6
------------------------
-
-Update to the latest D6 release, then upgrade as outlined in the Drupal 7 docs.
-
-Note: The D5 Legacy Mode has been removed (see http://drupal.org/node/1768330).
-
-
-
-
-Permissions
+PERMISSIONS
 -----------
 
 Administering Forum Access requires Core's Administer Forums permission.
@@ -58,22 +39,25 @@ Detailed explanations of how Forum Access' grants work together with Core's
 other permissions are available on the administration pages.
 
 
+INSTALLATION
+------------
+
+ * Install the Forum Access module as you would normally install a contributed
+   Drupal module. Visit
+   https://www.drupal.org/node/1897420 for further information.
 
 
-Configuration
+CONFIGURATION
 -------------
 
-Forum Access does not have its own administration page -- it adds its controls
-to Core's forum administration pages at
-
-   Administration | Structure | Forums | Edit/Add Forum/Container
-
-   admin/structure/forum/edit/forum/1
-
+    1. Navigate to Administration > Extend and enable the module.
+    2. Rebuild the permissions.
+    3. Forum Access does not have its own administration page. Navigate to
+       Administration > Structure > Forums > Edit/Add Forum/Container for
+       the controls. Save.
 
 
-
-Troubleshooting
+TROUBLESHOOTING
 ---------------
 
 Step-by-step troubleshooting instructions are provided on the administration
@@ -85,21 +69,12 @@ and you should probably follow the troubleshooting instructions to install
 DNA and learn about how your combination of node access modules works.
 
 
+MAINTAINERS
+-----------
 
+ * Hans Salvisberg (salvis) - https://www.drupal.org/u/salvis
+ * Kurucz István (nevergone) - https://www.drupal.org/u/nevergone
 
-Support/Customizations
-----------------------
+Supporting organizations:
 
-Support by volunteers is available on
-
-   http://drupal.org/project/issues/forum_access?status=All&version=7.x
-
-Please consider helping others as a way to give something back to the community
-that provides Drupal and the contributed modules to you free of charge.
-
-
-For paid support and customizations of this module or other Drupal work
-contact the maintainer through his contact form:
-
-   http://drupal.org/user/82964
-
+ * Salvisberg Software & Consulting

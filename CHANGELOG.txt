@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 8
 
 forum_access 8.x-1.x-dev:
   Bugs fixed:
+    - #3011364 by volkswagenchick, salvis: README configs and formatting.
     - #3066485 by Tomazetti: FieldFormatter comment_forum missing cache contexts.
     - #3002918 by salvis, ron_s: Add primary key and index to the {forum_access} table.
     - #3016322 by chipway: All dependencies must be prefixed.
@@ -22,7 +23,7 @@ forum_access 8.x-1.x-alpha0 (2018-04-11):
 
 
 forum_access 7.x-1.3 (2016-08-16):
-  Bug fixed:
+  Bugs fixed:
     - #2783863: Remove call to non-existent _forum_access_preprocess_comment() function.
     - #2463055 by DrCord: Fix 'Use of undefined constant uids' notice.
     - #2276445 by Bastlynn: Avoid a notice when a comment pending for notification has been deleted.
@@ -33,7 +34,7 @@ forum_access 7.x-1.3 (2016-08-16):
     - #1793504 by RedRat: Fix non-translatable string.
 
 forum_access 7.x-1.2 (2012-09-15):
-  Bug fixed:
+  Bugs fixed:
     - #1775204: Avoid crashing the site if FA encounters CMA 1.x (when the upgrade instructions aren't being followed).
 
 forum_access 7.x-1.1 (2012-09-02):
