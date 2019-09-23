@@ -5,6 +5,7 @@
  * Forum Access install file.
  */
 
+use Drupal\Core\Database\Database;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\user\Entity\Role;
 
@@ -14,6 +15,73 @@ use Drupal\user\Entity\Role;
  * @inheritdoc
  */
 function forum_access_schema() {
+    return _forum_access_schema_8101();
+}
+
+/**
+ * Implements hook_install().
+ *
+ * @inheritdoc
+ *
+ * @throws \Exception
+ */
+function forum_access_install() {
+  // Set the weight of the forum_access.module to 2 so it
+  // is loaded after the forum.module.
+  module_set_weight('forum_access', 2);
+  // Add default values for grants during installation.
+  if ($vid = \Drupal::config('forum.settings')->get('vocabulary')) {
+    $terms = \Drupal::service('entity_type.manager')
+      ->getStorage('taxonomy_term')
+      ->loadTree($vid);
+    $grants_rid_create = [
+      AccountInterface::ANONYMOUS_ROLE => 0,
+      AccountInterface::AUTHENTICATED_ROLE => 1,
+    ];
+    foreach ($terms as $term) {
+      foreach ($grants_rid_create as $rid => $grant) {
+        \Drupal::database()->insert('forum_access')
+          ->fields([
+            'tid' => $term->tid,
+            'rid' => $rid,
+            'grant_view' => 1,
+            'grant_update' => 0,
+            'grant_delete' => 0,
+            'grant_create' => $grant,
+            'priority' => 0,
+          ])
+          ->execute();
+      }
+    }
+  }
+  // Add integer accordance to roles. We need it for hook_node grants
+  // which understands only integer as gid.
+  $config = \Drupal::configFactory()->getEditable('forum_access.settings');
+  $roles_gids = [];
+  /** @var Drupal\Core\Entity\EntityInterface[] $roles */
+  $roles = Role::loadMultiple();
+  $i = 1;
+  foreach ($roles as $role) {
+    $roles_gids[$role->id()] = $i;
+    $i++;
+  }
+  $config->set('forum_access_roles_gids', $roles_gids);
+  $config->save();
+}
+
+/**
+ * Add primary key and index to the {forum_access} table.
+ */
+function forum_access_update_8101(&$sandbox) {
+  $schema = Database::getConnection()->schema();
+  $schema->addPrimaryKey('forum_access', ['tid', 'rid']);
+  $schema->addIndex('forum_access', 'rid', ['rid'], _forum_access_schema_8101()['forum_access']);
+}
+
+/*
+ * Implementation of forum_access_schema() version 8101.
+ */
+function _forum_access_schema_8101() {
   $schema['forum_access'] = [
     'description' => 'The Forum Access control table.',
     'fields' => [
@@ -69,61 +137,12 @@ function forum_access_schema() {
         'default' => 0,
       ],
     ],
+    'primary key' => ['tid', 'rid'],
+    'indexes' => ['rid' => ['rid']],
     'foreign keys' => [
       'tid' => ['taxonomy_term_data' => 'tid'],
       'rid' => ['user_roles' => 'rid'],
     ],
   ];
   return $schema;
-}
-
-/**
- * Implements hook_install().
- *
- * @inheritdoc
- *
- * @throws \Exception
- */
-function forum_access_install() {
-  // Set the weight of the forum_access.module to 2 so it
-  // is loaded after the forum.module.
-  module_set_weight('forum_access', 2);
-  // Add default values for grants during installation.
-  if ($vid = \Drupal::config('forum.settings')->get('vocabulary')) {
-    $terms = \Drupal::service('entity_type.manager')
-      ->getStorage('taxonomy_term')
-      ->loadTree($vid);
-    $grants_rid_create = [
-      AccountInterface::ANONYMOUS_ROLE => 0,
-      AccountInterface::AUTHENTICATED_ROLE => 1,
-    ];
-    foreach ($terms as $term) {
-      foreach ($grants_rid_create as $rid => $grant) {
-        \Drupal::database()->insert('forum_access')
-          ->fields([
-            'tid' => $term->tid,
-            'rid' => $rid,
-            'grant_view' => 1,
-            'grant_update' => 0,
-            'grant_delete' => 0,
-            'grant_create' => $grant,
-            'priority' => 0,
-          ])
-          ->execute();
-      }
-    }
-  }
-  // Add integer accordance to roles. We need it for hook_node grants
-  // which understands only integer as gid.
-  $config = \Drupal::configFactory()->getEditable('forum_access.settings');
-  $roles_gids = [];
-  /** @var Drupal\Core\Entity\EntityInterface[] $roles */
-  $roles = Role::loadMultiple();
-  $i = 1;
-  foreach ($roles as $role) {
-    $roles_gids[$role->id()] = $i;
-    $i++;
-  }
-  $config->set('forum_access_roles_gids', $roles_gids);
-  $config->save();
 }
