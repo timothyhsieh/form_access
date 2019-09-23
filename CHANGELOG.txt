@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 8
 
 forum_access 8.x-1.x-dev:
   Bugs fixed:
+    - #3066485 by Tomazetti: FieldFormatter comment_forum missing cache contexts.
     - #3002918 by salvis, ron_s: Add primary key and index to the {forum_access} table.
     - #3016322 by chipway: All dependencies must be prefixed.
     - #3028731 by salvis, Tomazetti, g.philippot: Fix Error during migration from D7 to D8 -- fix missing common.inc include and generally postpone includes until needed in forum_access.module.

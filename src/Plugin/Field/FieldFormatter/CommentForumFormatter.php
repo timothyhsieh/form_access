@@ -44,6 +44,7 @@ class CommentForumFormatter extends CommentDefaultFormatter {
       // $entity->get($field_name)->comment_count, but unpublished comments
       // should display if the user is an administrator.
       $elements['#cache']['contexts'][] = 'user.permissions';
+      $elements['#cache']['contexts'][] = 'user.node_grants:operation';
       if ($this->currentUser->hasPermission('access comments') || $this->currentUser->hasPermission('administer comments')) {
         $output['comments'] = [];
         $tid = forum_access_get_tid($entity);
