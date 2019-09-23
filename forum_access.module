@@ -8,6 +8,7 @@
 use Drupal\comment\CommentInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -448,9 +449,9 @@ function forum_access_query_taxonomy_term_access_alter(SelectInterface $query) {
         [
           ':uid' => $account->id(),
         ]);
-      $query->condition(db_or()
+      $query->condition((new Condition('OR'))
         ->isNull("$access_alias.rid")
-        ->condition(db_and()
+        ->condition((new Condition('AND'))
           ->condition("$access_alias.rid", $rids, 'IN')
           ->condition("$access_alias.grant_$op", 1, '>='))
         ->condition("$aclu_alias.uid", $account->id()));

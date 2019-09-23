@@ -92,7 +92,7 @@ function _forum_access_update_access_records($form_state) {
  * Ooperations for batch.
  */
 function _forum_access_update_batch_operation($tid, $limit, $count, &$context) {
-  $node_storage = \Drupal::entityManager()->getStorage('node');
+  $node_storage = \Drupal::entityTypeManager()->getStorage('node');
   if (empty($context['sandbox'])) {
     // Initiate multistep processing.
     $context['sandbox']['progress'] = 0;
@@ -116,7 +116,7 @@ function _forum_access_update_batch_operation($tid, $limit, $count, &$context) {
     // loads successfully.
     if (!empty($node)) {
       /** @var \Drupal\node\NodeAccessControlHandlerInterface $access_control_handler */
-      $access_control_handler = \Drupal::entityManager()
+      $access_control_handler = \Drupal::entityTypeManager()
         ->getAccessControlHandler('node');
       $grants = $access_control_handler->acquireGrants($node);
       \Drupal::service('node.grant_storage')->write($node, $grants);
@@ -135,11 +135,11 @@ function _forum_access_update_batch_operation($tid, $limit, $count, &$context) {
  */
 function _forum_access_update_batch_finished($success, $results, $operations) {
   if ($success) {
-    drupal_set_message(t('The content access permissions have been updated.'));
+    \Drupal::messenger()->addMessage(t('The content access permissions have been updated.'));
     node_access_needs_rebuild(FALSE);
   }
   else {
-    drupal_set_message(t('The content access permissions have not been properly updated.'), 'error');
+    \Drupal::messenger()->addError(t('The content access permissions have not been properly updated.'));
   }
 }
 
