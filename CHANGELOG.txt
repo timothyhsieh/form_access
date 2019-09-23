@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 7
 
 forum_access 7.x-1.x-dev:
   Bugs fixed:
+    - #3002918 by ron_s: Define primary key for the {forum_access} table.
     - #3068844 by salvis: Fix PhpStorm red flags (no functional change).
     - #3068829 by salvis: Fix Warning: count(): Parameter must be an array or an object that implements Countable in form_process_radios() (line 3183 of includes\form.inc).
     - Avoid notices in a test.
