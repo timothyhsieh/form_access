@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
@@ -570,7 +571,7 @@ function forum_access_form_taxonomy_term_forums_forum_form_alter(&$form, FormSta
   $form['forum_access']['grants'] = _forum_access_forum_grants_form($form_state, $settings);
   $form['forum_access']['moderators'] = _forum_access_forum_moderators_form($form_state, $tid);
   $form['actions']['submit']['#submit'][] = '_forum_access_admin_forum_form_submit';
-  if (isset($tid) && !node_access_needs_rebuild()) {
+  if (isset($tid) /*&& !node_access_needs_rebuild()*/) {
     // Count number of nodes which are attached to this term.
     $count = Drupal::database()
       ->select('node__taxonomy_forums')
@@ -587,13 +588,35 @@ function forum_access_form_taxonomy_term_forums_forum_form_alter(&$form, FormSta
     $form['forum_access']['update_choice'] = [
       '#type' => 'radios',
       '#title' => t('Update the permissions'),
+      /*
       '#description' => t('<em>If</em> you make any node access changes, then each node in this forum needs to be updated. Hover over the radiobuttons for details.'),
-      '#options' => [
-        'all' => t('for all %count nodes immediately', ['%count' => $count]),
-        'batch' => t('in batches of :limit now', [':limit' => $limit]),
-        'later' => t('rebuild <strong>all</strong> permissions later'),
+      '#options' => array_flip(['this_tid_now', 'batch', 'later']),
+      '#default_value' => ($count <= $threshold ? 'this_forum_now' : 'batch'),
+      'this_tid_now' => [
+        '#type' => 'radio',
+        '#title' => t('for all %count nodes immediately', ['%count' => $count]),
+        '#attributes' => ['title' => t('This option is the fastest, but with many nodes it can still take considerable time and memory. If it does not complete, it will leave your @node_access table in an inconsistent state.', ['@!node_access' => '{node_access}'])],
       ],
-      '#default_value' => 'batch',
+      'batch' => [
+        '#type' => 'radio',
+        '#title' => t('in batches of @limit now', ['@limit' => $limit]),
+        '#attributes' => ['title' => t('The batch option will always work reliably, but it takes longer to complete.')],
+      ],
+      */
+      '#options' => array_flip(['all_now', 'all_later']),
+      '#default_value' => 'all_now',
+      'all_now' => [
+        '#type' => 'radio',
+        '#title' => t('rebuild <strong>all</strong> permissions now'),
+      ],
+      'all_later' => [
+        '#type' => 'radio',
+        '#title' => t('rebuild <strong>all</strong> permissions later &mdash; do not forget to <a href=":rebuild">Rebuild permissions</a> as soon as possible!', [
+          ':rebuild' => Url::fromRoute('node.configure_rebuild_confirm')->toString(),
+        ]),
+        '#attributes' => ['title' => t("This option will only set a flag to remind you to rebuild all permissions later; this is useful if you want to make multiple changes to your node access settings quickly and delay the updating until you're done.")],
+      ],
+      '#attributes' => ['class' => ['forum-access-flowed']],
     ];
   }
   if (isset($tid)) {

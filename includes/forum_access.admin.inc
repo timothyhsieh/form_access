@@ -57,7 +57,11 @@ function _forum_access_update_access_records($form_state) {
   $tid = $form_state->getValue('tid');
   $forum_access = $form_state->getValue('forum_access');
   switch ($forum_access['update_choice']) {
-    case 'all':
+    case 'this_tid_now':
+      // This should update the nodes in this forum only, not yet implemented.
+      break;
+      
+    case 'all_now':
       node_access_rebuild(TRUE);
       break;
 
@@ -82,7 +86,7 @@ function _forum_access_update_access_records($form_state) {
       batch_set($batch);
       break;
 
-    case 'later':
+    case 'all_later':
       node_access_needs_rebuild(TRUE);
       break;
   }
