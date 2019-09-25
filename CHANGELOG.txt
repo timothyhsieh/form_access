@@ -10,6 +10,7 @@ forum_access 7.x-1.x-dev:
     - #3068829 by salvis: Fix Warning: count(): Parameter must be an array or an object that implements Countable in form_process_radios() (line 3183 of includes\form.inc).
     - Avoid notices in a test.
   Enhancement:
+    - #3083683 by salvis: Hide inaccessible forums from the forum list.
     - #2958547 by salvis: Support non-forum nodes with optional forum_taxonomy field.
 
 

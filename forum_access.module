@@ -331,6 +331,11 @@ function forum_access_query_alter($p1, $p2, $p3) {
   return;
 }
 
+/**
+ * Implements hook_query_term_access_alter().
+ *
+ * @param QueryAlterableInterface $query
+ */
 function forum_access_query_term_access_alter(QueryAlterableInterface $query) {
   global $user;
 
@@ -342,9 +347,9 @@ function forum_access_query_term_access_alter(QueryAlterableInterface $query) {
     $op = 'view';
   }
 
-  // If $account can bypass node access, or there are no node access
-  // modules, we don't need to alter the query.
-  if (user_access('bypass node access', $account)) {
+  // If $account can bypass node access, we let them administer the full forum
+  // structure and see the nodes, i.e. we don't restrict the query.
+  if (user_access('bypass node access', $account) && (strpos(current_path(), 'admin/structure/forum') === 0 || strpos(current_path(), 'node/') === 0)) {
     return;
   }
 
@@ -363,13 +368,25 @@ function forum_access_query_term_access_alter(QueryAlterableInterface $query) {
       // The node_access table has the access grants for any given node.
       $access_alias = $query->leftJoin('forum_access', 'fa', '%alias.tid = ' . $talias . '.tid');
       $acl_alias = $query->leftJoin('acl', 'acl', "%alias.number = $talias.tid AND %alias.module = 'forum_access'");
-      $aclu_alias = $query->leftJoin('acl_user', 'aclu', "%alias.acl_id = $acl_alias.acl_id AND %alias.uid = $account->uid");
-      $query->condition(db_or()
-        ->isNull("$access_alias.rid")
-        ->condition(db_and()
-          ->condition("$access_alias.rid", $rids, 'IN')
-          ->condition("$access_alias.grant_$op", 1, '>='))
-        ->condition("$aclu_alias.uid", $account->uid));
+      if (user_access('bypass node access', $account)) {
+        // If $account can bypass node access, we allow access if any role or
+        // account has access.
+        $aclu_alias = $query->leftJoin('acl_user', 'aclu', "%alias.acl_id = $acl_alias.acl_id");
+        $query->condition(db_or()
+          ->isNull("$access_alias.rid")
+          ->condition("$access_alias.grant_$op", 1, '>=')
+          ->isNotNull("$aclu_alias.uid")
+        );
+      }
+      else {
+        $aclu_alias = $query->leftJoin('acl_user', 'aclu', "%alias.acl_id = $acl_alias.acl_id AND %alias.uid = $account->uid");
+        $query->condition(db_or()
+          ->isNull("$access_alias.rid")
+          ->condition(db_and()
+            ->condition("$access_alias.rid", $rids, 'IN')
+            ->condition("$access_alias.grant_$op", 1, '>='))
+          ->condition("$aclu_alias.uid", $account->uid));
+      }
     }
   }
 }
