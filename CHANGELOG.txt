@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+
+
+forum_access 7.x-1.4 (2019-09-25):
   Bugs fixed:
     - #3003279 by salvis, ron_s: Forum node migration generates warning errors.
     - #3002918 by ron_s: Define primary key for the {forum_access} table.
