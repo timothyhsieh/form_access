@@ -15,7 +15,7 @@ use Drupal\user\Entity\Role;
  * @inheritdoc
  */
 function forum_access_schema() {
-    return _forum_access_schema_8101();
+    return _forum_access_schema_8102();
 }
 
 /**
@@ -70,18 +70,29 @@ function forum_access_install() {
 }
 
 /**
- * Add primary key and index to the {forum_access} table.
+ * Resize {forum_access}.rid and
+ * add primary key and index to the {forum_access} table.
  */
-function forum_access_update_8101(&$sandbox) {
+function forum_access_update_8102(&$sandbox) {
+  $new_schema = _forum_access_schema_8102();
   $schema = Database::getConnection()->schema();
+
+  // Drop the primary key and index that may have been created in update_8101.
+  $schema->dropPrimaryKey('forum_access');
+  $schema->dropIndex('forum_access', 'rid');
+
+  // Adjust the 'rid' field width.
+  $schema->changeField('forum_access', 'rid', 'rid', $new_schema['forum_access']['fields']['rid']);
+
+  // Add the primary key and index (again or for the first time).
   $schema->addPrimaryKey('forum_access', ['tid', 'rid']);
-  $schema->addIndex('forum_access', 'rid', ['rid'], _forum_access_schema_8101()['forum_access']);
+  $schema->addIndex('forum_access', 'rid', ['rid'], $new_schema['forum_access']);
 }
 
 /*
- * Implementation of forum_access_schema() version 8101.
+ * Implementation of forum_access_schema() version 8102.
  */
-function _forum_access_schema_8101() {
+function _forum_access_schema_8102() {
   $schema['forum_access'] = [
     'description' => 'The Forum Access control table.',
     'fields' => [
@@ -94,7 +105,7 @@ function _forum_access_schema_8101() {
       'rid' => [
         'description' => 'The {role}.rid to which this {forum_access} entry applies.',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 64,
         'not null' => TRUE,
       ],
       'grant_view' => [

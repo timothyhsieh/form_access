@@ -5,7 +5,12 @@ CHANGELOG for Forum Access for Drupal 8
 forum_access 8.x-1.x-dev:
 
 
-forum_access 8.x-1.x-alpha1 (2019-09-25):
+forum_access 8.x-1.0-alpha2 (2019-09-27):
+  Bug fixed:
+    - #3084233 by salvis: Update 8101 (#3002918) can fail; fix rid width and redo the update in 8102.
+
+
+forum_access 8.x-1.0-alpha1 (2019-09-25):
   Bugs fixed:
     - #3001448 by salvis: PHP notice and other issues with the Update radiobuttons.
     - #3011364 by volkswagenchick, salvis: README configs and formatting.
@@ -16,8 +21,7 @@ forum_access 8.x-1.x-alpha1 (2019-09-25):
   Tasks:
     - #3081936 by Sergiu Stici: Deprecated Code Report.
 
-
-forum_access 8.x-1.x-alpha0 (2018-04-11):
+forum_access 8.x-1.0-alpha0 (2018-04-11):
   Branch to port to D8.
   Porting:
     - #2959985 by salvis: Fix some minor coding issues.
