@@ -226,9 +226,10 @@ function forum_access_node_insert(EntityInterface $entity) {
   // To preserve database integrity, only write grants if the node
   // loads successfully.
   if (!empty($node)) {
-    \Drupal::entityTypeManager()
-      ->getAccessControlHandler('node')
-      ->writeGrants($node);
+    /** @var \Drupal\node\NodeAccessControlHandlerInterface $access_control_handler */
+    $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('node');
+    $grants = $access_control_handler->acquireGrants($node);
+    \Drupal::service('node.grant_storage')->write($node, $grants);
   }
 }
 
