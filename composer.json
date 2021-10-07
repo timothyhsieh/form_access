@@ -22,6 +22,6 @@
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
   "require": {
-    "drupal/acl": "1.x-dev"
+    "drupal/acl": "^1.0@beta"
   }
 }
