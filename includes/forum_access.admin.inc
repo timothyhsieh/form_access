@@ -56,39 +56,41 @@ function _forum_access_form_roles_permissions_save(FormStateInterface $form_stat
 function _forum_access_update_access_records($form_state) {
   $tid = $form_state->getValue('tid');
   $forum_access = $form_state->getValue('forum_access');
-  switch ($forum_access['update_choice']) {
-    case 'this_tid_now':
-      // This should update the nodes in this forum only, not yet implemented.
-      break;
-      
-    case 'all_now':
-      node_access_rebuild(TRUE);
-      break;
+  if (isset($forum_access['update_choice'])) {
+    switch ($forum_access['update_choice']) {
+      case 'this_tid_now':
+        // This should update the nodes in this forum only, not yet implemented.
+        break;
 
-    case 'batch':
-      // Mass update in batch mode, modeled after node.module.
-      $limit = $forum_access['update_limit'];
-      $count = Drupal::database()
-        ->select('node__taxonomy_forums')
-        ->condition('taxonomy_forums_target_id', $tid)
-        ->countQuery()
-        ->distinct()
-        ->execute()
-        ->fetchField();
-      $batch = [
-        'title' => t('Updating content access permissions'),
-        'file' => drupal_get_path('module', 'forum_access') . '/includes/forum_access.admin.inc',
-        'operations' => [
-          ['_forum_access_update_batch_operation', [$tid, $limit, $count]],
-        ],
-        'finished' => '_forum_access_update_batch_finished',
-      ];
-      batch_set($batch);
-      break;
+      case 'all_now':
+        node_access_rebuild(TRUE);
+        break;
 
-    case 'all_later':
-      node_access_needs_rebuild(TRUE);
-      break;
+      case 'batch':
+        // Mass update in batch mode, modeled after node.module.
+        $limit = $forum_access['update_limit'];
+        $count = Drupal::database()
+          ->select('node__taxonomy_forums')
+          ->condition('taxonomy_forums_target_id', $tid)
+          ->countQuery()
+          ->distinct()
+          ->execute()
+          ->fetchField();
+        $batch = [
+          'title' => t('Updating content access permissions'),
+          'file' => drupal_get_path('module', 'forum_access') . '/includes/forum_access.admin.inc',
+          'operations' => [
+            ['_forum_access_update_batch_operation', [$tid, $limit, $count]],
+          ],
+          'finished' => '_forum_access_update_batch_finished',
+        ];
+        batch_set($batch);
+        break;
+
+      case 'all_later':
+        node_access_needs_rebuild(TRUE);
+        break;
+    }
   }
 }
 
