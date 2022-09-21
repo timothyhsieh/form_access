@@ -78,7 +78,7 @@ function _forum_access_update_access_records($form_state) {
           ->fetchField();
         $batch = [
           'title' => t('Updating content access permissions'),
-          'file' => drupal_get_path('module', 'forum_access') . '/includes/forum_access.admin.inc',
+	  'file' => \Drupal::service('extension.list.module')->getPath('forum_access') . '/includes/forum_access.admin.inc',
           'operations' => [
             ['_forum_access_update_batch_operation', [$tid, $limit, $count]],
           ],
