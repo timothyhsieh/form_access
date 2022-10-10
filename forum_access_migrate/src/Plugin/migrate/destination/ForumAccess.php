@@ -22,34 +22,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ForumAccess extends Table {
 
   /**
-   * The name of the destination table.
-   *
-   * @var string
-   */
-  protected $tableName;
-
-  /**
-   * IDMap compatible array of id fields.
-   *
-   * @var array
-   */
-  protected $idFields;
-
-  /**
-   * Array of fields present on the destination table.
-   *
-   * @var array
-   */
-  protected $fields;
-
-  /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $dbConnection;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, Connection $connection) {
