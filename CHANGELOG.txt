@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 8 and 9
 
 forum_access 8.x-1.x-dev:
   Bug fixed:
+    - #3112447 by eelkeblok: Fix potential undefined index for role that was not configured during testing.
     - Issue by salvis: This version is not ready for D10.
 
 

@@ -66,7 +66,9 @@ function forum_access_node_grants(AccountInterface $account, $op) {
   $grants = [];
   /** @var string $role */
   foreach ($account->getRoles() as $role) {
-    $grants['forum_access'][] = $roles_gids[$role];
+    if (isset($roles_gids[$role])) {
+      $grants['forum_access'][] = $roles_gids[$role];
+    }
   }
   return $grants;
 }
