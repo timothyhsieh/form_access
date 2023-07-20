@@ -1,14 +1,31 @@
 
-CHANGELOG for Forum Access for Drupal 8
+CHANGELOG for Forum Access for Drupal 8 and 9
 
 
 forum_access 8.x-1.x-dev:
+  Bug fixed:
+    - Issue by salvis: This version is not ready for D10.
 
+
+forum_access 8.x-1.0-beta1 (2022-10-10):
+  Bug fixed:
+    - Issue by sadashiv: Fixing fatal error with migration.
+
+
+forum_access 8.x-1.0-alpha4 (2022-09-21):
+  Bug fixed:
+    - Issue by sadashiv: Drupal 10 support.
+    - #3297269 by Project Update Bot: Automated Drupal 10 compatibility fixes.
+
+forum_access 8.x-1.0-alpha3 (2021-10-07):
+  Bug fixed:
+    - #3085002 by sadashiv: Requires ACL dev.
+    - #3129859 by Mfgr45, mrinalini9, nickolaj: Drupal 9 readiness.
+    - #3103089 by cainaru: "Undefined index" message in dblog after creating new forum.
 
 forum_access 8.x-1.0-alpha2 (2019-09-27):
   Bug fixed:
     - #3084233 by salvis: Update 8101 (#3002918) can fail; fix rid width and redo the update in 8102.
-
 
 forum_access 8.x-1.0-alpha1 (2019-09-25):
   Bugs fixed:

@@ -15,7 +15,7 @@ use Drupal\user\Entity\Role;
  * @inheritdoc
  */
 function forum_access_schema() {
-    return _forum_access_schema_8102();
+  return _forum_access_schema_8102();
 }
 
 /**
@@ -89,7 +89,7 @@ function forum_access_update_8102(&$sandbox) {
   $schema->addIndex('forum_access', 'rid', ['rid'], $new_schema['forum_access']);
 }
 
-/*
+/**
  * Implementation of forum_access_schema() version 8102.
  */
 function _forum_access_schema_8102() {
