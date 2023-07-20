@@ -5,6 +5,8 @@ CHANGELOG for Forum Access for Drupal 7
 forum_access 7.x-1.x-dev:
   Enhancements:
     - #3375942 by salvis: Require chain_menu_access 7.x-2.1.
+  Bugs fixed:
+    - #3317447 by immaculatexavier: Deprecated implode() function call.
 
 
 forum_access 7.x-1.4 (2019-09-25):
