@@ -8,7 +8,6 @@
 use Drupal\comment\CommentInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Database\Query\AlterableInterface;
-use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -112,12 +111,7 @@ function forum_access_node_access(NodeInterface $node, $op, AccountInterface $ac
       break;
   }
   if (isset($access)) {
-    if ($access) {
-      return AccessResult::allowed();
-    }
-    else {
-      return AccessResult::forbidden();
-    }
+    return $access ? AccessResult::allowed() : AccessResult::forbidden();
   }
   return AccessResult::neutral();
 }
@@ -187,23 +181,11 @@ function forum_access_node_create_access(AccountInterface $account, array $conte
   switch ($route_name) {
     case 'forum.page':
       $term = $route->getParameter('taxonomy_term');
-      if (forum_access_access('create', $term->id())) {
-        return AccessResult::allowed();
-      }
-      else {
-        return AccessResult::forbidden();
-      }
-      break;
+      return forum_access_access('create', $term->id()) ? AccessResult::allowed() : AccessResult::forbidden();
 
     case 'node.add':
       $forum_id = \Drupal::request()->get('forum_id');
-      if (forum_access_access('create', $forum_id)) {
-        return AccessResult::allowed();
-      }
-      else {
-        return AccessResult::forbidden();
-      }
-      break;
+      return forum_access_access('create', $forum_id) ? AccessResult::allowed() : AccessResult::forbidden();
   }
   return AccessResult::neutral();
 }
@@ -326,12 +308,12 @@ function forum_access_comment_access(EntityInterface $entity, $operation, Accoun
       return AccessResult::allowed();
     }
     elseif ($operation == 'update'
-      && (forum_access_access('update', $tid) || $account->hasPermission('edit any forum content') || $is_author && $account->hasPermission('edit own forum content'))) {
+      && (forum_access_access('update', $tid) || $account->hasPermission('edit any forum content') || ($is_author && $account->hasPermission('edit own forum content')))) {
       return AccessResult::allowed();
     }
     // Delete operation.
     elseif ($operation == 'delete'
-      && (forum_access_access('delete', $tid) || $account->hasPermission('delete any forum content') || $is_author && $account->hasPermission('delete own forum content'))) {
+      && (forum_access_access('delete', $tid) || $account->hasPermission('delete any forum content') || ($is_author && $account->hasPermission('delete own forum content')))) {
       return AccessResult::allowed();
     }
     // Approve operation.
@@ -360,8 +342,8 @@ function forum_access_query_comment_filter_alter(AlterableInterface $query) {
     'update' => forum_access_access('update', $tid),
     'delete' => forum_access_access('delete', $tid),
   ];
-  // If user has access to update or delete posts or he is moderator
-  // of forum allow him to see unpublished comments.
+  // If the user has access to update or delete posts or is moderator
+  // of the forum, allow to see unpublished comments.
   if (!($access['update'] || $access['delete'])) {
     return;
   }
@@ -416,6 +398,21 @@ function forum_access_taxonomy_term_delete(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_access() for entity_type 'taxonomy_term'.
+ *
+ * @inheritdoc
+ */
+function forum_access_taxonomy_term_access(EntityInterface $entity, string $operation, AccountInterface $account) {
+  if ($entity->bundle() == 'forums') {
+    module_load_include('inc', 'forum_access', 'includes/forum_access.common');
+    if (!forum_access_access('view', $entity->id())) {
+      return AccessResult::forbidden();
+    }
+  }
+  return AccessResult::neutral();
+}
+
+/**
  * Implements hook_query_TAG_alter() for tag 'taxonomy_term_access'.
  *
  * @inheritdoc
@@ -428,9 +425,10 @@ function forum_access_query_taxonomy_term_access_alter(SelectInterface $query) {
   if (!$op = $query->getMetaData('op')) {
     $op = 'view';
   }
-  // If $account can bypass node access, or there are no node access
-  // modules, we don't need to alter the query.
-  if ($account->hasPermission('bypass node access')) {
+  // If $account can bypass node access, we let them administer the full forum
+  // structure and see the nodes, i.e. we don't restrict the query.
+  $route = \Drupal::routeMatch()->getRouteName();
+  if ($account->hasPermission('bypass node access') && ($route == 'forum.overview' || $route == 'entity.taxonomy_vocabulary.overview_form')) {
     return;
   }
   // Prevent duplicate records.
@@ -449,16 +447,30 @@ function forum_access_query_taxonomy_term_access_alter(SelectInterface $query) {
         [
           ':name' => 'moderate',
         ]);
-      $aclu_alias = $query->leftJoin('acl_user', 'aclu', "%alias.acl_id = $acl_alias.acl_id AND %alias.uid = :uid",
-        [
-          ':uid' => $account->id(),
-        ]);
-      $query->condition((new Condition('OR'))
-        ->isNull("$access_alias.rid")
-        ->condition((new Condition('AND'))
+      if ($account->hasPermission('bypass node access')) {
+        // If $account can bypass node access, we allow access if any role or
+        // account has access.
+        $aclu_alias = $query->leftJoin('acl_user', 'aclu', "%alias.acl_id = $acl_alias.acl_id");
+        $or = $query->orConditionGroup();
+        $or
+          ->isNull("$access_alias.rid")
+          ->condition("$access_alias.grant_$op", 1, '>=')
+          ->isNotNull("$aclu_alias.uid");
+        $query->condition($or);
+      }
+      else {
+        $aclu_alias = $query->leftJoin('acl_user', 'aclu', "%alias.acl_id = $acl_alias.acl_id AND %alias.uid = " . $account->id());
+        $and = $query->andConditionGroup();
+        $and
           ->condition("$access_alias.rid", $rids, 'IN')
-          ->condition("$access_alias.grant_$op", 1, '>='))
-        ->condition("$aclu_alias.uid", $account->id()));
+          ->condition("$access_alias.grant_$op", 1, '>=');
+        $condition = $query->orConditionGroup();
+        $condition
+          ->isNull("$access_alias.rid")
+          ->condition($and)
+          ->condition("$aclu_alias.uid", $account->id());
+        $query->condition($condition);
+      }
     }
   }
 }
