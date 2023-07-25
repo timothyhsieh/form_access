@@ -6,6 +6,7 @@ forum_access 8.x-1.x-dev:
   Enhancement:
     - #3083683 by salvis, naresh_bavaskar: Hide closed forums from the 'normal' forum list.
   Bugs fixed:
+    - #3345959 by salvis: Avoid rebuilding permissions when unchanged.
     - #3112447 by eelkeblok: Fix potential undefined index for role that was not configured during testing.
     - Issue by salvis: This version is not ready for D10.
 

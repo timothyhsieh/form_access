@@ -53,11 +53,29 @@ function _forum_access_form_roles_permissions_save(FormStateInterface $form_stat
 /**
  * Update access records.
  */
-function _forum_access_update_access_records($form_state) {
+function _forum_access_update_access_records($form, $form_state) {
   $tid = $form_state->getValue('tid');
-  $forum_access = $form_state->getValue('forum_access');
-  if (isset($forum_access['update_choice'])) {
-    switch ($forum_access['update_choice']) {
+  $fa_values = $form_state->getValue('forum_access');
+  $access = $fa_values['grants']['checkboxes'];
+
+  if (empty($fa_values['force_update'])) {
+    $is_changed = FALSE;
+    $form_initial_values = $form['forum_access'];
+    foreach (array_keys($fa_values['grants']['checkboxes']) as $grant_type) {
+      $defaults = $form_initial_values['grants']['checkboxes'][$grant_type]['#default_value'];
+      $defaults = array_flip($defaults);
+      foreach ($access[$grant_type] as $rid => $checked) {
+        $is_changed = $is_changed || (empty($form_initial_values['grants']['checkboxes'][$grant_type][$rid]['#disabled']) && (!empty($checked) != isset($defaults[$rid])));
+      }
+    }
+    if (!$is_changed && $fa_values['moderators']['user_list'] == $form_initial_values['moderators']['user_list']['#default_value'] && (empty($fa_values['interference']) || $fa_values['interference']['advanced']['priority'] == $form_initial_values['interference']['advanced']['priority']['#default_value'])) {
+      \Drupal::messenger()->addMessage(t('The content access permissions are unchanged.'));
+      return;
+    }
+  }
+
+  if (isset($fa_values['update_choice'])) {
+    switch ($fa_values['update_choice']) {
       case 'this_tid_now':
         // This should update the nodes in this forum only, not yet implemented.
         break;
@@ -68,7 +86,7 @@ function _forum_access_update_access_records($form_state) {
 
       case 'batch':
         // Mass update in batch mode, modeled after node.module.
-        $limit = $forum_access['update_limit'];
+        $limit = $fa_values['update_limit'];
         $count = Drupal::database()
           ->select('node__taxonomy_forums')
           ->condition('taxonomy_forums_target_id', $tid)
@@ -78,7 +96,7 @@ function _forum_access_update_access_records($form_state) {
           ->fetchField();
         $batch = [
           'title' => t('Updating content access permissions'),
-	  'file' => \Drupal::service('extension.list.module')->getPath('forum_access') . '/includes/forum_access.admin.inc',
+	        'file' => \Drupal::service('extension.list.module')->getPath('forum_access') . '/includes/forum_access.admin.inc',
           'operations' => [
             ['_forum_access_update_batch_operation', [$tid, $limit, $count]],
           ],
