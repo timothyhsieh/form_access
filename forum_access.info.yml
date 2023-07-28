@@ -7,5 +7,5 @@ package: Access control
 configure: forum.overview
 
 dependencies:
-  - acl:acl
+  - acl:acl (>=1.0-beta2)
   - drupal:forum
