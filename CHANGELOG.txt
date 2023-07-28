@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 7
 
 
 forum_access 7.x-1.x-dev:
+
+
+forum_access 7.x-1.5 (2023-07-28):
   Enhancements:
     - Issue by salvis: Require acl 7.x-1.3.
     - #3375942 by salvis: Require chain_menu_access 7.x-2.1.
@@ -20,7 +23,6 @@ forum_access 7.x-1.4 (2019-09-25):
     - #3068844 by salvis: Fix PhpStorm red flags (no functional change).
     - #3068829 by salvis: Fix Warning: count(): Parameter must be an array or an object that implements Countable in form_process_radios() (line 3183 of includes\form.inc).
     - Avoid notices in a test.
-
 
 forum_access 7.x-1.3 (2016-08-16):
   Bugs fixed:
