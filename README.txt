@@ -1,4 +1,4 @@
-CONTENTS OF THIS FILE
+﻿CONTENTS OF THIS FILE
 ---------------------
 
  * Introduction
@@ -28,7 +28,8 @@ access on that forum (AKA moderators).
 REQUIREMENTS
 ------------
 
-This module requires no modules outside of Drupal core.
+This module requires the Drupal Core Forum module and the contributed ACL
+module.
 
 
 PERMISSIONS
@@ -64,17 +65,22 @@ Step-by-step troubleshooting instructions are provided on the administration
 pages.
 
 In case you have additional node access modules enabled, the administration
-pages will provide additional information on how to make them work together,
-and you should probably follow the troubleshooting instructions to install
-DNA and learn about how your combination of node access modules works.
+pages will provide additional information on how to make them work together.
 
 
 MAINTAINERS
 -----------
 
  * Hans Salvisberg (salvis) - https://www.drupal.org/u/salvis
- * Kurucz Istv�n (nevergone) - https://www.drupal.org/u/nevergone
+ * Earl Miles (merlinofchaos) - https://www.drupal.org/u/merlinofchaos
 
 Supporting organizations:
 
  * Salvisberg Software & Consulting
+   https://www.drupal.org/salvisberg-software-consulting
+
+Acknowledgments:
+
+ * Originally written for Drupal 5 and maintained by merlinofchaos.
+ * Ported to Drupal 6 and 7 and maintained by salvis.
+ * Ported to Drupal 8 by nevergone (Kurucz István), maintained by salvis.
