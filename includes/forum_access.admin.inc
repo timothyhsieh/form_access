@@ -32,10 +32,12 @@ function _forum_access_forum_moderators_form($form_state, $tid) {
 
 /**
  * Save ACL configuration.
+ *
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The state of the forum/forum container form.
  */
 function _forum_access_form_moderators_save(FormStateInterface $form_state) {
-  $data = $form_state->getValue(['forum_access', 'moderators']);
-  if (!empty($data)) {
+  if ($data = $form_state->getValue(['forum_access', 'moderators'])) {
     acl_save_form($data, 0);
   }
 }
@@ -57,18 +59,18 @@ function _forum_access_update_access_records($form, $form_state) {
   $tid = $form_state->getValue('tid');
   $fa_values = $form_state->getValue('forum_access');
   $access = $fa_values['grants']['checkboxes'];
+  $form = $form['forum_access'];
 
   if (empty($fa_values['force_update'])) {
     $is_changed = FALSE;
-    $form_initial_values = $form['forum_access'];
     foreach (array_keys($fa_values['grants']['checkboxes']) as $grant_type) {
-      $defaults = $form_initial_values['grants']['checkboxes'][$grant_type]['#default_value'];
+      $defaults = $form['grants']['checkboxes'][$grant_type]['#default_value'];
       $defaults = array_flip($defaults);
       foreach ($access[$grant_type] as $rid => $checked) {
-        $is_changed = $is_changed || (empty($form_initial_values['grants']['checkboxes'][$grant_type][$rid]['#disabled']) && (!empty($checked) != isset($defaults[$rid])));
+        $is_changed = $is_changed || (empty($form['grants']['checkboxes'][$grant_type][$rid]['#disabled']) && (!empty($checked) != isset($defaults[$rid])));
       }
     }
-    if (!$is_changed && $fa_values['moderators']['user_list'] == $form_initial_values['moderators']['user_list']['#default_value'] && (empty($fa_values['interference']) || $fa_values['interference']['advanced']['priority'] == $form_initial_values['interference']['advanced']['priority']['#default_value'])) {
+    if (!$is_changed && !acl_edit_form_get_user_list_changed($form['moderators']) && (empty($fa_values['interference']) || $fa_values['interference']['advanced']['priority'] == $form['interference']['advanced']['priority']['#default_value'])) {
       \Drupal::messenger()->addMessage(t('The content access permissions are unchanged.'));
       return;
     }
