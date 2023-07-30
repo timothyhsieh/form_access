@@ -586,6 +586,10 @@ function forum_access_form_taxonomy_term_forums_forum_form_alter(&$form, FormSta
   $form['forum_access']['grants'] = _forum_access_forum_grants_form($form_state, $settings);
   $form['forum_access']['moderators'] = _forum_access_forum_moderators_form($form_state, $tid);
   $form['actions']['submit']['#submit'][] = '_forum_access_admin_forum_form_submit';
+  if (!empty($form['actions']['overview'])) {
+    $form['actions']['overview']['#submit'][] = '_forum_access_admin_forum_form_submit';
+  }
+
   if (isset($tid) /*&& !node_access_needs_rebuild()*/) {
     // Count number of nodes which are attached to this term.
     $count = Drupal::database()
@@ -678,6 +682,9 @@ function forum_access_form_taxonomy_term_forums_container_form_alter(&$form, For
   $form['forum_access']['grants'] = _forum_access_container_grants_form($form_state, $settings);
   $form['forum_access']['moderators'] = _forum_access_forum_moderators_form($form_state, $tid);
   $form['actions']['submit']['#submit'][] = '_forum_access_admin_container_form_submit';
+  if (!empty($form['actions']['overview'])) {
+    $form['actions']['overview']['#submit'][] = '_forum_access_admin_container_form_submit';
+  }
 }
 
 /**

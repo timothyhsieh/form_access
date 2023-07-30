@@ -3,6 +3,8 @@ CHANGELOG for Forum Access for Drupal 8 and 9
 
 
 forum_access 8.x-1.x-dev:
+  Bugs fixed:
+    - #3378081 by salvis: Support the [Save and go to list] button.
 
 
 forum_access 8.x-1.0-beta2 (2023-07-28):
