@@ -644,20 +644,32 @@ function forum_access_form_taxonomy_term_forums_forum_form_alter(&$form, FormSta
       '#title' => t('Update even if unchanged'),
     ];
   }
+  $form['forum_access']['#after_build'][] = 'forum_access_form_taxonomy_term_forums_x_form_alter_after_build';
+}
+
+/**
+ * Check for moderators, past or new.
+ */
+function forum_access_form_taxonomy_term_forums_x_form_alter_after_build(array $form, FormStateInterface $form_state) {
+  // Open the Moderators details if past or new moderators are set.
+  $moderators_form = &$form['moderators'];
+  $past_moderators = acl_edit_form_get_user_list($moderators_form, TRUE);
+  $future_moderators = acl_edit_form_get_user_list($moderators_form);
+  $moderators_form['#open'] = !empty($past_moderators) || !empty($future_moderators);
+  if (acl_edit_form_get_user_list_changed($moderators_form)) {
+    $form['#open'] = TRUE;
+  }
+  return $form;
 }
 
 /**
  * Submit handler for forum access administrative form.
  */
 function _forum_access_admin_forum_form_submit($form, FormStateInterface $form_state) {
-  module_load_include('inc', 'forum_access', 'includes/forum_access.admin');
-  // Save roles permissions.
-  _forum_access_form_roles_permissions_save($form_state);
-  // Save moderators list.
-  _forum_access_form_moderators_save($form_state);
-  // Update access records.
-  $route = \Drupal::routeMatch()->getRouteName();
-  if ($route != 'forum.add_forum') {
+  _forum_access_admin_container_form_submit($form, $form_state); // Shared code.
+
+  if (\Drupal::routeMatch()->getRouteName() != 'forum.add_forum') {
+    // Update access records.
     _forum_access_update_access_records($form, $form_state);
   }
 }
@@ -681,6 +693,7 @@ function forum_access_form_taxonomy_term_forums_container_form_alter(&$form, For
   // Moderators fields.
   $form['forum_access']['grants'] = _forum_access_container_grants_form($form_state, $settings);
   $form['forum_access']['moderators'] = _forum_access_forum_moderators_form($form_state, $tid);
+  $form['forum_access']['#after_build'][] = 'forum_access_form_taxonomy_term_forums_x_form_alter_after_build';
   $form['actions']['submit']['#submit'][] = '_forum_access_admin_container_form_submit';
   if (!empty($form['actions']['overview'])) {
     $form['actions']['overview']['#submit'][] = '_forum_access_admin_container_form_submit';
@@ -692,10 +705,15 @@ function forum_access_form_taxonomy_term_forums_container_form_alter(&$form, For
  */
 function _forum_access_admin_container_form_submit($form, FormStateInterface $form_state) {
   module_load_include('inc', 'forum_access', 'includes/forum_access.admin');
+
   // Save roles permissions.
   _forum_access_form_roles_permissions_save($form_state);
-  // Save moderators list.
-  _forum_access_form_moderators_save($form_state);
+
+  // (We can't use $form_state here because D8 fails to call #after_build.)
+  if (acl_edit_form_get_user_list_changed($form['forum_access']['moderators'])) {
+    // Save moderators list.
+    _forum_access_form_moderators_save($form_state);
+  }
 }
 
 /**

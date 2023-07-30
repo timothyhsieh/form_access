@@ -4,6 +4,7 @@ CHANGELOG for Forum Access for Drupal 8 and 9
 
 forum_access 8.x-1.x-dev:
   Bugs fixed:
+    - #3378089 by salvis: Collapse Moderators when not used, but open when unsaved.
     - #3378081 by salvis: Support the [Save and go to list] button.
   Task:
     - #3378086 by salvis: Avoid using ACL internal data, use acl_edit_form_get_user_list_changed($form) instead.
