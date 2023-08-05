@@ -7,6 +7,7 @@ forum_access 8.x-1.x-dev:
     - #3378089 by salvis: Collapse Moderators when not used, but open when unsaved.
     - #3378081 by salvis: Support the [Save and go to list] button.
   Task:
+    - Issue by salvis: Raise the ACL minimal dependency to 8.x-1.0-beta3.
     - #3378086 by salvis: Avoid using ACL internal data, use acl_edit_form_get_user_list_changed($form) instead.
 
 
