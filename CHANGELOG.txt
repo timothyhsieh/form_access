@@ -3,6 +3,9 @@ CHANGELOG for Forum Access for Drupal 8 and 9
 
 
 forum_access 8.x-1.x-dev:
+
+
+forum_access 8.x-1.0-beta3 (2023-08-05):
   Bugs fixed:
     - #3378089 by salvis: Collapse Moderators when not used, but open when unsaved.
     - #3378081 by salvis: Support the [Save and go to list] button.
@@ -19,7 +22,6 @@ forum_access 8.x-1.0-beta2 (2023-07-28):
     - #3345959 by salvis: Avoid rebuilding permissions when unchanged.
     - #3112447 by eelkeblok: Fix potential undefined index for role that was not configured during testing.
     - Issue by salvis: This version is not ready for D10.
-
 
 forum_access 8.x-1.0-beta1 (2022-10-10):
   Bug fixed:
