@@ -5,6 +5,10 @@ CHANGELOG for Forum Access for Drupal 8 and 9
 forum_access 8.x-1.x-dev:
 
 
+forum_access 8.x-1.0 (2023-08-23):
+    - Issue by salvis: Update serialization.
+
+
 forum_access 8.x-1.0-beta3 (2023-08-05):
   Bugs fixed:
     - #3378089 by salvis: Collapse Moderators when not used, but open when unsaved.
@@ -12,7 +16,6 @@ forum_access 8.x-1.0-beta3 (2023-08-05):
   Task:
     - Issue by salvis: Raise the ACL minimal dependency to 8.x-1.0-beta3.
     - #3378086 by salvis: Avoid using ACL internal data, use acl_edit_form_get_user_list_changed($form) instead.
-
 
 forum_access 8.x-1.0-beta2 (2023-07-28):
   Enhancement:
