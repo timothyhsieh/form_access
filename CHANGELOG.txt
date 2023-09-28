@@ -3,11 +3,14 @@ CHANGELOG for Forum Access for Drupal 8 and 9
 
 
 forum_access 8.x-1.x-dev:
+  Bug fixed:
+    - Issue #3386451 by salvis: Fix moderator element doesn't exist on Add forms, causes error.
+  Tasks:
+    - Issue #3390476 by salvis: Resolve a TODO and a PHP warning.
+    _ Issue #3390466 by salvis: Update ACL dependency and fix some other issues in composer.json and *.info.yml.
 
 
 forum_access 8.x-1.0 (2023-08-23):
-    - Issue #3390476 by salvis: Resolve a TODO and a PHP warning.
-    _ Issue #3390466 by salvis: Update ACL dependency and fix some other issues in composer.json and *.info.yml.
     - Issue by salvis: Update serialization.
 
 

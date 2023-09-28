@@ -19,16 +19,19 @@ function _forum_access_forum_moderators_form($form_state, $tid) {
   if (isset($tid)) {
     $acl_id = forum_access_get_acl($tid, 'moderate');
     $form = acl_edit_form($form_state, $acl_id, t('Moderators'));
-    $form['warning'] = [
-      '#type' => 'item',
-      '#markup' => t('Moderators receive all grants above.'),
-    ];
-    $form['note'] = [
-      '#type' => 'item',
-      '#markup' => t('Note: Changes to moderators are not saved until you click Save below.'),
-    ];
-    return $form;
   }
+  else {
+    $form = acl_edit_form($form_state, 0, t('Moderators'), TRUE);
+  }
+  $form['warning'] = [
+    '#type' => 'item',
+    '#markup' => t('Moderators receive all grants above.'),
+  ];
+  $form['note'] = [
+    '#type' => 'item',
+    '#markup' => t('Note: Changes to moderators are not saved until you click Save below.'),
+  ];
+  return $form;
 }
 
 /**
@@ -39,6 +42,11 @@ function _forum_access_forum_moderators_form($form_state, $tid) {
  */
 function _forum_access_form_moderators_save(FormStateInterface $form_state) {
   if ($data = $form_state->getValue(['forum_access', 'moderators'])) {
+    if ($data['acl_id'] == 0) {
+      $tid = $form_state->getValue(['tid']);
+      module_load_include('inc', 'forum_access', 'includes/forum_access.acl');
+      $data['acl_id'] = forum_access_get_acl($tid, "moderate");
+    }
     acl_save_form($data, 0);
   }
 }
@@ -99,7 +107,7 @@ function _forum_access_update_access_records($form, $form_state) {
           ->fetchField();
         $batch = [
           'title' => t('Updating content access permissions'),
-	        'file' => \Drupal::service('extension.list.module')->getPath('forum_access') . '/includes/forum_access.admin.inc',
+          'file' => \Drupal::service('extension.list.module')->getPath('forum_access') . '/includes/forum_access.admin.inc',
           'operations' => [
             ['_forum_access_update_batch_operation', [$tid, $limit, $count]],
           ],
