@@ -5,6 +5,7 @@
  * Contains integrations with forms.
  */
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Vocabulary;
@@ -290,13 +291,13 @@ function _forum_access_container_grants_form($form_state, $settings) {
 function _forum_access_grants_form_elements(&$form, $roles, $administer_forums_roles, $bypass_node_access_roles, $cols, $settings) {
   $form = [
     '#theme' => 'forum_access_table',
+    'rows' => [],
   ];
   // Build table rows.
   foreach ($roles as $rid => $role) {
     $form['rows'][$rid]['label'] = [
       '#type' => 'item',
-      // @todo Add check_plain.
-      '#markup' => $role->label(),
+      '#markup' => Html::escape($role->label()),
     ];
     $special = NULL;
     if (isset($administer_forums_roles[$rid])) {

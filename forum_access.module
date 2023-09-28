@@ -336,7 +336,6 @@ function forum_access_query_comment_filter_alter(AlterableInterface $query) {
   }
 
   module_load_include('inc', 'forum_access', 'includes/forum_access.common');
-  // @todo Replace it with the function.
   $tid = forum_access_get_tid($entity);
   $access = [
     'update' => forum_access_access('update', $tid),
