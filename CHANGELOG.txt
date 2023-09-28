@@ -6,6 +6,7 @@ forum_access 8.x-1.x-dev:
 
 
 forum_access 8.x-1.0 (2023-08-23):
+    _ Issue #3390466 by salvis: Update ACL dependency and fix some other issues in composer.json and *.info.yml.
     - Issue by salvis: Update serialization.
 
 

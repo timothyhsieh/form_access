@@ -17,11 +17,10 @@
   ],
   "support": {
     "issues": "https://drupal.org/project/issues/forum_access",
-    "source": "https://cgit.drupalcode.org/forum_access"
+    "source": "https://git.drupalcode.org/project/forum_access"
   },
-  "license": "GPL-2.0+",
-  "minimum-stability": "dev",
+  "license": "GPL-2.0-or-later",
   "require": {
-    "drupal/acl": "^1.0"
+    "drupal/acl": "^1.1"
   }
 }
