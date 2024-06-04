@@ -827,6 +827,10 @@ function forum_access_set_settings($tid, array $settings) {
  *   List of available tids for specific account.
  */
 function forum_access_form_node_form_get_available_tids(AccountInterface $account, NodeInterface $node) {
+
+  // For some reason, forum_access.acl is not loaded at this point and we need
+  // it to get the forum_access_get_settings_by_user() function.
+  module_load_include('inc', 'forum_access', 'includes/forum_access.acl');
   module_load_include('inc', 'forum_access', 'includes/forum_access.common');
   // We figure out what tids we want to show in form according
   // to the forum access settings.
